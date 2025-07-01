@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "chess_lib",
+  "engine",
+  "terminal",
+  "datagen",
+  "trainer",
+]

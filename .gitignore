@@ -1,0 +1,14 @@
+debug/
+/target
+
+Cargo.lock
+/resources/checkpoints
+/resources/books
+/.vs
+
+**/*.rs.bk
+
+*.pdb
+*.exe
+*.bin
+*.pgn
