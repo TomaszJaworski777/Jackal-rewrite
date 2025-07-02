@@ -6,3 +6,6 @@ edition = "2021"
 [lib]
 name = "chess_lib"
 path = "src/lib.rs"
+
+[dependencies]
+colored = "=2.1.0"

@@ -10,3 +10,4 @@ path = "src/main.rs"
 [dependencies]
 engine    = { path = "../engine" }
 chess_lib = { path = "../chess_lib" }
+utils     = { path = "../utils" }
