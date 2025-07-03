@@ -8,4 +8,4 @@ name = "chess_lib"
 path = "src/lib.rs"
 
 [dependencies]
-colored = "=2.1.0"
+utils = { path = "../utils" }

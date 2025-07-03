@@ -6,3 +6,6 @@ edition = "2021"
 [lib]
 name = "utils"
 path = "src/lib.rs"
+
+[dependencies]
+colored = "=2.1.0"

@@ -6,9 +6,9 @@ use std::{
     },
 };
 
-use super::square::Square;
+use utils::Colors;
 
-use colored::*;
+use super::square::Square;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, PartialOrd)]
 pub struct Bitboard(u64);
@@ -201,7 +201,7 @@ impl From<Bitboard> for String {
             for file in 0..8 {
                 let square = Square::from_coords(rank, file);
                 result += if bitboard.get_bit(square) {
-                    " 1".green() //TODO: Make util and get color from config file
+                    " 1".green()
                 } else {
                     " 0".red()
                 }
