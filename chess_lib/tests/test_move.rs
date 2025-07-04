@@ -2,18 +2,50 @@ use chess_lib::{Move, MoveFlag, Piece, Square};
 
 #[test]
 fn to_string() {
-    assert_eq!(String::from(Move::NULL), "a1a1");
+    assert_eq!(Move::NULL.to_string(false), "a1a1");
     assert_eq!(
-        String::from(Move::from_squares(Square::A4, Square::B5, 0)),
+        Move::from_squares(Square::A4, Square::B5, 0).to_string(false),
         "a4b5"
     );
     assert_eq!(
-        String::from(Move::from_squares(
+        Move::from_squares(
             Square::E7,
             Square::E8,
             MoveFlag::ROOK_PROMOTION
-        )),
+        ).to_string(false),
         "e7e8r"
+    );
+    assert_eq!(
+        Move::from_squares(
+            Square::E1,
+            Square::H1,
+            MoveFlag::KING_SIDE_CASTLE
+        ).to_string(false),
+        "e1g1"
+    );
+    assert_eq!(
+        Move::from_squares(
+            Square::E1,
+            Square::A1,
+            MoveFlag::QUEEN_SIDE_CASTLE
+        ).to_string(false),
+        "e1c1"
+    );
+    assert_eq!(
+        Move::from_squares(
+            Square::E1,
+            Square::H1,
+            MoveFlag::KING_SIDE_CASTLE
+        ).to_string(true),
+        "e1h1"
+    );
+    assert_eq!(
+        Move::from_squares(
+            Square::E1,
+            Square::A1,
+            MoveFlag::QUEEN_SIDE_CASTLE
+        ).to_string(true),
+        "e1a1"
     );
 }
 

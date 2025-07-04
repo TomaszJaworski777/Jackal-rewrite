@@ -119,22 +119,22 @@ impl From<u8> for Square {
 
 impl From<Square> for u8 {
     #[inline]
-    fn from(square: Square) -> Self {
-        square.0
+    fn from(value: Square) -> Self {
+        value.0
     }
 }
 
 impl From<Square> for u16 {
     #[inline]
-    fn from(square: Square) -> Self {
-        u16::from(square.0)
+    fn from(value: Square) -> Self {
+        u16::from(value.0)
     }
 }
 
 impl From<Square> for usize {
     #[inline]
-    fn from(square: Square) -> Self {
-        square.0 as usize
+    fn from(value: Square) -> Self {
+        value.0 as usize
     }
 }
 
@@ -160,15 +160,15 @@ impl From<&str> for Square {
 
 impl From<Square> for String {
     #[inline]
-    fn from(square: Square) -> Self {
-        if square == Square::NULL {
+    fn from(value: Square) -> Self {
+        if value == Square::NULL {
             return String::from("NULL");
         }
 
         format!(
             "{}{}",
-            (b'a' + square.get_file()) as char,
-            square.get_rank() + 1
+            (b'a' + value.get_file()) as char,
+            value.get_rank() + 1
         )
     }
 }

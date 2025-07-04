@@ -28,15 +28,15 @@ impl From<usize> for Piece {
 
 impl From<Piece> for u8 {
     #[inline]
-    fn from(piece: Piece) -> Self {
-        piece.0
+    fn from(value: Piece) -> Self {
+        value.0
     }
 }
 
 impl From<Piece> for usize {
     #[inline]
-    fn from(piece: Piece) -> Self {
-        piece.0 as usize
+    fn from(value: Piece) -> Self {
+        value.0 as usize
     }
 }
 

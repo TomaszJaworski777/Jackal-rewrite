@@ -180,27 +180,27 @@ impl From<u64> for Bitboard {
 
 impl From<Bitboard> for u64 {
     #[inline]
-    fn from(board: Bitboard) -> Self {
-        board.0
+    fn from(value: Bitboard) -> Self {
+        value.0
     }
 }
 
 impl From<Square> for Bitboard {
     #[inline]
-    fn from(square: Square) -> Self {
-        Self(1u64 << u8::from(square))
+    fn from(value: Square) -> Self {
+        Self(1u64 << u8::from(value))
     }
 }
 
 impl From<Bitboard> for String {
     #[inline]
-    fn from(bitboard: Bitboard) -> Self {
+    fn from(value: Bitboard) -> Self {
         let mut result = " -----------------\n".to_string();
         for rank in (0..8).rev() {
             result += "|";
             for file in 0..8 {
                 let square = Square::from_coords(rank, file);
-                result += if bitboard.get_bit(square) {
+                result += if value.get_bit(square) {
                     " 1".green()
                 } else {
                     " 0".red()
@@ -211,7 +211,7 @@ impl From<Bitboard> for String {
             result += " |\n";
         }
         result += " -----------------\n";
-        result += &format!("  Bitboard: {}\n", u64::from(bitboard));
+        result += &format!("  Bitboard: {}\n", u64::from(value));
         result
     }
 }

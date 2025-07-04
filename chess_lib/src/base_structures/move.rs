@@ -1,6 +1,4 @@
-use std::fmt::{Display, Formatter, Result};
-
-use crate::{base_structures::Piece, Square};
+use crate::{base_structures::{Piece, Side}, Square};
 
 pub struct MoveFlag;
 impl MoveFlag {
@@ -61,6 +59,12 @@ impl Move {
     }
 
     #[inline]
+    pub fn is_castle(&self) -> bool {
+        let flag = self.get_flag();
+        flag == MoveFlag::KING_SIDE_CASTLE || flag == MoveFlag::QUEEN_SIDE_CASTLE
+    }
+
+    #[inline]
     pub fn is_promotion(&self) -> bool {
         self.0 & MoveFlag::KNIGHT_PROMOTION != 0
     }
@@ -69,31 +73,21 @@ impl Move {
     pub fn get_promotion_piece(&self) -> Piece {
         Piece::from((((self.get_flag() >> 6) & 3) + 1) as u8)
     }
-}
 
-impl From<Move> for u16 {
-    #[inline]
-    fn from(mv: Move) -> Self {
-        mv.0
-    }
-}
+    pub fn to_string(&self, chess960: bool) -> String {
+    
+        if !chess960 && self.is_castle() {
+            let side = if u8::from(self.get_from_square()) < 32 { Side::WHITE } else { Side::BLACK };
+            let destination_square = if self.get_flag() == MoveFlag::QUEEN_SIDE_CASTLE { Square::C1 } else { Square::G1 } + 56 * u8::from(side);
+            return format!("{}{}", self.get_from_square(), destination_square);
+        }
 
-impl From<u16> for Move {
-    #[inline]
-    fn from(value: u16) -> Self {
-        Self(value)
-    }
-}
-
-impl From<Move> for String {
-    #[inline]
-    fn from(mv: Move) -> Self {
         format!(
             "{}{}{}",
-            mv.get_from_square(),
-            mv.get_to_square(),
-            if mv.is_promotion() {
-                ["n", "b", "r", "q"][(u8::from(mv.get_promotion_piece()) - 1) as usize]
+            self.get_from_square(),
+            self.get_to_square(),
+            if self.is_promotion() {
+                ["n", "b", "r", "q"][(u8::from(self.get_promotion_piece()) - 1) as usize]
             } else {
                 ""
             }
@@ -101,8 +95,16 @@ impl From<Move> for String {
     }
 }
 
-impl Display for Move {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
-        write!(formatter, "{}", String::from(*self))
+impl From<Move> for u16 {
+    #[inline]
+    fn from(value: Move) -> Self {
+        value.0
+    }
+}
+
+impl From<u16> for Move {
+    #[inline]
+    fn from(value: u16) -> Self {
+        Self(value)
     }
 }
