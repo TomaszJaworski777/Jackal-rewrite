@@ -7,10 +7,9 @@ impl ChessBoard {
         phase <= 2
             && self.get_piece_mask(Piece::PAWN).is_empty()
             && ((phase != 2)
-                || (bishops & self.get_occupancy_for_side(Side::WHITE) != bishops
-                    && bishops & self.get_occupancy_for_side(Side::BLACK) != bishops
+                || bishops.pop_count() == 2
                     && (bishops & 0x55AA55AA55AA55AA == bishops
-                        || bishops & 0xAA55AA55AA55AA55 == bishops)))
+                        || bishops & 0xAA55AA55AA55AA55 == bishops))
     }
 
     pub fn all_attackers_to_square(&self, occupancy: Bitboard, square: Square, defender_side: Side) -> Bitboard {

@@ -23,3 +23,30 @@ fn from_fen() {
     let fen = FEN::from("brnr1krr/pp3ppp/3ppn2/2p5/5P2/P2P4/NPP1P1PP/BQ1BRRKR w HEgb - 2 1");
     assert_eq!(FEN::from(&ChessBoard::from(&fen)), fen);
 }
+
+#[test]
+fn insufficient_material() {
+    let board = ChessBoard::from(&FEN::from("2k5/8/8/8/8/1B6/3K4/8 w - - 0 1"));
+    assert!(board.is_insufficient_material());
+
+    let board = ChessBoard::from(&FEN::from("2k5/8/8/8/8/1B3B2/3K4/8 w - - 0 1"));
+    assert!(board.is_insufficient_material());
+
+    let board = ChessBoard::from(&FEN::from("2k5/8/8/8/8/1B2B3/3K4/8 w - - 0 1"));
+    assert!(!board.is_insufficient_material());
+
+    let board = ChessBoard::from(&FEN::from("2k5/8/8/8/8/1B2N3/3K4/8 w - - 0 1"));
+    assert!(!board.is_insufficient_material());
+
+    let board = ChessBoard::from(&FEN::from("2k5/8/8/8/8/1N2N3/3K4/8 w - - 0 1"));
+    assert!(!board.is_insufficient_material());
+
+    let board = ChessBoard::from(&FEN::from("2k5/8/8/8/8/1N6/3K4/8 w - - 0 1"));
+    assert!(board.is_insufficient_material());
+
+    let board = ChessBoard::from(&FEN::from("2k5/4b3/8/8/8/1B6/3K4/8 w - - 0 1"));
+    assert!(!board.is_insufficient_material());
+
+    let board = ChessBoard::from(&FEN::from("2k5/3b4/8/8/8/1B6/3K4/8 w - - 0 1"));
+    assert!(board.is_insufficient_material());
+}
