@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter, Result};
 
 use crate::Square;
 
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct CastleRights {
     value: u8,
     rooks: [Square; 4],
@@ -21,13 +21,8 @@ impl CastleRights {
     }
 
     #[inline]
-    pub fn set_right(&mut self, right_flag: u8) {
-        self.value |= right_flag
-    }
-
-    #[inline]
-    pub fn remove_right(&mut self, right_flag: u8) {
-        self.value &= !right_flag
+    pub fn set_rights(&mut self, value: u8) {
+        self.value = value
     }
 
     #[inline]

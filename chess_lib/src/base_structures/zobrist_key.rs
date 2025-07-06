@@ -1,27 +1,29 @@
-use crate::{Piece, Square};
+use std::{fmt::{Display, Formatter, Result}};
 
-#[derive(Copy, Clone, Default, PartialEq)]
+use crate::{base_structures::CastleRights, Piece, Side, Square};
+
+#[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct ZobristKey(u64);
 impl ZobristKey {
     pub const NULL: Self = Self(0);
 
     #[inline]
-    pub(crate) fn update_piece_hash<const WHITE: bool>(&mut self, piece: Piece, square: Square) {
-        self.0 ^= SEEDS[(usize::from(piece) + usize::from(WHITE) * 6) * 64 + usize::from(square)];
+    pub(crate) fn update_piece_hash(&mut self, square: Square, piece: Piece, side: Side) {
+        self.0 ^= SEEDS[(usize::from(piece) + usize::from(side) * 6) * 64 + usize::from(square)];
     }
     
     #[inline]
-    pub(crate) fn get_side_to_move_seed(&mut self) {
-        self.0 ^= SEEDS[768]
+    pub(crate) fn add_side_to_move(&mut self, side: Side) {
+        self.0 ^= SEEDS[768] * usize::from(side) as u64
     }
 
     #[inline]
-    pub(crate) fn get_castle_rights_seed(&mut self, mask: u8) {
-        self.0 ^= SEEDS[769 + usize::from(mask)]
+    pub(crate) fn add_castle_rights(&mut self, castle_rights: CastleRights) {
+        self.0 ^= SEEDS[769 + usize::from(castle_rights)]
     }
 
     #[inline]
-    pub(crate) fn get_en_passant_seed(&mut self, square: Square) {
+    pub(crate) fn add_en_passant(&mut self, square: Square) {
         self.0 ^= SEEDS[785 + usize::from(square) % 8]
     }
 }
@@ -30,6 +32,12 @@ impl From<ZobristKey> for u64 {
     #[inline]
     fn from(value: ZobristKey) -> Self {
         value.0
+    }
+}
+
+impl Display for ZobristKey {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result {
+        write!(formatter, "{:#x}", self.0)
     }
 }
 

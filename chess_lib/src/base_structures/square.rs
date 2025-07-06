@@ -80,6 +80,11 @@ impl Square {
     pub const NULL: Self = Self(64);
 
     #[inline]
+    pub const fn from_value(value: u8) -> Self {
+        Self(value)
+    }
+
+    #[inline]
     pub const fn from_coords(rank: u8, file: u8) -> Self {
         Self(rank * 8 + file)
     }

@@ -6,6 +6,9 @@ pub const LABEL_COLOR: (u8, u8, u8) = DARK_WHITE;
 pub const HIGHLIGHT_COLOR: (u8, u8, u8) = BLUE;
 pub const HIGHLIGHT_ALT_COLOR: (u8, u8, u8) = WHITE;
 
+pub const WHITE_PIECES: (u8, u8, u8) = (225, 225, 120);
+pub const BLACK_PIECES: (u8, u8, u8) = (133, 209, 227);
+
 pub const GREEN: (u8, u8, u8) = (80, 191, 71);
 pub const YELLOW: (u8, u8, u8) = (225, 225, 120);
 pub const RED: (u8, u8, u8) = (200, 71, 71);

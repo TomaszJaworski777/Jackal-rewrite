@@ -38,6 +38,16 @@ impl Bitboard {
     pub const EMPTY: Self = Self(0);
 
     #[inline]
+    pub const fn from_value(value: u64) -> Self {
+        Self(value)
+    }
+
+    #[inline]
+    pub const fn from_square(square: Square) -> Self {
+        Self(1u64 << square.get_value())
+    }
+
+    #[inline]
     pub const fn get_value(&self) -> u64 {
         self.0
     }
@@ -164,6 +174,11 @@ impl Bitboard {
     #[inline]
     pub const fn wrapping_mul(self, rhs: Bitboard) -> Self {
         Self(self.0.wrapping_mul(rhs.0))
+    }
+    
+    #[inline]
+    pub const fn wrapping_sub(self, rhs: Bitboard) -> Self {
+        Self(self.0.wrapping_sub(rhs.0))
     }
 
     pub fn draw_bitboard(&self) {

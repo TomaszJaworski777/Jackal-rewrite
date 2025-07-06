@@ -10,29 +10,29 @@ pub trait Labels {
 
 impl Labels for String {
     fn label(&self) -> Self {
-        color_to_string(&self, color_config::LABEL_COLOR)
+        apply_color(&self, color_config::LABEL_COLOR)
     }
 
     fn highlight(&self) -> Self {
-        color_to_string(&self, color_config::HIGHLIGHT_COLOR)
+        apply_color(&self, color_config::HIGHLIGHT_COLOR)
     }
 
     fn highlight_alt(&self) -> Self {
-        color_to_string(&self, color_config::HIGHLIGHT_ALT_COLOR)
+        apply_color(&self, color_config::HIGHLIGHT_ALT_COLOR)
     }
 }
 
 impl Labels for &str {
     fn label(&self) -> String {
-        color_to_string(&self, color_config::LABEL_COLOR)
+        apply_color(&self, color_config::LABEL_COLOR)
     }
 
     fn highlight(&self) -> String {
-        color_to_string(&self, color_config::HIGHLIGHT_COLOR)
+        apply_color(&self, color_config::HIGHLIGHT_COLOR)
     }
 
     fn highlight_alt(&self) -> String {
-        color_to_string(&self, color_config::HIGHLIGHT_ALT_COLOR)
+        apply_color(&self, color_config::HIGHLIGHT_ALT_COLOR)
     }
 }
 
@@ -49,69 +49,94 @@ pub trait Colors {
 
 impl Colors for String {
     fn green(&self) -> Self {
-        color_to_string(&self, color_config::GREEN)
+        apply_color(&self, color_config::GREEN)
     }
 
     fn yellow(&self) -> Self {
-        color_to_string(&self, color_config::YELLOW)
+        apply_color(&self, color_config::YELLOW)
     }
 
     fn red(&self) -> Self {
-        color_to_string(&self, color_config::RED)
+        apply_color(&self, color_config::RED)
     }
 
     fn blue(&self) -> Self {
-        color_to_string(&self, color_config::BLUE)
+        apply_color(&self, color_config::BLUE)
     }
 
     fn dark_blue(&self) -> Self {
-        color_to_string(&self, color_config::DARK_BLUE)
+        apply_color(&self, color_config::DARK_BLUE)
     }
 
     fn black(&self) -> Self {
-        color_to_string(&self, color_config::BLACK)
+        apply_color(&self, color_config::BLACK)
     }
 
     fn white(&self) -> Self {
-        color_to_string(&self, color_config::WHITE)
+        apply_color(&self, color_config::WHITE)
     }
 
     fn dark_white(&self) -> Self {
-        color_to_string(&self, color_config::DARK_WHITE)
+        apply_color(&self, color_config::DARK_WHITE)
     }
 }
 
 impl Colors for &str {
     fn green(&self) -> String {
-        color_to_string(&self, color_config::GREEN)
+        apply_color(&self, color_config::GREEN)
     }
 
     fn yellow(&self) -> String {
-        color_to_string(&self, color_config::YELLOW)
+        apply_color(&self, color_config::YELLOW)
     }
 
     fn red(&self) -> String {
-        color_to_string(&self, color_config::RED)
+        apply_color(&self, color_config::RED)
     }
 
     fn blue(&self) -> String {
-        color_to_string(&self, color_config::BLUE)
+        apply_color(&self, color_config::BLUE)
     }
 
     fn dark_blue(&self) -> String {
-        color_to_string(&self, color_config::DARK_BLUE)
+        apply_color(&self, color_config::DARK_BLUE)
     }
 
     fn black(&self) -> String {
-        color_to_string(&self, color_config::BLACK)
+        apply_color(&self, color_config::BLACK)
     }
 
     fn white(&self) -> String {
-        color_to_string(&self, color_config::WHITE)
+        apply_color(&self, color_config::WHITE)
     }
 
     fn dark_white(&self) -> String {
-        color_to_string(&self, color_config::DARK_WHITE)
+        apply_color(&self, color_config::DARK_WHITE)
+    }
+}
+
+pub trait PieceColors {
+    fn white_pieces(&self) -> String;
+    fn black_pieces(&self) -> String;
+}
+
+impl PieceColors for String {
+    fn white_pieces(&self) -> Self {
+        apply_color(&self, color_config::WHITE_PIECES)
+    }
+
+    fn black_pieces(&self) -> Self {
+        apply_color(&self, color_config::BLACK_PIECES)
+    }
+}
+
+impl PieceColors for &str {
+    fn white_pieces(&self) -> String {
+        apply_color(&self, color_config::WHITE_PIECES)
+    }
+
+    fn black_pieces(&self) -> String {
+        apply_color(&self, color_config::BLACK_PIECES)
     }
 }
 
@@ -156,7 +181,7 @@ fn lerp_color_internal(a: (u8, u8, u8), b: (u8, u8, u8), value: f32) -> (u8, u8,
     (result_r as u8, result_g as u8, result_b as u8)
 }
 
-fn color_to_string(content: &str, color: (u8, u8, u8)) -> String {
+fn apply_color(content: &str, color: (u8, u8, u8)) -> String {
     content.truecolor(
         color.0,
         color.1,

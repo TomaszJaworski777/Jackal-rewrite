@@ -1,5 +1,7 @@
 use std::io::stdin;
 
+use chess_lib::{ChessBoard, FEN};
+
 use crate::processors::{process_command_line_args, MiscProcessor};
 
 mod processors;
@@ -17,6 +19,9 @@ fn main() {
     type CommandProcessorFunc = fn(&str, &[String], &mut bool) -> bool;
     const COMMAND_PROCESSORS: [CommandProcessorFunc; 1] =
         [MiscProcessor::execute];
+
+    let board = ChessBoard::from(&FEN::start_position());
+    board.draw_board();
 
     //Initialize engine loop
     while !cancelation_token {

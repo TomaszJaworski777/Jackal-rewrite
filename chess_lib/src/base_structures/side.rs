@@ -7,6 +7,11 @@ impl Side {
     pub const BLACK: Self = Self(1);
 
     #[inline]
+    pub const fn get_value(&self) -> u8 {
+        self.0
+    }
+
+    #[inline]
     pub const fn flipped(&self) -> Self {
         Self(1 - self.0)
     }
@@ -14,6 +19,12 @@ impl Side {
     #[inline]
     pub const fn flip(&mut self) {
         self.0 = 1 - self.0;
+    }
+}
+
+impl From<bool> for Side {
+    fn from(value: bool) -> Self {
+        Self(u8::from(value))
     }
 }
 
