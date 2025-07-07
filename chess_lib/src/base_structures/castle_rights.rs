@@ -36,6 +36,11 @@ impl CastleRights {
     }
 
     #[inline]
+    pub fn rook_square(&self, index: usize) -> Square {
+        self.rooks[index]
+    }
+
+    #[inline]
     pub fn get_castle_mask(&self) -> [u8; 64] {
         let mut result = [0u8; 64];
 
@@ -52,14 +57,14 @@ impl CastleRights {
     }
 }
 
-impl From<CastleRights> for u8 {
-    fn from(rights: CastleRights) -> Self {
+impl From<&CastleRights> for u8 {
+    fn from(rights: &CastleRights) -> Self {
         rights.value
     }
 }
 
-impl From<CastleRights> for usize {
-    fn from(rights: CastleRights) -> Self {
+impl From<&CastleRights> for usize {
+    fn from(rights: &CastleRights) -> Self {
         rights.value as usize
     }
 }

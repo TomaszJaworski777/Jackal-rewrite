@@ -1,4 +1,4 @@
-use chess_lib::{ChessBoard, Piece, Side, Square, FEN};
+use chess_lib::{ChessBoard, Move, MoveFlag, Piece, Side, Square, FEN};
 
 
 #[test]
@@ -49,4 +49,32 @@ fn insufficient_material() {
 
     let board = ChessBoard::from(&FEN::from("2k5/3b4/8/8/8/1B6/3K4/8 w - - 0 1"));
     assert!(board.is_insufficient_material());
+}
+
+#[test]
+fn make_move() {
+    let mut board = ChessBoard::from(&FEN::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w HAha - 0 1"));
+    board.make_move(Move::from_squares(Square::E2, Square::E4, MoveFlag::DOUBLE_PUSH));
+    assert_eq!(board.en_passant_square(), Square::E3);
+    assert_eq!(FEN::from(&board), FEN::from("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b HAha e3 0 1"));
+
+    let mut board = ChessBoard::from(&FEN::from("5rk1/P4pp1/7p/2pP4/8/8/4PPPP/2RR1K1R w HD c6 0 1"));
+    board.make_move(Move::from_squares(Square::D5, Square::C6, MoveFlag::EN_PASSANT));
+    assert_eq!(FEN::from(&board), FEN::from("5rk1/P4pp1/2P4p/8/8/8/4PPPP/2RR1K1R b HD - 0 1"));
+
+    let mut board = ChessBoard::from(&FEN::from("5rk1/P4pp1/7p/2pP4/8/8/4PPPP/2RR1K1R w HD c6 0 1"));
+    board.make_move(Move::from_squares(Square::F1, Square::H1, MoveFlag::KING_SIDE_CASTLE));
+    assert_eq!(FEN::from(&board), FEN::from("5rk1/P4pp1/7p/2pP4/8/8/4PPPP/2RR1RK1 b - - 1 1"));
+
+    let mut board = ChessBoard::from(&FEN::from("5rk1/P4pp1/7p/2pP4/8/8/4PPPP/2RR1RK1 w - - 6 1"));
+    board.make_move(Move::from_squares(Square::A7, Square::A8, MoveFlag::ROOK_PROMOTION));
+    assert_eq!(FEN::from(&board), FEN::from("R4rk1/5pp1/7p/2pP4/8/8/4PPPP/2RR1RK1 b - - 0 1"));
+
+    let mut board = ChessBoard::from(&FEN::from("5rk1/P4pp1/7p/2pP4/8/8/4PPPP/2RR1RK1 w - - 6 1"));
+    board.make_move(Move::from_squares(Square::C1, Square::A1, MoveFlag::QUIET_MOVE));
+    assert_eq!(FEN::from(&board), FEN::from("5rk1/P4pp1/7p/2pP4/8/8/4PPPP/R2R1RK1 b - - 7 1"));
+
+    let mut board = ChessBoard::from(&FEN::from("5rk1/P4pp1/7p/3P4/2p5/8/4PPPP/R2R1K1R w HD - 0 2"));
+    board.make_move(Move::from_squares(Square::F1, Square::D1, MoveFlag::QUEEN_SIDE_CASTLE));
+    assert_eq!(FEN::from(&board), FEN::from("5rk1/P4pp1/7p/3P4/2p5/8/4PPPP/R1KR3R b - - 1 1"));
 }

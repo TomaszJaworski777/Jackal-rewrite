@@ -18,7 +18,7 @@ impl ZobristKey {
     }
 
     #[inline]
-    pub(crate) fn add_castle_rights(&mut self, castle_rights: CastleRights) {
+    pub(crate) fn add_castle_rights(&mut self, castle_rights: &CastleRights) {
         self.0 ^= SEEDS[769 + usize::from(castle_rights)]
     }
 

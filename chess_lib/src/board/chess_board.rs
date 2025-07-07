@@ -71,7 +71,7 @@ impl ChessBoard {
         }
 
         result.add_side_to_move(self.side);
-        result.add_castle_rights(self.castle_rights);
+        result.add_castle_rights(&self.castle_rights);
 
         result
     }
