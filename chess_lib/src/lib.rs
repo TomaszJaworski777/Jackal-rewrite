@@ -1,6 +1,7 @@
 mod base_structures;
 mod attacks;
 mod board;
+mod move_gen;
 
 pub use base_structures::Bitboard;
 pub use base_structures::Move;

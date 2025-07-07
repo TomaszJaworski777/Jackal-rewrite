@@ -1,5 +1,7 @@
 use std::io::stdin;
 
+use chess_lib::{ChessBoard, Side, FEN};
+
 use crate::processors::{process_command_line_args, MiscProcessor};
 
 mod processors;
@@ -17,6 +19,11 @@ fn main() {
     type CommandProcessorFunc = fn(&str, &[String], &mut bool) -> bool;
     const COMMAND_PROCESSORS: [CommandProcessorFunc; 1] =
         [MiscProcessor::execute];
+
+    let board = ChessBoard::from(&FEN::from("k7/3r4/6b1/1b6/2p1P3/3KN1r1/2P5/1b3q2 w - - 0 1"));
+    let (diag, ortho) = board.generate_pin_masks(board.side());
+    diag.draw_bitboard();
+    ortho.draw_bitboard();
 
     //Initialize engine loop
     while !cancelation_token {
