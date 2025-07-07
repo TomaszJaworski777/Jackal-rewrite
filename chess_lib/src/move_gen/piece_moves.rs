@@ -5,21 +5,21 @@ pub(super) const BISHOP: u8 = 1;
 pub(super) const ROOK: u8 = 2;
 
 impl MoveGen {
-    pub fn generate_piece_moves<F: FnMut(Move), const COLOR: u8, const PIECE_TYPE: u8, const CAPTURE_ONLY: bool>(board: &ChessBoard, push_map: Bitboard, capture_map: Bitboard, diagonal_pins: Bitboard, orthographpic_pins: Bitboard, apply_move: &mut F) {
+    pub fn generate_piece_moves<F: FnMut(Move), const COLOR: u8, const PIECE_TYPE: u8, const CAPTURE_ONLY: bool>(board: &ChessBoard, push_map: Bitboard, capture_map: Bitboard, diagonal_pins: Bitboard, orthographic_pins: Bitboard, apply_move: &mut F) {
         let pieces = match PIECE_TYPE {
             KNIGHT => {
-                board.get_piece_mask_for_side(Piece::KNIGHT, Side::from(COLOR))
+                board.piece_mask_for_side(Piece::KNIGHT, Side::from(COLOR))
                     & !diagonal_pins
-                    & !orthographpic_pins
+                    & !orthographic_pins
             }
             BISHOP => {
-                (board.get_piece_mask_for_side(Piece::BISHOP, Side::from(COLOR))
-                    | board.get_piece_mask_for_side(Piece::QUEEN, Side::from(COLOR)))
-                    & !orthographpic_pins
+                (board.piece_mask_for_side(Piece::BISHOP, Side::from(COLOR))
+                    | board.piece_mask_for_side(Piece::QUEEN, Side::from(COLOR)))
+                    & !orthographic_pins
             }
             ROOK => {
-                (board.get_piece_mask_for_side(Piece::ROOK, Side::from(COLOR))
-                    | board.get_piece_mask_for_side(Piece::QUEEN, Side::from(COLOR)))
+                (board.piece_mask_for_side(Piece::ROOK, Side::from(COLOR))
+                    | board.piece_mask_for_side(Piece::QUEEN, Side::from(COLOR)))
                     & !diagonal_pins
             }
             _ => unreachable!(),
@@ -28,7 +28,7 @@ impl MoveGen {
         let pinned_pieces = match PIECE_TYPE {
             KNIGHT => Bitboard::EMPTY,
             BISHOP => pieces & diagonal_pins,
-            ROOK => pieces & orthographpic_pins,
+            ROOK => pieces & orthographic_pins,
             _ => unreachable!(),
         };
 
@@ -38,10 +38,10 @@ impl MoveGen {
             let attacks = match PIECE_TYPE {
                 KNIGHT => Attacks::get_knight_attacks(piece_square),
                 BISHOP => {
-                    Attacks::get_bishop_attacks(piece_square, board.get_occupancy())
+                    Attacks::get_bishop_attacks(piece_square, board.occupancy())
                 }
                 ROOK => {
-                    Attacks::get_rook_attacks(piece_square, board.get_occupancy())
+                    Attacks::get_rook_attacks(piece_square, board.occupancy())
                 }
                 _ => unreachable!(),
             };
@@ -59,12 +59,12 @@ impl MoveGen {
             let attacks = match PIECE_TYPE {
                 KNIGHT => Bitboard::EMPTY,
                 BISHOP => {
-                    Attacks::get_bishop_attacks(piece_square, board.get_occupancy())
+                    Attacks::get_bishop_attacks(piece_square, board.occupancy())
                         & diagonal_pins
                 }
                 ROOK => {
-                    Attacks::get_rook_attacks(piece_square, board.get_occupancy())
-                        & orthographpic_pins
+                    Attacks::get_rook_attacks(piece_square, board.occupancy())
+                        & orthographic_pins
                 }
                 _ => unreachable!(),
             };

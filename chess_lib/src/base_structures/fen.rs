@@ -70,7 +70,7 @@ impl From<String> for FEN {
 impl From<&str> for FEN {
     fn from(value: &str) -> Self {
         let mut result: Self = Self::default();
-        let fen_parts: Vec<&str> = value.split_whitespace().collect();
+        let fen_parts: Vec<&str> = value.trim().split_whitespace().collect();
 
         let board_parts: Vec<&str> = fen_parts[0].split('/').collect();
         for (index, part) in board_parts.into_iter().enumerate() {

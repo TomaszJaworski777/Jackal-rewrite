@@ -6,12 +6,12 @@ impl MoveGen {
         push_map: Bitboard,
         capture_map: Bitboard,
         diagonal_pins: Bitboard,
-        orthographpic_pins: Bitboard,
+        orthographic_pins: Bitboard,
         apply_move: &mut F,
     ) {
-        let pawns = board.get_piece_mask_for_side(Piece::PAWN, Side::from(COLOR));
+        let pawns = board.piece_mask_for_side(Piece::PAWN, Side::from(COLOR));
 
-        handle_pawn_captures::<_, COLOR>(pawns & !orthographpic_pins, capture_map, diagonal_pins, apply_move);
+        handle_pawn_captures::<_, COLOR>(pawns & !orthographic_pins, capture_map, diagonal_pins, apply_move);
         
         if board.en_passant_square() != Square::NULL {
             handle_en_passant::<_, COLOR>(board, pawns, apply_move);
@@ -21,19 +21,19 @@ impl MoveGen {
             return;
         }
 
-        handle_pawn_pushes::<_, COLOR>(board, pawns & !diagonal_pins, push_map, orthographpic_pins, apply_move);
+        handle_pawn_pushes::<_, COLOR>(board, pawns & !diagonal_pins, push_map, orthographic_pins, apply_move);
     }
 }
 
-fn handle_pawn_pushes<F: FnMut(Move), const COLOR: u8>(board: &ChessBoard, pawns: Bitboard, push_map: Bitboard, orthographpic_pins: Bitboard, apply_move: &mut F) {
-    let vertical_pin = orthographpic_pins & ( orthographpic_pins << 8 );
-    let vertical_pin = vertical_pin | orthographpic_pins >> 8;
+fn handle_pawn_pushes<F: FnMut(Move), const COLOR: u8>(board: &ChessBoard, pawns: Bitboard, push_map: Bitboard, orthographic_pins: Bitboard, apply_move: &mut F) {
+    let vertical_pin = orthographic_pins & ( orthographic_pins << 8 );
+    let vertical_pin = vertical_pin | orthographic_pins >> 8;
 
     let promotion_rank = if COLOR == WHITE { Bitboard::RANK_7 } else { Bitboard::RANK_2 };
     let double_push_rank = if COLOR == WHITE { Bitboard::RANK_2 } else { Bitboard::RANK_7 };
 
     let moveable_pawns = pawns & !promotion_rank;
-    let moveable_pawns = ( moveable_pawns & !orthographpic_pins ) | ( moveable_pawns & vertical_pin );
+    let moveable_pawns = ( moveable_pawns & !orthographic_pins ) | ( moveable_pawns & vertical_pin );
 
     let single_push_map = if COLOR == WHITE { push_map >> 8 } else { push_map << 8 };
 
@@ -44,7 +44,7 @@ fn handle_pawn_pushes<F: FnMut(Move), const COLOR: u8>(board: &ChessBoard, pawns
     }
 
     let double_push_map = if COLOR == WHITE { push_map >> 16 } else { push_map << 16 };
-    let empty_squares_shifted_map =  if COLOR == WHITE { !board.get_occupancy() >> 8 } else { !board.get_occupancy() << 8 };
+    let empty_squares_shifted_map =  if COLOR == WHITE { !board.occupancy() >> 8 } else { !board.occupancy() << 8 };
 
     let mut double_push_pawns = moveable_pawns & double_push_rank & empty_squares_shifted_map & double_push_map;
     let mut targets = if COLOR == WHITE { double_push_pawns << 16 } else { double_push_pawns >> 16 };
@@ -108,7 +108,7 @@ fn handle_en_passant<F: FnMut(Move), const COLOR: u8>(board: &ChessBoard, mut pa
         let mv = Move::from_squares(from_square, en_passant_square, MoveFlag::EN_PASSANT);
         board.make_move(mv);
 
-        if !board.is_square_attacked(board.get_king_square(Side::from(COLOR)), Side::from(COLOR)) {
+        if !board.is_square_attacked(board.king_square(Side::from(COLOR)), Side::from(COLOR)) {
             apply_move(mv)
         }
     });

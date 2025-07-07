@@ -1,12 +1,12 @@
-use utils::{bytes_to_string, number_to_string, time_to_string};
+use utils::{bytes_to_string, number_to_string, seconds_to_string};
 
 
 #[test]
 fn time_to_str() {
-    assert_eq!(time_to_string(50), "50s");
-    assert_eq!(time_to_string(90), "1m 30s");
-    assert_eq!(time_to_string(3690), "1h 1m 30s");
-    assert_eq!(time_to_string(3620), "1h 0m 20s");
+    assert_eq!(seconds_to_string(50), "50s");
+    assert_eq!(seconds_to_string(90), "1m 30s");
+    assert_eq!(seconds_to_string(3690), "1h 1m 30s");
+    assert_eq!(seconds_to_string(3620), "1h 0m 20s");
 }
 
 #[test]

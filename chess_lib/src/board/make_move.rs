@@ -48,7 +48,7 @@ impl ChessBoard {
         from_square: Square,
         to_square: Square,
     ) {
-        let moved_piece = self.get_piece_on_square(from_square);
+        let moved_piece = self.piece_on_square(from_square);
         match moved_piece {
             Piece::PAWN => self
                 .make_move_captured_piece::<COLOR, MOVE_FLAG, { PAWN }>(
@@ -116,7 +116,7 @@ impl ChessBoard {
             return;
         }
 
-        let captured_piece = self.get_piece_on_square(to_square);
+        let captured_piece = self.piece_on_square(to_square);
         match captured_piece {
             Piece::PAWN => self
                 .make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { PAWN }>(

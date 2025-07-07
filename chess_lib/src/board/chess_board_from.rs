@@ -35,12 +35,12 @@ impl From<&FEN> for ChessBoard {
 
         board.side = Side::from(value.side_to_move == "b");
 
-        if board.is_square_attacked(board.get_king_square(board.side.flipped()), board.side.flipped()) {
+        if board.is_square_attacked(board.king_square(board.side.flipped()), board.side.flipped()) {
             println!("Tried to parse illegal position. Defaulting to starting position instead.");
             return Self::default()
         }
 
-        let kings = [board.get_king_square(Side::WHITE), board.get_king_square(Side::BLACK)];
+        let kings = [board.king_square(Side::WHITE), board.king_square(Side::BLACK)];
         let mut rooks = [Square::NULL; 4];
         let mut rights = 0u8;
 
@@ -50,7 +50,7 @@ impl From<&FEN> for ChessBoard {
             }
 
             let side = if char.is_ascii_uppercase() { Side::WHITE } else { Side::BLACK };
-            let king_square = board.get_king_square(side);
+            let king_square = board.king_square(side);
             let file = char.to_ascii_uppercase() as u8 - b'A';
             let index = 2 * u8::from(side) + if file < king_square.get_file() { 0 } else { 1 };
             rights |= 0b1000 >> index;
@@ -79,8 +79,8 @@ impl From<&ChessBoard> for FEN {
             let mut empty_count = 0;
             for file in 0..8 {
                 let square = Square::from_coords(rank, file);
-                let piece = value.get_piece_on_square(square);
-                let side = value.get_color_on_square(square);
+                let piece = value.piece_on_square(square);
+                let side = value.color_on_square(square);
                 if piece != Piece::NONE {
                     if empty_count > 0 {
                         fen.push_str(&empty_count.to_string());

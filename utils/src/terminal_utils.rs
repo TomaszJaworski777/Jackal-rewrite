@@ -37,7 +37,27 @@ pub fn create_loading_bar(length: usize, fill: f32, low_color: (u8,  u8, u8), hi
     result
 }
 
-pub fn time_to_string(seconds: u128) -> String {
+pub fn seconds_to_string(seconds: u128) -> String {
+    let hh = seconds / 3600;
+    let mm = (seconds - (hh * 3600)) / 60;
+    let ss = seconds - (hh * 3600) - (mm * 60);
+
+    let mut result = String::new();
+
+    if hh > 0 {
+        result.push_str(format!("{}h ", hh).as_str());
+    }
+
+    if hh > 0 || mm > 0 {
+        result.push_str(format!("{}m ", mm).as_str());
+    }
+
+    result.push_str(format!("{}s ", ss).as_str());
+
+    result.trim().to_string()
+}
+
+pub fn miliseconds_to_string(seconds: u128) -> String {
     let hh = seconds / 3600;
     let mm = (seconds - (hh * 3600)) / 60;
     let ss = seconds - (hh * 3600) - (mm * 60);

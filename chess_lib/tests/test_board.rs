@@ -5,9 +5,9 @@ use chess_lib::{Bitboard, ChessBoard, Move, MoveFlag, Piece, Side, Square, FEN};
 fn from_fen() {
     let board = ChessBoard::from(&FEN::start_position());
 
-    assert_eq!(board.get_king_square(Side::WHITE), Square::E1);
-    assert_eq!(board.get_piece_mask_for_side(Piece::PAWN, Side::WHITE).ls1b_square(), Square::A2);
-    assert_eq!(board.get_piece_on_square(Square::B1), Piece::KNIGHT);
+    assert_eq!(board.king_square(Side::WHITE), Square::E1);
+    assert_eq!(board.piece_mask_for_side(Piece::PAWN, Side::WHITE).ls1b_square(), Square::A2);
+    assert_eq!(board.piece_on_square(Square::B1), Piece::KNIGHT);
 
     assert_eq!(FEN::from(&board), FEN::start_position());
 
@@ -103,15 +103,15 @@ fn pin_mask() {
 
 #[test]
 fn attack_mask() { 
-    let board = ChessBoard::from(&FEN::from("k7/3r4/6b1/1b6/1p2P3/3KN1r1/2P5/1b3q2 w - - 0 1"));
+    let board = ChessBoard::from(&FEN::from("k7/3r4/6b1/1b6/1p2P3/3K2r1/2P5/1b3q2 w - - 0 1"));
     let attack_mask = board.generate_attack_map(Side::WHITE);
-    assert_eq!(attack_mask, Bitboard::from(2251808403619872));
+    assert_eq!(attack_mask, Bitboard::from(172270427136));
     let attack_mask = board.generate_attack_map(Side::BLACK);
-    assert_eq!(attack_mask, Bitboard::from(2251808403619872));
+    assert_eq!(attack_mask, Bitboard::from(4251237427160514046));
 
-    let board = ChessBoard::from(&FEN::from("k7/3r4/6b1/8/2p1P3/3KN1r1/2P5/1b3q2 w - - 0 1"));
-        let attack_mask = board.generate_attack_map(Side::WHITE);
-    assert_eq!(attack_mask, Bitboard::from(2251808403619872));
+    let board = ChessBoard::from(&FEN::from("k7/3r4/6b1/1b6/2p1P3/3K2r1/2P5/1b3q2 w - - 0 1"));
+    let attack_mask = board.generate_attack_map(Side::WHITE);
+    assert_eq!(attack_mask, Bitboard::from(172270427136));
     let attack_mask = board.generate_attack_map(Side::BLACK);
-    assert_eq!(attack_mask, Bitboard::from(2251808403619872));
+    assert_eq!(attack_mask, Bitboard::from(4251237418570579422));
 }

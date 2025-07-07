@@ -16,34 +16,34 @@ pub struct ChessBoard {
 
 impl ChessBoard {
     #[inline]
-    pub fn get_occupancy(&self) -> Bitboard {
+    pub fn occupancy(&self) -> Bitboard {
         self.occupancy[0] | self.occupancy[1]
     }   
 
     #[inline]
-    pub fn get_occupancy_for_side(&self, side: Side) -> Bitboard {
+    pub fn occupancy_for_side(&self, side: Side) -> Bitboard {
         self.occupancy[usize::from(side)]
     } 
 
     #[inline]
-    pub fn get_piece_mask(&self, piece: Piece) -> Bitboard {
+    pub fn piece_mask(&self, piece: Piece) -> Bitboard {
         assert_ne!(piece, Piece::NONE);
         self.pieces[usize::from(piece)]
     }   
 
     #[inline]
-    pub fn get_piece_mask_for_side(&self, piece: Piece, side: Side) -> Bitboard {
+    pub fn piece_mask_for_side(&self, piece: Piece, side: Side) -> Bitboard {
         assert_ne!(piece, Piece::NONE);
-        self.get_piece_mask(piece) & self.get_occupancy_for_side(side)
+        self.piece_mask(piece) & self.occupancy_for_side(side)
     }   
 
     #[inline]
-    pub fn get_king_square(&self, side: Side) -> Square {
-        self.get_piece_mask_for_side(Piece::KING, side).ls1b_square()
+    pub fn king_square(&self, side: Side) -> Square {
+        self.piece_mask_for_side(Piece::KING, side).ls1b_square()
     }
 
     #[inline]
-    pub fn get_color_on_square(&self, square: Square) -> Side {
+    pub fn color_on_square(&self, square: Square) -> Side {
         if self.occupancy[usize::from(Side::BLACK)].get_bit(square) {
             Side::BLACK
         } else {
@@ -52,7 +52,7 @@ impl ChessBoard {
     }
 
     #[inline]
-    pub fn get_piece_on_square(&self, square: Square) -> Piece {
+    pub fn piece_on_square(&self, square: Square) -> Piece {
         for piece in usize::from(Piece::PAWN)..=usize::from(Piece::KING) {
             if self.pieces[piece].get_bit( square ) {
                 return Piece::from(piece)

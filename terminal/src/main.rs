@@ -1,6 +1,7 @@
 use std::io::stdin;
 
-use chess_lib::{ChessBoard, Side, FEN};
+use chess_lib::{perft, ChessBoard, FEN};
+use utils::{miliseconds_to_string, number_to_string, seconds_to_string};
 
 use crate::processors::{process_command_line_args, MiscProcessor};
 
@@ -20,10 +21,17 @@ fn main() {
     const COMMAND_PROCESSORS: [CommandProcessorFunc; 1] =
         [MiscProcessor::execute];
 
-    let board = ChessBoard::from(&FEN::from("k7/3r4/6b1/1b6/2p1P3/3KN1r1/2P5/1b3q2 w - - 0 1"));
-    let (diag, ortho) = board.generate_pin_masks(board.side());
-    diag.draw_bitboard();
-    ortho.draw_bitboard();
+    let board = ChessBoard::from(&FEN::from("bqnb1rkr/pp3ppp/3ppn2/2p5/5P2/P2P4/NPP1P1PP/BQ1BNRKR w HFhf - 2 9"));
+    board.draw_board();
+    
+    let (result, duration) = perft(&FEN::from("bqnb1rkr/pp3ppp/3ppn2/2p5/5P2/P2P4/NPP1P1PP/BQ1BNRKR w HFhf - 2 9"), 6, true, true, true);
+    println!("  Perft ended! {} nodes, {}, {}n/s",
+                result,
+                miliseconds_to_string(duration),
+                number_to_string(
+                    ((result * 1000) as f64 / duration as f64) as u128
+                )
+            );
 
     //Initialize engine loop
     while !cancelation_token {

@@ -4,7 +4,8 @@ mod color_config;
 
 pub use terminal_utils::clear_terminal_screen;
 pub use terminal_utils::create_loading_bar;
-pub use terminal_utils::time_to_string;
+pub use terminal_utils::seconds_to_string;
+pub use terminal_utils::miliseconds_to_string;
 pub use terminal_utils::number_to_string;
 pub use terminal_utils::bytes_to_string;
 pub use color_utils::Labels;

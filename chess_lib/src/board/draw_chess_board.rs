@@ -39,8 +39,8 @@ impl ChessBoard {
                     continue;
                 }
 
-                let piece_type = self.get_piece_on_square(square);
-                let piece_side = self.get_color_on_square(square);
+                let piece_type = self.piece_on_square(square);
+                let piece_side = self.color_on_square(square);
                 if piece_type == Piece::NONE {
                     result += " .";
                 } else if piece_side == Side::BLACK {
