@@ -182,10 +182,5 @@ fn lerp_color_internal(a: (u8, u8, u8), b: (u8, u8, u8), value: f32) -> (u8, u8,
 }
 
 fn apply_color(content: &str, color: (u8, u8, u8)) -> String {
-    content.truecolor(
-        color.0,
-        color.1,
-        color.2,
-    )
-    .to_string()
+    content.truecolor(color.0, color.1, color.2).to_string()
 }

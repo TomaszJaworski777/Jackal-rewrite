@@ -35,12 +35,18 @@ impl From<&FEN> for ChessBoard {
 
         board.side = Side::from(value.side_to_move == "b");
 
-        if board.is_square_attacked(board.king_square(board.side.flipped()), board.side.flipped()) {
+        if board.is_square_attacked(
+            board.king_square(board.side.flipped()),
+            board.side.flipped(),
+        ) {
             println!("Tried to parse illegal position. Defaulting to starting position instead.");
-            return Self::default()
+            return Self::default();
         }
 
-        let kings = [board.king_square(Side::WHITE), board.king_square(Side::BLACK)];
+        let kings = [
+            board.king_square(Side::WHITE),
+            board.king_square(Side::BLACK),
+        ];
         let mut rooks = [Square::NULL; 4];
         let mut rights = 0u8;
 
@@ -49,7 +55,11 @@ impl From<&FEN> for ChessBoard {
                 break;
             }
 
-            let side = if char.is_ascii_uppercase() { Side::WHITE } else { Side::BLACK };
+            let side = if char.is_ascii_uppercase() {
+                Side::WHITE
+            } else {
+                Side::BLACK
+            };
             let king_square = board.king_square(side);
             let file = char.to_ascii_uppercase() as u8 - b'A';
             let index = 2 * u8::from(side) + if file < king_square.get_file() { 0 } else { 1 };
@@ -72,7 +82,7 @@ impl From<&FEN> for ChessBoard {
 
 impl From<&ChessBoard> for FEN {
     fn from(value: &ChessBoard) -> Self {
-         let mut fen = String::new();
+        let mut fen = String::new();
 
         // Piece placement
         for rank in (0..8).rev() {
@@ -106,7 +116,11 @@ impl From<&ChessBoard> for FEN {
 
         // Side to move
         fen.push(' ');
-        fen.push(if value.side() == Side::WHITE { 'w' } else { 'b' });
+        fen.push(if value.side() == Side::WHITE {
+            'w'
+        } else {
+            'b'
+        });
 
         // Castling rights
         fen.push(' ');

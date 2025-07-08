@@ -17,7 +17,11 @@ impl CastleRights {
     pub const NULL: u8 = 0;
 
     pub fn create_base(rooks: [Square; 4], kings: [Square; 2]) -> Self {
-        Self { value: 0, rooks, kings }
+        Self {
+            value: 0,
+            rooks,
+            kings,
+        }
     }
 
     #[inline]

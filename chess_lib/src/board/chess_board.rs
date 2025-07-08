@@ -1,4 +1,7 @@
-use crate::{base_structures::{CastleRights, ZobristKey}, Bitboard, Piece, Side, Square};
+use crate::{
+    base_structures::{CastleRights, ZobristKey},
+    Bitboard, Piece, Side, Square,
+};
 
 const PHASE_VALUES: [u8; 6] = [0, 1, 1, 2, 4, 0];
 
@@ -18,24 +21,24 @@ impl ChessBoard {
     #[inline]
     pub fn occupancy(&self) -> Bitboard {
         self.occupancy[0] | self.occupancy[1]
-    }   
+    }
 
     #[inline]
     pub fn occupancy_for_side(&self, side: Side) -> Bitboard {
         self.occupancy[usize::from(side)]
-    } 
+    }
 
     #[inline]
     pub fn piece_mask(&self, piece: Piece) -> Bitboard {
         assert_ne!(piece, Piece::NONE);
         self.pieces[usize::from(piece)]
-    }   
+    }
 
     #[inline]
     pub fn piece_mask_for_side(&self, piece: Piece, side: Side) -> Bitboard {
         assert_ne!(piece, Piece::NONE);
         self.piece_mask(piece) & self.occupancy_for_side(side)
-    }   
+    }
 
     #[inline]
     pub fn king_square(&self, side: Side) -> Square {
@@ -48,14 +51,14 @@ impl ChessBoard {
             Side::BLACK
         } else {
             Side::WHITE
-        }        
+        }
     }
 
     #[inline]
     pub fn piece_on_square(&self, square: Square) -> Piece {
         for piece in usize::from(Piece::PAWN)..=usize::from(Piece::KING) {
-            if self.pieces[piece].get_bit( square ) {
-                return Piece::from(piece)
+            if self.pieces[piece].get_bit(square) {
+                return Piece::from(piece);
             }
         }
 
@@ -65,7 +68,7 @@ impl ChessBoard {
     #[inline]
     pub fn hash(&self) -> ZobristKey {
         let mut result = self.hash;
-        
+
         if self.en_passant_square != Square::NULL {
             result.add_en_passant(self.en_passant_square);
         }

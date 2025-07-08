@@ -19,8 +19,13 @@ pub fn clear_terminal_screen() {
     };
 }
 
-pub fn create_loading_bar(length: usize, fill: f32, low_color: (u8,  u8, u8), high_color: (u8,  u8, u8)) -> String {
-        let mut result = String::from("[");
+pub fn create_loading_bar(
+    length: usize,
+    fill: f32,
+    low_color: (u8, u8, u8),
+    high_color: (u8, u8, u8),
+) -> String {
+    let mut result = String::from("[");
 
     for i in 0..length {
         let percentage = i as f32 / (length - 1) as f32;

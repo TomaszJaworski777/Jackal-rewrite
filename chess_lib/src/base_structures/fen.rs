@@ -1,4 +1,7 @@
-use std::{char, fmt::{Display, Formatter, Result}};
+use std::{
+    char,
+    fmt::{Display, Formatter, Result},
+};
 
 use crate::Bitboard;
 
@@ -40,7 +43,8 @@ impl FEN {
         }
 
         let valid_en_passant = if fen_parts[3] != "-" {
-            (Bitboard::from(Square::from(fen_parts[3])) & Bitboard::RANK_3.or(Bitboard::RANK_6)).is_not_empty()
+            (Bitboard::from(Square::from(fen_parts[3])) & Bitboard::RANK_3.or(Bitboard::RANK_6))
+                .is_not_empty()
         } else {
             true
         };
@@ -80,7 +84,6 @@ impl From<&str> for FEN {
         result.side_to_move = fen_parts[1].to_string();
         result.castle_rights = normalize_castle_rights(&result, fen_parts[2]);
 
-
         result.en_passant_square = fen_parts[3].to_string();
 
         result.half_move_counter = if fen_parts.len() > 4 {
@@ -103,7 +106,8 @@ impl From<&str> for FEN {
 
 impl From<FEN> for String {
     fn from(value: FEN) -> Self {
-        format!("{}/{}/{}/{}/{}/{}/{}/{} {} {} {} {} {}", 
+        format!(
+            "{}/{}/{}/{}/{}/{}/{}/{} {} {} {} {} {}",
             value.board[0],
             value.board[1],
             value.board[2],
@@ -127,8 +131,7 @@ impl Display for FEN {
     }
 }
 
-fn normalize_castle_rights( fen: &FEN, rights: &str ) -> String {
-
+fn normalize_castle_rights(fen: &FEN, rights: &str) -> String {
     //Helper method to find occurance of the character in the fen string
     let find_files = |rank_str: &String, target: char| -> Vec<u8> {
         let mut result = Vec::new();
@@ -151,11 +154,19 @@ fn normalize_castle_rights( fen: &FEN, rights: &str ) -> String {
         return String::from("-");
     }
 
-    let white_king = find_files( &fen.board[7], 'K' );
-    let black_king = find_files( &fen.board[0], 'k' );
+    let white_king = find_files(&fen.board[7], 'K');
+    let black_king = find_files(&fen.board[0], 'k');
 
-    let white_king_file = if white_king.is_empty() { 255 } else { white_king[0] };
-    let black_king_file = if black_king.is_empty() { 255 } else { black_king[0] };
+    let white_king_file = if white_king.is_empty() {
+        255
+    } else {
+        white_king[0]
+    };
+    let black_king_file = if black_king.is_empty() {
+        255
+    } else {
+        black_king[0]
+    };
 
     let white_rooks = find_files(&fen.board[7], 'R');
     let black_rooks = find_files(&fen.board[0], 'r');
@@ -169,46 +180,56 @@ fn normalize_castle_rights( fen: &FEN, rights: &str ) -> String {
                 if white_king_file >= 8 {
                     continue;
                 }
-                
-                let file = white_rooks.iter().rev().find(|&element| *element > white_king_file);
+
+                let file = white_rooks
+                    .iter()
+                    .rev()
+                    .find(|&element| *element > white_king_file);
                 if let Some(file) = file {
                     result.push(char::from(b'A' + file));
                 }
-            },
+            }
             'Q' => {
                 if white_king_file >= 8 {
                     continue;
                 }
 
-                let file = white_rooks.iter().find(|&element| *element < white_king_file);
+                let file = white_rooks
+                    .iter()
+                    .find(|&element| *element < white_king_file);
                 if let Some(file) = file {
                     result.push(char::from(b'A' + file));
                 }
-            },
+            }
             'k' => {
                 if black_king_file >= 8 {
                     continue;
                 }
 
-                let file = black_rooks.iter().rev().find(|&element| *element > black_king_file);
+                let file = black_rooks
+                    .iter()
+                    .rev()
+                    .find(|&element| *element > black_king_file);
                 if let Some(file) = file {
                     result.push(char::from(b'a' + file));
                 }
-            },
+            }
             'q' => {
                 if black_king_file >= 8 {
                     continue;
                 }
 
-                let file = black_rooks.iter().find(|&element| *element < black_king_file);
+                let file = black_rooks
+                    .iter()
+                    .find(|&element| *element < black_king_file);
                 if let Some(file) = file {
                     result.push(char::from(b'a' + file));
                 }
-            },
+            }
             'A'..='H' | 'a'..='h' => {
                 result.push(char);
-            }, 
-            _ => continue 
+            }
+            _ => continue,
         }
     }
 

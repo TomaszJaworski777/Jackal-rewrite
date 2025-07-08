@@ -4,7 +4,8 @@ pub struct RookAttacks;
 impl RookAttacks {
     #[inline]
     pub fn get_rook_attacks(square: Square, occupancy: Bitboard) -> Bitboard {
-        let flip = ((occupancy >> (u8::from(square) & 7)) & Bitboard::FILE_A).wrapping_mul(Bitboard::from(0x8040_2010_0804_0201));
+        let flip = ((occupancy >> (u8::from(square) & 7)) & Bitboard::FILE_A)
+            .wrapping_mul(Bitboard::from(0x8040_2010_0804_0201));
         let occ = (flip >> 57) & 0x3F;
         let file = FILE[usize::from(square)][u64::from(occ) as usize];
 
@@ -19,7 +20,8 @@ const EAST: [u64; 64] = {
     let mut result = [0; 64];
     let mut square_index = 0;
     while square_index < 64 {
-        result[square_index] = (0xFF << (square_index & 56)) ^ (1 << square_index) ^ WEST[square_index];
+        result[square_index] =
+            (0xFF << (square_index & 56)) ^ (1 << square_index) ^ WEST[square_index];
         square_index += 1;
     }
 
@@ -48,7 +50,7 @@ const RANK_SHIFT: [usize; 64] = {
     result
 };
 
-const RANK: [[u64; 64]; 64] =  {
+const RANK: [[u64; 64]; 64] = {
     let mut result = [[0; 64]; 64];
     let mut square_index = 0;
     while square_index < 64 {
@@ -58,7 +60,8 @@ const RANK: [[u64; 64]; 64] =  {
             let mask = (occupancy << 1) as u64;
             let east = ((EAST[file] & mask) | (1 << 63)).trailing_zeros() as usize;
             let west = ((WEST[file] & mask) | 1).leading_zeros() as usize ^ 63;
-            result[square_index][occupancy] = (EAST[file] ^ EAST[east] | WEST[file] ^ WEST[west]) << (square_index - file);
+            result[square_index][occupancy] =
+                (EAST[file] ^ EAST[east] | WEST[file] ^ WEST[west]) << (square_index - file);
             occupancy += 1;
         }
         square_index += 1;
@@ -74,7 +77,11 @@ const FILE: [[u64; 64]; 64] = {
         let mut occupancy = 0;
         let square = Square::from_value(square_index as u8);
         while occupancy < 64 {
-            result[square_index][occupancy] = (Bitboard::FILE_H.and(Bitboard::from_value(RANK[7 - square.get_rank() as usize][occupancy].wrapping_mul(0x8040_2010_0804_0201)))).shift_right(7 - square.get_file() as u32).get_value();
+            result[square_index][occupancy] = (Bitboard::FILE_H.and(Bitboard::from_value(
+                RANK[7 - square.get_rank() as usize][occupancy].wrapping_mul(0x8040_2010_0804_0201),
+            )))
+            .shift_right(7 - square.get_file() as u32)
+            .get_value();
             occupancy += 1;
         }
         square_index += 1;

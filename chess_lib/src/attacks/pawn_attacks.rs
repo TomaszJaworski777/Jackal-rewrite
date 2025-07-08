@@ -22,7 +22,8 @@ impl PawnsAttacks {
             {
                 attack_map |= bb.shift_left(7).get_value()
             }
-            result[Side::WHITE.get_value() as usize][square_index] = Bitboard::from_value(attack_map);
+            result[Side::WHITE.get_value() as usize][square_index] =
+                Bitboard::from_value(attack_map);
             attack_map = 0;
             if Bitboard::FILE_A
                 .inverse()
@@ -38,7 +39,8 @@ impl PawnsAttacks {
             {
                 attack_map |= bb.shift_right(9).get_value()
             }
-            result[Side::BLACK.get_value() as usize][square_index] = Bitboard::from_value(attack_map);
+            result[Side::BLACK.get_value() as usize][square_index] =
+                Bitboard::from_value(attack_map);
             square_index += 1;
         }
         result

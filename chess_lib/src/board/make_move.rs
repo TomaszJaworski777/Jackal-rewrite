@@ -12,7 +12,7 @@ impl ChessBoard {
         }
     }
 
-     #[inline]
+    #[inline]
     fn make_move_move_flag<const COLOR: u8>(
         &mut self,
         mv: Move,
@@ -20,74 +20,83 @@ impl ChessBoard {
         to_square: Square,
     ) {
         match mv.get_flag() {
-            MoveFlag::QUIET_MOVE => self.make_move_moved_piece::<COLOR, { MoveFlag::QUIET_MOVE }>(mv, from_square, to_square),
-            MoveFlag::DOUBLE_PUSH => self.make_move_moved_piece::<COLOR, { MoveFlag::DOUBLE_PUSH }>(mv, from_square, to_square),
-            MoveFlag::KING_SIDE_CASTLE => self.make_move_moved_piece::<COLOR, { MoveFlag::KING_SIDE_CASTLE }>(mv, from_square, to_square),
-            MoveFlag::QUEEN_SIDE_CASTLE => self.make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_SIDE_CASTLE }>(mv, from_square, to_square),
-            MoveFlag::CAPTURE => self.make_move_moved_piece::<COLOR, { MoveFlag::CAPTURE }>(mv, from_square, to_square),
-            MoveFlag::EN_PASSANT => self.make_move_moved_piece::<COLOR, { MoveFlag::EN_PASSANT }>(mv, from_square, to_square),
-            MoveFlag::KNIGHT_PROMOTION => self.make_move_moved_piece::<COLOR, { MoveFlag::KNIGHT_PROMOTION }>(mv, from_square, to_square),
-            MoveFlag::BISHOP_PROMOTION => self.make_move_moved_piece::<COLOR, { MoveFlag::BISHOP_PROMOTION }>(mv, from_square, to_square),
-            MoveFlag::ROOK_PROMOTION => self.make_move_moved_piece::<COLOR, { MoveFlag::ROOK_PROMOTION }>(mv, from_square, to_square),
-            MoveFlag::QUEEN_PROMOTION => self.make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_PROMOTION }>(mv, from_square, to_square),
-            MoveFlag::KNIGHT_PROMOTION_CAPTURE => self.make_move_moved_piece::<COLOR, { MoveFlag::KNIGHT_PROMOTION_CAPTURE }>(mv, from_square, to_square),
-            MoveFlag::BISHOP_PROMOTION_CAPTURE => self.make_move_moved_piece::<COLOR, { MoveFlag::BISHOP_PROMOTION_CAPTURE }>(mv, from_square, to_square),
-            MoveFlag::ROOK_PROMOTION_CAPTURE => self.make_move_moved_piece::<COLOR, { MoveFlag::ROOK_PROMOTION_CAPTURE }>(mv, from_square, to_square),
-            MoveFlag::QUEEN_PROMOTION_CAPTURE => self.make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_PROMOTION_CAPTURE }>(mv, from_square, to_square),
-            _ => unreachable!()
-        }
-    }
-
-    #[inline]
-    fn make_move_moved_piece<
-        const COLOR: u8,
-        const MOVE_FLAG: u16,
-    >(
-        &mut self,
-        mv: Move,
-        from_square: Square,
-        to_square: Square,
-    ) {
-        let moved_piece = self.piece_on_square(from_square);
-        match moved_piece {
-            Piece::PAWN => self
-                .make_move_captured_piece::<COLOR, MOVE_FLAG, { PAWN }>(
+            MoveFlag::QUIET_MOVE => self.make_move_moved_piece::<COLOR, { MoveFlag::QUIET_MOVE }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            MoveFlag::DOUBLE_PUSH => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::DOUBLE_PUSH }>(
                     mv,
                     from_square,
                     to_square,
                 ),
-            Piece::KNIGHT => self
-                .make_move_captured_piece::<COLOR, MOVE_FLAG, { KNIGHT }>(
+            MoveFlag::KING_SIDE_CASTLE => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::KING_SIDE_CASTLE }>(
                     mv,
                     from_square,
                     to_square,
                 ),
-            Piece::BISHOP => self
-                .make_move_captured_piece::<COLOR, MOVE_FLAG, { BISHOP }>(
+            MoveFlag::QUEEN_SIDE_CASTLE => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_SIDE_CASTLE }>(
                     mv,
                     from_square,
                     to_square,
                 ),
-            Piece::ROOK => self
-                .make_move_captured_piece::<COLOR, MOVE_FLAG, { ROOK }>(
+            MoveFlag::CAPTURE => self.make_move_moved_piece::<COLOR, { MoveFlag::CAPTURE }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            MoveFlag::EN_PASSANT => self.make_move_moved_piece::<COLOR, { MoveFlag::EN_PASSANT }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            MoveFlag::KNIGHT_PROMOTION => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::KNIGHT_PROMOTION }>(
                     mv,
                     from_square,
                     to_square,
                 ),
-            Piece::QUEEN => self
-                .make_move_captured_piece::<COLOR, MOVE_FLAG, { QUEEN }>(
+            MoveFlag::BISHOP_PROMOTION => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::BISHOP_PROMOTION }>(
                     mv,
                     from_square,
                     to_square,
                 ),
-            Piece::KING => self
-                .make_move_captured_piece::<COLOR, MOVE_FLAG, { KING }>(
+            MoveFlag::ROOK_PROMOTION => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::ROOK_PROMOTION }>(
                     mv,
                     from_square,
                     to_square,
                 ),
-            Piece::NONE => self
-                .make_move_captured_piece::<COLOR, MOVE_FLAG, { NONE }>(
+            MoveFlag::QUEEN_PROMOTION => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_PROMOTION }>(
+                    mv,
+                    from_square,
+                    to_square,
+                ),
+            MoveFlag::KNIGHT_PROMOTION_CAPTURE => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::KNIGHT_PROMOTION_CAPTURE }>(
+                    mv,
+                    from_square,
+                    to_square,
+                ),
+            MoveFlag::BISHOP_PROMOTION_CAPTURE => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::BISHOP_PROMOTION_CAPTURE }>(
+                    mv,
+                    from_square,
+                    to_square,
+                ),
+            MoveFlag::ROOK_PROMOTION_CAPTURE => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::ROOK_PROMOTION_CAPTURE }>(
+                    mv,
+                    from_square,
+                    to_square,
+                ),
+            MoveFlag::QUEEN_PROMOTION_CAPTURE => self
+                .make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_PROMOTION_CAPTURE }>(
                     mv,
                     from_square,
                     to_square,
@@ -97,11 +106,55 @@ impl ChessBoard {
     }
 
     #[inline]
-    fn make_move_captured_piece<
-        const COLOR: u8,
-        const MOVE_FLAG: u16,
-        const MOVED_PIECE: u8,
-    >(
+    fn make_move_moved_piece<const COLOR: u8, const MOVE_FLAG: u16>(
+        &mut self,
+        mv: Move,
+        from_square: Square,
+        to_square: Square,
+    ) {
+        let moved_piece = self.piece_on_square(from_square);
+        match moved_piece {
+            Piece::PAWN => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { PAWN }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::KNIGHT => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { KNIGHT }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::BISHOP => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { BISHOP }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::ROOK => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { ROOK }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::QUEEN => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { QUEEN }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::KING => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { KING }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::NONE => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { NONE }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            _ => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn make_move_captured_piece<const COLOR: u8, const MOVE_FLAG: u16, const MOVED_PIECE: u8>(
         &mut self,
         mv: Move,
         from_square: Square,
@@ -118,42 +171,36 @@ impl ChessBoard {
 
         let captured_piece = self.piece_on_square(to_square);
         match captured_piece {
-            Piece::PAWN => self
-                .make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { PAWN }>(
-                    mv,
-                    from_square,
-                    to_square,
-                ),
-            Piece::KNIGHT => self
-                .make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { KNIGHT }>(
-                    mv,
-                    from_square,
-                    to_square,
-                ),
-            Piece::BISHOP => self
-                .make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { BISHOP }>(
-                    mv,
-                    from_square,
-                    to_square,
-                ),
-            Piece::ROOK => self
-                .make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { ROOK }>(
-                    mv,
-                    from_square,
-                    to_square,
-                ),
-            Piece::QUEEN => self
-                .make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { QUEEN }>(
-                    mv,
-                    from_square,
-                    to_square,
-                ),
-            Piece::NONE => self
-                .make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { NONE }>(
-                    mv,
-                    from_square,
-                    to_square,
-                ),
+            Piece::PAWN => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { PAWN }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::KNIGHT => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { KNIGHT }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::BISHOP => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { BISHOP }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::ROOK => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { ROOK }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::QUEEN => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { QUEEN }>(
+                mv,
+                from_square,
+                to_square,
+            ),
+            Piece::NONE => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { NONE }>(
+                mv,
+                from_square,
+                to_square,
+            ),
             _ => {
                 self.draw_board();
                 println!("{}", mv.to_string(true));
@@ -174,7 +221,11 @@ impl ChessBoard {
         to_square: Square,
     ) {
         if CAPTURED_PIECE != NONE {
-            self.remove_piece_on_square(to_square, Piece::from(CAPTURED_PIECE), Side::from(1 - COLOR));
+            self.remove_piece_on_square(
+                to_square,
+                Piece::from(CAPTURED_PIECE),
+                Side::from(1 - COLOR),
+            );
         }
 
         self.remove_piece_on_square(from_square, Piece::from(MOVED_PIECE), Side::from(COLOR));
@@ -202,15 +253,39 @@ impl ChessBoard {
                 self.en_passant_square = to_square ^ 8;
             }
             MoveFlag::QUEEN_SIDE_CASTLE => {
-                self.remove_piece_on_square(self.castle_rights().rook_square(usize::from(COLOR) * 2), Piece::ROOK, Side::from(COLOR));
-                self.set_piece_on_square(Square::from(side_flip as u8 + 3), Piece::ROOK, Side::from(COLOR));
-                self.set_piece_on_square(Square::from(side_flip as u8 + 2), Piece::KING, Side::from(COLOR));
-            },
+                self.remove_piece_on_square(
+                    self.castle_rights().rook_square(usize::from(COLOR) * 2),
+                    Piece::ROOK,
+                    Side::from(COLOR),
+                );
+                self.set_piece_on_square(
+                    Square::from(side_flip as u8 + 3),
+                    Piece::ROOK,
+                    Side::from(COLOR),
+                );
+                self.set_piece_on_square(
+                    Square::from(side_flip as u8 + 2),
+                    Piece::KING,
+                    Side::from(COLOR),
+                );
+            }
             MoveFlag::KING_SIDE_CASTLE => {
-                self.remove_piece_on_square(self.castle_rights().rook_square(usize::from(COLOR) * 2 + 1), Piece::ROOK, Side::from(COLOR));
-                self.set_piece_on_square(Square::from(side_flip as u8 + 5), Piece::ROOK, Side::from(COLOR));
-                self.set_piece_on_square(Square::from(side_flip as u8 + 6), Piece::KING, Side::from(COLOR));
-            },
+                self.remove_piece_on_square(
+                    self.castle_rights().rook_square(usize::from(COLOR) * 2 + 1),
+                    Piece::ROOK,
+                    Side::from(COLOR),
+                );
+                self.set_piece_on_square(
+                    Square::from(side_flip as u8 + 5),
+                    Piece::ROOK,
+                    Side::from(COLOR),
+                );
+                self.set_piece_on_square(
+                    Square::from(side_flip as u8 + 6),
+                    Piece::KING,
+                    Side::from(COLOR),
+                );
+            }
             MoveFlag::EN_PASSANT => {
                 self.remove_piece_on_square(to_square ^ 8, Piece::PAWN, Side::from(1 - COLOR))
             }

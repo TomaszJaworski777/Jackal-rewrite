@@ -1,4 +1,8 @@
-use crate::{attacks::{BishopAttacks, KingAttacks, KnightAttacks, PawnsAttacks, RookAttacks}, base_structures::Side, Bitboard, Square};
+use crate::{
+    attacks::{BishopAttacks, KingAttacks, KnightAttacks, PawnsAttacks, RookAttacks},
+    base_structures::Side,
+    Bitboard, Square,
+};
 
 pub struct Attacks;
 impl Attacks {

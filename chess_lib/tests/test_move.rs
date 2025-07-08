@@ -8,43 +8,23 @@ fn to_string() {
         "a4b5"
     );
     assert_eq!(
-        Move::from_squares(
-            Square::E7,
-            Square::E8,
-            MoveFlag::ROOK_PROMOTION
-        ).to_string(false),
+        Move::from_squares(Square::E7, Square::E8, MoveFlag::ROOK_PROMOTION).to_string(false),
         "e7e8r"
     );
     assert_eq!(
-        Move::from_squares(
-            Square::E1,
-            Square::H1,
-            MoveFlag::KING_SIDE_CASTLE
-        ).to_string(false),
+        Move::from_squares(Square::E1, Square::H1, MoveFlag::KING_SIDE_CASTLE).to_string(false),
         "e1g1"
     );
     assert_eq!(
-        Move::from_squares(
-            Square::E1,
-            Square::A1,
-            MoveFlag::QUEEN_SIDE_CASTLE
-        ).to_string(false),
+        Move::from_squares(Square::E1, Square::A1, MoveFlag::QUEEN_SIDE_CASTLE).to_string(false),
         "e1c1"
     );
     assert_eq!(
-        Move::from_squares(
-            Square::E1,
-            Square::H1,
-            MoveFlag::KING_SIDE_CASTLE
-        ).to_string(true),
+        Move::from_squares(Square::E1, Square::H1, MoveFlag::KING_SIDE_CASTLE).to_string(true),
         "e1h1"
     );
     assert_eq!(
-        Move::from_squares(
-            Square::E1,
-            Square::A1,
-            MoveFlag::QUEEN_SIDE_CASTLE
-        ).to_string(true),
+        Move::from_squares(Square::E1, Square::A1, MoveFlag::QUEEN_SIDE_CASTLE).to_string(true),
         "e1a1"
     );
 }

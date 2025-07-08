@@ -1,10 +1,12 @@
-use crate::{board::{chess_board::ChessBoard, move_history::MoveHistory}, Move};
-
+use crate::{
+    board::{chess_board::ChessBoard, move_history::MoveHistory},
+    Move,
+};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct ChessPosition {
     board: ChessBoard,
-    history: MoveHistory
+    history: MoveHistory,
 }
 
 impl ChessPosition {
@@ -37,6 +39,9 @@ impl ChessPosition {
 
 impl From<ChessBoard> for ChessPosition {
     fn from(value: ChessBoard) -> Self {
-        Self { board: value, history: MoveHistory::default() }
+        Self {
+            board: value,
+            history: MoveHistory::default(),
+        }
     }
 }

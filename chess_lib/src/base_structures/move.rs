@@ -1,4 +1,7 @@
-use crate::{base_structures::{Piece, Side}, Square};
+use crate::{
+    base_structures::{Piece, Side},
+    Square,
+};
 
 pub struct MoveFlag;
 impl MoveFlag {
@@ -75,10 +78,17 @@ impl Move {
     }
 
     pub fn to_string(&self, chess960: bool) -> String {
-    
         if !chess960 && self.is_castle() {
-            let side = if u8::from(self.get_from_square()) < 32 { Side::WHITE } else { Side::BLACK };
-            let destination_square = if self.get_flag() == MoveFlag::QUEEN_SIDE_CASTLE { Square::C1 } else { Square::G1 } + 56 * u8::from(side);
+            let side = if u8::from(self.get_from_square()) < 32 {
+                Side::WHITE
+            } else {
+                Side::BLACK
+            };
+            let destination_square = if self.get_flag() == MoveFlag::QUEEN_SIDE_CASTLE {
+                Square::C1
+            } else {
+                Square::G1
+            } + 56 * u8::from(side);
             return format!("{}{}", self.get_from_square(), destination_square);
         }
 

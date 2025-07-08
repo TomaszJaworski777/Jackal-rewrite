@@ -175,7 +175,7 @@ impl Bitboard {
     pub const fn wrapping_mul(self, rhs: Bitboard) -> Self {
         Self(self.0.wrapping_mul(rhs.0))
     }
-    
+
     #[inline]
     pub const fn wrapping_sub(self, rhs: Bitboard) -> Self {
         Self(self.0.wrapping_sub(rhs.0))

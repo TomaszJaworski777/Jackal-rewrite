@@ -52,7 +52,8 @@ impl From<Side> for String {
             "White"
         } else {
             "Black"
-        }.to_string()
+        }
+        .to_string()
     }
 }
 

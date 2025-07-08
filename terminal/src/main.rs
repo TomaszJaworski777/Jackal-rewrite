@@ -18,20 +18,26 @@ fn main() {
 
     //Register all command processors
     type CommandProcessorFunc = fn(&str, &[String], &mut bool) -> bool;
-    const COMMAND_PROCESSORS: [CommandProcessorFunc; 1] =
-        [MiscProcessor::execute];
+    const COMMAND_PROCESSORS: [CommandProcessorFunc; 1] = [MiscProcessor::execute];
 
-    let board = ChessBoard::from(&FEN::from("bqnb1rkr/pp3ppp/3ppn2/2p5/5P2/P2P4/NPP1P1PP/BQ1BNRKR w HFhf - 2 9"));
+    let board = ChessBoard::from(&FEN::from(
+        "bqnb1rkr/pp3ppp/3ppn2/2p5/5P2/P2P4/NPP1P1PP/BQ1BNRKR w HFhf - 2 9",
+    ));
     board.draw_board();
-    
-    let (result, duration) = perft(&FEN::from("bqnb1rkr/pp3ppp/3ppn2/2p5/5P2/P2P4/NPP1P1PP/BQ1BNRKR w HFhf - 2 9"), 6, true, true, true);
-    println!("  Perft ended! {} nodes, {}, {}n/s",
-                result,
-                miliseconds_to_string(duration),
-                number_to_string(
-                    ((result * 1000) as f64 / duration as f64) as u128
-                )
-            );
+
+    let (result, duration) = perft(
+        &FEN::from("bqnb1rkr/pp3ppp/3ppn2/2p5/5P2/P2P4/NPP1P1PP/BQ1BNRKR w HFhf - 2 9"),
+        6,
+        true,
+        true,
+        true,
+    );
+    println!(
+        "  Perft ended! {} nodes, {}, {}n/s",
+        result,
+        miliseconds_to_string(duration),
+        number_to_string(((result * 1000) as f64 / duration as f64) as u128)
+    );
 
     //Initialize engine loop
     while !cancelation_token {

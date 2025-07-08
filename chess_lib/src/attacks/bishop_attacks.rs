@@ -9,14 +9,16 @@ impl BishopAttacks {
         let mut diagonal = occupancy & mask.diagonal;
         let mut reverse_diagonal = diagonal.flip();
         diagonal = diagonal.wrapping_sub(Bitboard::from(mask.bitboard));
-        reverse_diagonal = reverse_diagonal.wrapping_sub(Bitboard::from(mask.bitboard.swap_bytes()));
+        reverse_diagonal =
+            reverse_diagonal.wrapping_sub(Bitboard::from(mask.bitboard.swap_bytes()));
         diagonal ^= reverse_diagonal.flip();
         diagonal &= mask.diagonal;
 
         let mut anti = occupancy & mask.anti;
         let mut reverse_diagonal = anti.flip();
         anti = anti.wrapping_sub(Bitboard::from(mask.bitboard));
-        reverse_diagonal = reverse_diagonal.wrapping_sub(Bitboard::from(mask.bitboard.swap_bytes()));
+        reverse_diagonal =
+            reverse_diagonal.wrapping_sub(Bitboard::from(mask.bitboard.swap_bytes()));
         anti ^= reverse_diagonal.flip();
         anti &= mask.anti;
 
@@ -32,7 +34,11 @@ struct Mask {
 }
 
 const BISHOP: [Mask; 64] = {
-    let mut result = [Mask { bitboard: 0, diagonal: 0, anti: 0 }; 64];
+    let mut result = [Mask {
+        bitboard: 0,
+        diagonal: 0,
+        anti: 0,
+    }; 64];
 
     let mut square_index = 0;
     while square_index < 64 {

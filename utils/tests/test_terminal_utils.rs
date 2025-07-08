@@ -1,6 +1,5 @@
 use utils::{bytes_to_string, number_to_string, seconds_to_string};
 
-
 #[test]
 fn time_to_str() {
     assert_eq!(seconds_to_string(50), "50s");

@@ -1,18 +1,18 @@
-mod base_structures;
 mod attacks;
+mod base_structures;
 mod board;
 mod move_gen;
 
 use std::time::Instant;
 
+pub use attacks::Attacks;
 pub use base_structures::Bitboard;
 pub use base_structures::Move;
 pub use base_structures::MoveFlag;
 pub use base_structures::Piece;
-pub use base_structures::Square;
 pub use base_structures::Side;
+pub use base_structures::Square;
 pub use base_structures::FEN;
-pub use attacks::Attacks;
 pub use board::ChessBoard;
 pub use board::ChessPosition;
 
@@ -25,7 +25,13 @@ pub fn perft(fen: &FEN, depth: u8, bulk: bool, chess960: bool, print_split: bool
     (result, duration)
 }
 
-fn perft_internal(board: &ChessBoard, depth: u8, bulk: bool, chess960: bool, print_split: bool) -> u128 {
+fn perft_internal(
+    board: &ChessBoard,
+    depth: u8,
+    bulk: bool,
+    chess960: bool,
+    print_split: bool,
+) -> u128 {
     let mut node_count = 0u128;
 
     if bulk && depth == 1 {

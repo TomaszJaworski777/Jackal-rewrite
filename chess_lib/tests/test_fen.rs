@@ -1,6 +1,5 @@
 use chess_lib::FEN;
 
-
 #[test]
 fn haha() {
     let fen = FEN::from("rbbqn1kr/pp2p1pp/6n1/2pp1p2/2P4P/P7/BP1PPPP1/R1BQNNKR w HAha - 0 9");

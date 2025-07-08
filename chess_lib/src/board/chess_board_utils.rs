@@ -12,12 +12,16 @@ impl ChessBoard {
                         || bishops & 0xAA55AA55AA55AA55 == bishops))
     }
 
-    pub fn all_attackers_to_square(&self, occupancy: Bitboard, square: Square, defender_side: Side) -> Bitboard {
+    pub fn all_attackers_to_square(
+        &self,
+        occupancy: Bitboard,
+        square: Square,
+        defender_side: Side,
+    ) -> Bitboard {
         let queens = self.piece_mask(Piece::QUEEN);
         ((Attacks::get_knight_attacks(square) & self.piece_mask(Piece::KNIGHT))
             | (Attacks::get_king_attacks(square) & self.piece_mask(Piece::KING))
-            | (Attacks::get_pawn_attacks(square, defender_side)
-                & self.piece_mask(Piece::PAWN))
+            | (Attacks::get_pawn_attacks(square, defender_side) & self.piece_mask(Piece::PAWN))
             | (Attacks::get_rook_attacks(square, occupancy)
                 & (self.piece_mask(Piece::ROOK) | queens))
             | (Attacks::get_bishop_attacks(square, occupancy)
@@ -26,8 +30,14 @@ impl ChessBoard {
     }
 
     #[inline]
-    pub fn is_square_attacked_with_occupancy(&self, square: Square, occupancy: Bitboard, defender_side: Side) -> bool {
-        self.all_attackers_to_square(occupancy, square, defender_side).is_not_empty()
+    pub fn is_square_attacked_with_occupancy(
+        &self,
+        square: Square,
+        occupancy: Bitboard,
+        defender_side: Side,
+    ) -> bool {
+        self.all_attackers_to_square(occupancy, square, defender_side)
+            .is_not_empty()
     }
 
     #[inline]
@@ -45,7 +55,7 @@ impl ChessBoard {
         self.all_attackers_to_square(
             self.occupancy(),
             self.king_square(defender_side),
-            defender_side
+            defender_side,
         )
     }
 
@@ -55,9 +65,8 @@ impl ChessBoard {
         let attacker_occupancy = self.occupancy_for_side(defender_side.flipped());
         let queens = self.piece_mask_for_side(Piece::QUEEN, defender_side.flipped());
 
-        let potential_pinners =
-            Attacks::get_bishop_attacks(king_square, attacker_occupancy)
-                & (self.piece_mask_for_side(Piece::BISHOP, defender_side.flipped()) | queens);
+        let potential_pinners = Attacks::get_bishop_attacks(king_square, attacker_occupancy)
+            & (self.piece_mask_for_side(Piece::BISHOP, defender_side.flipped()) | queens);
 
         let mut diag_result = Bitboard::EMPTY;
         potential_pinners.map(|potential_pinner| {
@@ -67,9 +76,8 @@ impl ChessBoard {
             }
         });
 
-        let potential_pinners =
-            Attacks::get_rook_attacks(king_square, attacker_occupancy)
-                & (self.piece_mask_for_side(Piece::ROOK, defender_side.flipped()) | queens);
+        let potential_pinners = Attacks::get_rook_attacks(king_square, attacker_occupancy)
+            & (self.piece_mask_for_side(Piece::ROOK, defender_side.flipped()) | queens);
         let mut orto_result = Bitboard::EMPTY;
         potential_pinners.map(|potential_pinner| {
             let ray = Rays::get_ray(king_square, potential_pinner);
@@ -90,13 +98,11 @@ impl ChessBoard {
         let attacker_pieces = self.occupancy_for_side(attacker_side);
         let queens = self.piece_mask(Piece::QUEEN);
 
-        (attacker_pieces & (self.piece_mask(Piece::ROOK) | queens)).map(|rook_square| {
-            threats |= Attacks::get_rook_attacks(rook_square, occupancy)
-        });
+        (attacker_pieces & (self.piece_mask(Piece::ROOK) | queens))
+            .map(|rook_square| threats |= Attacks::get_rook_attacks(rook_square, occupancy));
 
-        (attacker_pieces & (self.piece_mask(Piece::BISHOP) | queens)).map(|bishop_square| {
-            threats |= Attacks::get_bishop_attacks(bishop_square, occupancy)
-        });
+        (attacker_pieces & (self.piece_mask(Piece::BISHOP) | queens))
+            .map(|bishop_square| threats |= Attacks::get_bishop_attacks(bishop_square, occupancy));
 
         (attacker_pieces & self.piece_mask(Piece::KING))
             .map(|king_square| threats |= Attacks::get_king_attacks(king_square));
@@ -104,9 +110,8 @@ impl ChessBoard {
         (attacker_pieces & self.piece_mask(Piece::KNIGHT))
             .map(|knight_square| threats |= Attacks::get_knight_attacks(knight_square));
 
-        (attacker_pieces & self.piece_mask(Piece::PAWN)).map(|pawn_square| {
-            threats |= Attacks::get_pawn_attacks(pawn_square, attacker_side)
-        });
+        (attacker_pieces & self.piece_mask(Piece::PAWN))
+            .map(|pawn_square| threats |= Attacks::get_pawn_attacks(pawn_square, attacker_side));
 
         threats
     }

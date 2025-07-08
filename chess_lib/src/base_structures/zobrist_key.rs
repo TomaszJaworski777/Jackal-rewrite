@@ -1,4 +1,4 @@
-use std::{fmt::{Display, Formatter, Result}};
+use std::fmt::{Display, Formatter, Result};
 
 use crate::{base_structures::CastleRights, Piece, Side, Square};
 
@@ -11,7 +11,7 @@ impl ZobristKey {
     pub(crate) fn update_piece_hash(&mut self, square: Square, piece: Piece, side: Side) {
         self.0 ^= SEEDS[(usize::from(piece) + usize::from(side) * 6) * 64 + usize::from(square)];
     }
-    
+
     #[inline]
     pub(crate) fn add_side_to_move(&mut self, side: Side) {
         self.0 ^= SEEDS[768] * usize::from(side) as u64
