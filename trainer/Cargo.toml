@@ -3,10 +3,6 @@ name    = "trainer"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "trainer"
-path = "src/main.rs"
-
 [dependencies]
 engine     = { path = "../engine" }
 chess_lib  = { path = "../chess_lib" }
