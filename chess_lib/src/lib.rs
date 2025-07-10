@@ -3,6 +3,7 @@ mod base_structures;
 mod board;
 mod move_gen;
 
+use std::time::Duration;
 use std::time::Instant;
 
 pub use attacks::Attacks;
@@ -16,13 +17,12 @@ pub use base_structures::FEN;
 pub use board::ChessBoard;
 pub use board::ChessPosition;
 
-const DEFAULT_PERFT_DEPTH: u8 = 5;
+pub const DEFAULT_PERFT_DEPTH: u8 = 5;
 
-pub fn perft(fen: &FEN, depth: Option<u8>, bulk: bool, chess960: bool, print_split: bool) -> (u128, u128) {
-    let board = ChessBoard::from(fen);
+pub fn perft(board: &ChessBoard, depth: Option<u8>, bulk: bool, chess960: bool, print_split: bool) -> (u128, Duration) {
     let timer = Instant::now();
-    let result = perft_internal(&board, depth.unwrap_or(DEFAULT_PERFT_DEPTH), bulk, chess960, print_split);
-    let duration = timer.elapsed().as_millis();
+    let result = perft_internal(board, depth.unwrap_or(DEFAULT_PERFT_DEPTH), bulk, chess960, print_split);
+    let duration = timer.elapsed();
 
     (result, duration)
 }
@@ -52,7 +52,7 @@ fn perft_internal(
         node_count += result;
 
         if print_split {
-            println!("{} - {result}", mv.to_string(chess960))
+            println!("  {} - {result}", mv.to_string(chess960))
         }
     });
 

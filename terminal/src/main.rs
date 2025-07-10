@@ -9,9 +9,7 @@ mod processors;
 fn main() {
     let mut shutdown_token = false;
 
-    let mut search_engine = SearchEngine {
-
-    };
+    let mut search_engine = SearchEngine::default();
 
     if process_command_line_args(&std::env::args().collect(), &search_engine) {
         return;

@@ -25,9 +25,8 @@ impl ChessBoard {
         info.push(half_moves.as_str());
         let in_check = format!("In Check: {}", self.is_in_check());
         info.push(in_check.as_str());
-        let insufficient_material =
-            format!("Insufficient material: {}", self.is_insufficient_material());
-        info.push(insufficient_material.as_str());
+        let phase = format!("Phase: {}", self.phase());
+        info.push(phase.as_str());
 
         let mut result = " -----------------\n".to_string();
         for rank in (0..8).rev() {

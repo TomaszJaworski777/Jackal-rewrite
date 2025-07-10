@@ -1,5 +1,6 @@
+use chess_lib::DEFAULT_PERFT_DEPTH;
 use engine::SearchEngine;
-use utils::clear_terminal_screen;
+use utils::{clear_terminal_screen, miliseconds_to_string, number_to_string};
 
 pub struct MiscProcessor;
 impl MiscProcessor {
@@ -7,12 +8,13 @@ impl MiscProcessor {
         match command {
             "exit" | "quit" | "q" => *shutdown_token = true,
             "clear" | "clean" | "cls" => clear_terminal_screen(),
+            "draw" | "d" => search_engine.current_position().board().draw_board(),
             "perft" => {
-                let depth = if args.len() >= 1 { args[0].parse::<u8>().unwrap_or(5) } else { 5 };
+                let depth = if args.len() >= 1 { args[0].parse::<u8>().ok() } else { None };
                 perft(search_engine, depth, false);
             },
             "bulk" => {
-                let depth = if args.len() >= 1 { args[0].parse::<u8>().unwrap_or(5) } else { 5 };
+                let depth = if args.len() >= 1 { args[0].parse::<u8>().ok() } else { None };
                 perft(search_engine, depth, true);
             },
             _ => return false,
@@ -22,6 +24,25 @@ impl MiscProcessor {
     }
 }
 
-fn perft(search_engine: &SearchEngine, depth: u8, bulk: bool) {
-    
+fn perft(search_engine: &SearchEngine, depth: Option<u8>, bulk: bool) {
+    println!("");
+
+    search_engine.current_position().board().draw_board();
+
+    println!("-----------------------------------------------------------");
+    println!("  Running PERFT");
+    println!("  Depth: {}", depth.unwrap_or(DEFAULT_PERFT_DEPTH));
+    println!("  Bulk: {bulk}");
+    println!("-----------------------------------------------------------\n");
+
+    let (result, duration) = chess_lib::perft(search_engine.current_position().board(), depth, bulk, false, true);
+    let miliseconds = duration.as_millis();
+
+    println!("\n-----------------------------------------------------------");
+    println!(
+        "  Perft ended! {result} nodes, {}, {}n/s",
+        miliseconds_to_string(miliseconds),
+        number_to_string(((result * 1000) as f64 / miliseconds as f64) as u128)
+    );
+    println!("-----------------------------------------------------------\n");
 }
