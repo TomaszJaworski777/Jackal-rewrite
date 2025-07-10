@@ -16,10 +16,12 @@ pub use base_structures::FEN;
 pub use board::ChessBoard;
 pub use board::ChessPosition;
 
-pub fn perft(fen: &FEN, depth: u8, bulk: bool, chess960: bool, print_split: bool) -> (u128, u128) {
+const DEFAULT_PERFT_DEPTH: u8 = 5;
+
+pub fn perft(fen: &FEN, depth: Option<u8>, bulk: bool, chess960: bool, print_split: bool) -> (u128, u128) {
     let board = ChessBoard::from(fen);
     let timer = Instant::now();
-    let result = perft_internal(&board, depth, bulk, chess960, print_split);
+    let result = perft_internal(&board, depth.unwrap_or(DEFAULT_PERFT_DEPTH), bulk, chess960, print_split);
     let duration = timer.elapsed().as_millis();
 
     (result, duration)

@@ -20,7 +20,7 @@ fn standard() {
         let expected_result = target[1].parse::<u128>().unwrap();
         let depth = target[0].chars().collect::<Vec<char>>()[1] as u8 - b'0';
         println!("{fen}");
-        let (result, _) = perft(&fen, depth, true, false, false);
+        let (result, _) = perft(&fen, Some(depth), true, false, false);
         assert_eq!(result, expected_result);
     }
 }
@@ -40,7 +40,7 @@ fn frc() {
         let expected_result = target[1].parse::<u128>().unwrap();
         let depth = target[0].chars().collect::<Vec<char>>()[1] as u8 - b'0';
         println!("{fen}");
-        let (result, _) = perft(&fen, depth, true, true, false);
+        let (result, _) = perft(&fen, Some(depth), true, true, false);
         assert_eq!(result, expected_result);
     }
 }

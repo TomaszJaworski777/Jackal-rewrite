@@ -1,21 +1,19 @@
-const DEFAULT_BENCH_DEPTH: usize = 5;
+use engine::SearchEngine;
 
 #[allow(clippy::ptr_arg)]
-pub fn process_command_line_args(args: &Vec<String>) -> bool {
+pub fn process_command_line_args(args: &Vec<String>, search_engine: &SearchEngine) -> bool {
     let mut result = false;
 
     for (idx, arg) in args.iter().enumerate() {
         match arg.as_str() {
             "bench" => {
                 let depth = if idx >= args.len() - 1 {
-                    DEFAULT_BENCH_DEPTH
+                    None
                 } else {
-                    args[idx + 1]
-                        .parse::<usize>()
-                        .unwrap_or(DEFAULT_BENCH_DEPTH)
+                    args[idx + 1].parse::<u8>().ok()
                 };
 
-                //TODO: Call bench
+                search_engine.bench(depth);
                 result = true;
             }
             _ => continue,
