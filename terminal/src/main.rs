@@ -1,11 +1,12 @@
-use std::io::stdin;
-
 use engine::SearchEngine;
 
 use crate::{displays::welcome_message, processors::{process_command_line_args, MiscProcessor, UciProcessor}};
 
 mod processors;
 mod displays;
+mod input_wrapper;
+
+pub use input_wrapper::InputWrapper;
 
 fn main() {
     let mut shutdown_token = false;
@@ -18,21 +19,12 @@ fn main() {
 
     println!("{}", welcome_message());
 
-    type CommandProcessorFunc = fn(&str, &[String], &mut SearchEngine, &mut bool) -> bool;
-    const COMMAND_PROCESSORS: [CommandProcessorFunc; 2] = [
-        MiscProcessor::execute,
-        UciProcessor::execute,
-    ];
+    let mut input_wrapper = InputWrapper::new();
+    let mut uci_processor = UciProcessor::new();
 
     while !shutdown_token {
-        let mut input_command = String::new();
+        let input_command = input_wrapper.get_input();
 
-        if stdin().read_line(&mut input_command).is_err() {
-            println!("Error reading input, please try again.");
-            continue;
-        }
-
-        let input_command = input_command.trim();
         let command_parts: Vec<&str> = input_command.split_whitespace().collect();
         if command_parts.is_empty() {
             continue;
@@ -44,10 +36,12 @@ fn main() {
             .map(|&arg_str| arg_str.to_string())
             .collect::<Vec<String>>();
 
-        for processor in &COMMAND_PROCESSORS {
-            if processor(command, &command_args, &mut search_engine, &mut shutdown_token) {
-                break;
-            }
+        if MiscProcessor::execute(command, &command_args, &mut search_engine, &mut shutdown_token) {
+            continue;
+        }
+
+        if uci_processor.execute(command, &command_args, &mut search_engine, &mut input_wrapper, &mut shutdown_token) {
+            continue;
         }
     }
 }
