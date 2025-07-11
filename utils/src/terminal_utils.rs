@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use crate::lerp_color;
+use crate::{lerp_color, CustomColor};
 
 pub fn clear_terminal_screen() {
     if cfg!(target_os = "windows") {
@@ -30,7 +30,7 @@ pub fn create_loading_bar(
     for i in 0..length {
         let percentage = i as f32 / (length - 1) as f32;
         let char = if percentage <= fill {
-            lerp_color("#", low_color, high_color, percentage)
+            "#".custom_color(lerp_color(low_color, high_color, percentage))
         } else {
             String::from(".")
         };

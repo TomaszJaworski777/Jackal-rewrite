@@ -1,4 +1,4 @@
-use colored::*;
+use colored::Colorize;
 
 use crate::color_config;
 
@@ -40,11 +40,14 @@ pub trait Colors {
     fn green(&self) -> String;
     fn yellow(&self) -> String;
     fn red(&self) -> String;
+    fn orange(&self) -> String;
     fn blue(&self) -> String;
     fn dark_blue(&self) -> String;
+    fn purple(&self) -> String;
     fn black(&self) -> String;
     fn white(&self) -> String;
     fn dark_white(&self) -> String;
+    fn gray(&self) -> String;
 }
 
 impl Colors for String {
@@ -60,12 +63,20 @@ impl Colors for String {
         apply_color(&self, color_config::RED)
     }
 
+    fn orange(&self) -> Self {
+        apply_color(&self, color_config::ORANGE)
+    }
+
     fn blue(&self) -> Self {
         apply_color(&self, color_config::BLUE)
     }
 
     fn dark_blue(&self) -> Self {
         apply_color(&self, color_config::DARK_BLUE)
+    }
+
+    fn purple(&self) -> Self {
+        apply_color(&self, color_config::PURPLE)
     }
 
     fn black(&self) -> Self {
@@ -78,6 +89,10 @@ impl Colors for String {
 
     fn dark_white(&self) -> Self {
         apply_color(&self, color_config::DARK_WHITE)
+    }
+
+    fn gray(&self) -> Self {
+        apply_color(&self, color_config::GRAY)
     }
 }
 
@@ -94,12 +109,20 @@ impl Colors for &str {
         apply_color(&self, color_config::RED)
     }
 
+    fn orange(&self) -> String {
+        apply_color(&self, color_config::ORANGE)
+    }
+
     fn blue(&self) -> String {
         apply_color(&self, color_config::BLUE)
     }
 
     fn dark_blue(&self) -> String {
         apply_color(&self, color_config::DARK_BLUE)
+    }
+
+    fn purple(&self) -> String {
+        apply_color(&self, color_config::PURPLE)
     }
 
     fn black(&self) -> String {
@@ -112,6 +135,26 @@ impl Colors for &str {
 
     fn dark_white(&self) -> String {
         apply_color(&self, color_config::DARK_WHITE)
+    }
+
+    fn gray(&self) -> String {
+        apply_color(&self, color_config::GRAY)
+    }
+}
+
+pub trait CustomColor {
+    fn custom_color(&self, color: (u8, u8, u8)) -> String;
+}
+
+impl CustomColor for String {
+    fn custom_color(&self, color: (u8, u8, u8)) -> String {
+        apply_color(&self, color)
+    }
+}
+
+impl CustomColor for &str {
+    fn custom_color(&self, color: (u8, u8, u8)) -> String {
+        apply_color(&self, color)
     }
 }
 
@@ -152,29 +195,24 @@ pub fn heat_color(content: &str, value: f32, min_value: f32, max_value: f32) -> 
         (value - min_value) / (max_value - min_value)
     };
 
-    if scalar >= 0.5 {
+    let color = if scalar >= 0.5 {
         lerp_color(
-            content,
             color_config::DRAW_COLOR,
             color_config::WIN_COLOR,
             (scalar - 0.5) * 2.0,
         )
     } else {
         lerp_color(
-            content,
             color_config::LOSE_COLOR,
             color_config::DRAW_COLOR,
             scalar * 2.0,
         )
-    }
+    };
+
+    apply_color(content, color)
 }
 
-pub fn lerp_color(content: &str, a: (u8, u8, u8), b: (u8, u8, u8), value: f32) -> String {
-    let (r, g, b) = lerp_color_internal(a, b, value);
-    content.truecolor(r, g, b).to_string()
-}
-
-fn lerp_color_internal(a: (u8, u8, u8), b: (u8, u8, u8), value: f32) -> (u8, u8, u8) {
+pub fn lerp_color(a: (u8, u8, u8), b: (u8, u8, u8), value: f32) -> (u8, u8, u8) {
     let result_r = a.0 as i16 + ((b.0 as i16 - a.0 as i16) as f32 * value) as i16;
     let result_g = a.1 as i16 + ((b.1 as i16 - a.1 as i16) as f32 * value) as i16;
     let result_b = a.2 as i16 + ((b.2 as i16 - a.2 as i16) as f32 * value) as i16;

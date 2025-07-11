@@ -2,9 +2,10 @@ use std::io::stdin;
 
 use engine::SearchEngine;
 
-use crate::processors::{process_command_line_args, MiscProcessor};
+use crate::{displays::welcome_message, processors::{process_command_line_args, MiscProcessor, UciProcessor}};
 
 mod processors;
+mod displays;
 
 fn main() {
     let mut shutdown_token = false;
@@ -15,8 +16,13 @@ fn main() {
         return;
     }
 
+    println!("{}", welcome_message());
+
     type CommandProcessorFunc = fn(&str, &[String], &mut SearchEngine, &mut bool) -> bool;
-    const COMMAND_PROCESSORS: [CommandProcessorFunc; 1] = [MiscProcessor::execute];
+    const COMMAND_PROCESSORS: [CommandProcessorFunc; 2] = [
+        MiscProcessor::execute,
+        UciProcessor::execute,
+    ];
 
     while !shutdown_token {
         let mut input_command = String::new();
