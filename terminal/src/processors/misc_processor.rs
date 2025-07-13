@@ -1,4 +1,4 @@
-use chess_lib::DEFAULT_PERFT_DEPTH;
+use chess::DEFAULT_PERFT_DEPTH;
 use engine::SearchEngine;
 use utils::{clear_terminal_screen, miliseconds_to_string, number_to_string};
 
@@ -35,7 +35,7 @@ fn perft(search_engine: &SearchEngine, depth: Option<u8>, bulk: bool) {
     println!("  Bulk: {bulk}");
     println!("-----------------------------------------------------------\n");
 
-    let (result, duration) = chess_lib::perft(search_engine.current_position().board(), depth, bulk, false, true);
+    let (result, duration) = chess::perft(search_engine.current_position().board(), depth, bulk, false, true);
     let miliseconds = duration.as_millis();
 
     println!("\n-----------------------------------------------------------");

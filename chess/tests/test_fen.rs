@@ -1,4 +1,4 @@
-use chess_lib::FEN;
+use chess::FEN;
 
 #[test]
 fn haha() {

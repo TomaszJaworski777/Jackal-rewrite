@@ -1,4 +1,4 @@
-use chess_lib::{Bitboard, ChessBoard, Move, MoveFlag, Piece, Side, Square, FEN};
+use chess::{Bitboard, ChessBoard, Move, MoveFlag, Piece, Side, Square, FEN};
 
 #[test]
 fn from_fen() {

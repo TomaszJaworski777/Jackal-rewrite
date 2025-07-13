@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-engine    = { path = "../engine" }
-chess_lib = { path = "../chess_lib" }
-utils     = { path = "../utils" }
+engine = { path = "../engine" }
+chess  = { path = "../chess" }
+utils  = { path = "../utils" }

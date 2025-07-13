@@ -1,4 +1,4 @@
-use chess_lib::{Move, MoveFlag, Piece, Square};
+use chess::{Move, MoveFlag, Piece, Square};
 
 #[test]
 fn to_string() {

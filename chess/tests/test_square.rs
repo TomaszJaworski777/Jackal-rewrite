@@ -1,4 +1,4 @@
-use chess_lib::{Bitboard, Square};
+use chess::{Bitboard, Square};
 
 #[test]
 fn shift_left() {

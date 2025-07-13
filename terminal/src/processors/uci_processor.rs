@@ -1,4 +1,4 @@
-use chess_lib::{ChessBoard, ChessPosition, FEN};
+use chess::{ChessBoard, ChessPosition, FEN};
 use engine::SearchEngine;
 use utils::clear_terminal_screen;
 

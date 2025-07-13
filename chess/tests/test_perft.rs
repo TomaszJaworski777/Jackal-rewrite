@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use chess_lib::{perft, ChessBoard, FEN};
+use chess::{perft, ChessBoard, FEN};
 
 #[test]
 fn standard() {

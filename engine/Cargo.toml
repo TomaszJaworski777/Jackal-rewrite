@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-chess_lib = { path = "../chess_lib" }
+chess = { path = "../chess" }

@@ -11,7 +11,7 @@ pub use input_wrapper::InputWrapper;
 fn main() {
     let mut shutdown_token = false;
 
-    let mut search_engine = SearchEngine::default();
+    let mut search_engine = SearchEngine::new();
 
     if process_command_line_args(&std::env::args().collect(), &search_engine) {
         return;
