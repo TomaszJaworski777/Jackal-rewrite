@@ -95,8 +95,11 @@ fn position(args: &[String], search_engine: &mut SearchEngine) {
 fn go(args: &[String], search_engine: &mut SearchEngine, input_wrapper: &mut InputWrapper, shutdown_token: &mut bool) {
     std::thread::scope(|s| {
         s.spawn(|| {
-            let _ = search_engine.search();
-            println!("bestmove e2e4")
+            let result = search_engine.search();
+            let best_node = search_engine.tree().select_child(0, |node| node.score() as f64);
+            println!("avg_depth {}", result.avg_depth());
+            println!("iters {}", result.iterations());
+            println!("bestmove {}", search_engine.tree().get_node(best_node.unwrap()).mv().to_string(false));
         });
 
         loop {
