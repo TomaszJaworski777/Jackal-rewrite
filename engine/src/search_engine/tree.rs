@@ -38,7 +38,7 @@ impl Tree {
     }
 
     pub fn clear(&self) {
-        self.idx.store(0, Ordering::Relaxed);
+        self.idx.store(1, Ordering::Relaxed);
         self.reset_root();
     }
 
@@ -55,6 +55,8 @@ impl Tree {
     }
 
     pub fn expand_node(&self, node_idx: usize, board: &ChessBoard) -> bool {
+        assert_eq!(self.nodes[node_idx].children_count(), 0, "{node_idx}");
+
         let mut moves = Vec::new();
         board.map_legal_moves(|mv| moves.push(mv));
         

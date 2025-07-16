@@ -11,6 +11,7 @@ pub fn perform_iteration(tree: &Tree, position: &mut ChessPosition, depth: &mut 
     loop {
         let new_index = tree.select_child(current_node_idx, |node| {
             let score = if node.visits() == 0 { 0.5 } else { node.score() as f64 };
+        
             ucb1(score, 2.0, tree.get_node(current_node_idx).visits(), node.visits())
         } );
 
@@ -43,5 +44,5 @@ pub fn perform_iteration(tree: &Tree, position: &mut ChessPosition, depth: &mut 
 }
 
 fn ucb1(score: f64, c: f64, parent_visits: u32, child_visits: u32) -> f64 {
-    score + c * (f64::from(parent_visits).ln() / f64::from(child_visits.max(1)))
+    score + c * (f64::from(parent_visits.max(1)).ln() / f64::from(child_visits.max(1)))
 }
