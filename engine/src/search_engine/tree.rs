@@ -5,6 +5,8 @@ use chess::{ChessBoard, Move};
 use crate::search_engine::tree::node::Node;
 
 mod node;
+mod tree_utils;
+mod tree_draw;
 
 #[derive(Debug)]
 pub struct Tree {

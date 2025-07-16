@@ -98,3 +98,42 @@ pub fn bytes_to_string(number: u128) -> String {
         1_073_741_824.. => format!("{:.2}G", number as f64 / 1_073_741_824.0),
     }
 }
+
+pub trait AlignString {
+    fn align_to_right(&self, len: usize) -> String;
+    fn align_to_left(&self, len: usize) -> String;
+}
+
+impl AlignString for String {
+    fn align_to_right(&self, len: usize) -> String {
+        let string_len = self.len();
+
+        if string_len >= len {
+            return self.clone();
+        }
+
+        let space = " ".repeat(len - string_len);
+        format!("{space}{self}")
+    }
+    
+    fn align_to_left(&self, len: usize) -> String {
+        let string_len = self.len();
+
+        if string_len >= len {
+            return self.clone();
+        }
+
+        let space = " ".repeat(len - string_len);
+        format!("{self}{space}")
+    }
+}
+
+impl AlignString for &str {
+    fn align_to_right(&self, len: usize) -> String {
+        self.to_string().align_to_right(len)
+    }
+    
+    fn align_to_left(&self, len: usize) -> String {
+        self.to_string().align_to_left(len)
+    }
+}

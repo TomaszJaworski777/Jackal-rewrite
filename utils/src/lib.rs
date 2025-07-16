@@ -15,3 +15,4 @@ pub use terminal_utils::create_loading_bar;
 pub use terminal_utils::miliseconds_to_string;
 pub use terminal_utils::number_to_string;
 pub use terminal_utils::seconds_to_string;
+pub use terminal_utils::AlignString;

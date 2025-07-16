@@ -9,6 +9,13 @@ impl MiscProcessor {
             "exit" | "quit" | "q" => *shutdown_token = true,
             "clear" | "clean" | "cls" => clear_terminal_screen(),
             "draw" | "d" => search_engine.current_position().board().draw_board(),
+            "tree" => {
+                let depth = if args.len() >= 1 { args[0].parse::<u8>().ok() } else { None };
+                let node_idx = if args.len() >= 2 { 
+                    usize::from_str_radix(args[1].strip_prefix("0x").unwrap_or(args[1].as_str()), 16).ok() 
+                } else { None };
+                search_engine.tree().draw_tree(depth, node_idx);
+            },
             "perft" => {
                 let depth = if args.len() >= 1 { args[0].parse::<u8>().ok() } else { None };
                 perft(search_engine, depth, false);
