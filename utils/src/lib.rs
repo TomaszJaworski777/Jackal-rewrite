@@ -2,7 +2,7 @@ mod color_config;
 mod color_utils;
 mod terminal_utils;
 
-pub use color_config::*;
+pub use color_config::{DARK_WHITE, GRAY, ORANGE};
 pub use color_utils::heat_color;
 pub use color_utils::lerp_color;
 pub use color_utils::Colors;

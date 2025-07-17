@@ -1,31 +1,39 @@
-use crate::{search_engine::{mcts::mcts_iteration::perform_iteration, SearchStats}, SearchEngine};
+use crate::{search_engine::{mcts::mcts_iteration::perform_iteration, SearchLimits, SearchStats}, SearchEngine};
 
 mod mcts_iteration;
 
 impl SearchEngine {
-    pub(super) fn mcts(&self) -> SearchStats {
-        let mut search_stats = SearchStats::default();
+    pub(super) fn mcts(&self, search_limits: &SearchLimits) -> SearchStats {
+        let mut search_stats = SearchStats::new(0);
 
         //schedule main loop and workers
-        self.main_loop(&mut search_stats);
+        self.main_loop(&mut search_stats, &search_limits);
 
         search_stats
     }
 
-    fn main_loop(&self, search_stats: &mut SearchStats) {
-        loop {
+    fn main_loop(&self, search_stats: &mut SearchStats, search_limits: &SearchLimits) {
+        while !self.is_search_interrupted() {
             let mut depth = 0;
             let mut position = *self.current_position();
+
             if !perform_iteration(&self.tree, &mut position, &mut depth) {
                 self.interrupt_search();
-                break;
             }
 
             search_stats.push_iteration(depth);
 
-            if self.is_search_interrupted() {
-                break;
+            if search_limits.is_limit_reached(search_stats) {
+                self.interrupt_search();
             }
+
+            if search_stats.iterations() % 128 != 0 {
+                continue;
+            }
+
+            if search_limits.is_timeout(search_stats) {
+                //self.interrupt_search();
+            } 
         }
     }
 }

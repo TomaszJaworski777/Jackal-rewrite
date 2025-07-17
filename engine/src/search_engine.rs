@@ -8,8 +8,10 @@ mod bench;
 mod mcts;
 mod tree;
 mod search_stats;
+mod search_limits;
 
 pub use search_stats::SearchStats;
+pub use search_limits::SearchLimits;
 
 #[derive(Debug)]
 pub struct SearchEngine {
@@ -69,7 +71,7 @@ impl SearchEngine {
         self.interruption_token.load(Ordering::Relaxed)
     }
 
-    pub fn search(&self) -> SearchStats {
+    pub fn search(&self, search_limits: &SearchLimits) -> SearchStats {
         self.interruption_token.store(false, Ordering::Relaxed);
 
         self.tree.clear();
@@ -78,10 +80,6 @@ impl SearchEngine {
             self.tree.expand_node(0, self.current_position().board());
         }
 
-        let result = self.mcts();
-
-        self.interrupt_search();
-
-        result
+        self.mcts(search_limits)
     }
 }

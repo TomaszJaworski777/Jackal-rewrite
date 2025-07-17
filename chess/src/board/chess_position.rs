@@ -39,9 +39,13 @@ impl ChessPosition {
 
 impl From<ChessBoard> for ChessPosition {
     fn from(value: ChessBoard) -> Self {
-        Self {
+        let mut position = Self {
             board: value,
             history: MoveHistory::default(),
-        }
+        };
+
+        position.history.push(value.hash());
+        
+        position
     }
 }

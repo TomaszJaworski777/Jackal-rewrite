@@ -26,6 +26,7 @@ impl Clone for Tree {
 impl Tree {
     pub fn from_bytes(bytes: usize) -> Self {
         let tree_size = bytes / std::mem::size_of::<Node>();
+        println!("tree size: {tree_size}");
 
         let tree = Self { 
             nodes: vec![Node::new(); tree_size], 

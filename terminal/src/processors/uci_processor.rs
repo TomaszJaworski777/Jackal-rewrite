@@ -1,5 +1,5 @@
-use chess::{ChessBoard, ChessPosition, FEN};
-use engine::SearchEngine;
+use chess::{ChessBoard, ChessPosition, Side, FEN};
+use engine::{SearchEngine, SearchLimits};
 use utils::clear_terminal_screen;
 
 use crate::InputWrapper;
@@ -93,9 +93,11 @@ fn position(args: &[String], search_engine: &mut SearchEngine) {
 }
 
 fn go(args: &[String], search_engine: &mut SearchEngine, input_wrapper: &mut InputWrapper, shutdown_token: &mut bool) {
+    let search_limits = create_search_limits(args, search_engine.current_position().board());
+
     std::thread::scope(|s| {
         s.spawn(|| {
-            let result = search_engine.search();
+            let result = search_engine.search(&search_limits);
             let best_node = search_engine.tree().select_child(0, |node| node.score() as f64);
             println!("avg_depth {}", result.avg_depth());
             println!("iters {}", result.iterations());
@@ -124,4 +126,45 @@ fn go(args: &[String], search_engine: &mut SearchEngine, input_wrapper: &mut Inp
             }
         }
     });
+}
+
+fn create_search_limits(args: &[String], board: &ChessBoard) -> SearchLimits {
+    let mut search_limits = SearchLimits::default();
+
+    let mut iters = None;
+    let mut depth = None;
+    let mut move_time = None;
+    let mut moves_to_go = None;
+    let (mut wtime, mut btime, mut winc, mut binc) = (None, None, None, None);
+    let mut infinite = false;
+
+    for (idx, arg) in args.iter().enumerate() {
+        match arg.as_str() {
+            "infinite" => infinite = true,
+            "nodes" => iters = if args.len() > idx + 1 { args[idx + 1].parse::<u64>().ok() } else { None },
+            "depth" => depth = if args.len() > idx + 1 { args[idx + 1].parse::<u64>().ok() } else { None },
+            "movetime" => move_time = if args.len() > idx + 1 { args[idx + 1].parse::<u128>().ok() } else { None },
+            "moves_to_go" => moves_to_go = if args.len() > idx + 1 { args[idx + 1].parse::<u128>().ok() } else { None },
+            "wtime" => wtime = if args.len() > idx + 1 { args[idx + 1].parse::<u128>().ok() } else { None },
+            "btime" => btime = if args.len() > idx + 1 { args[idx + 1].parse::<u128>().ok() } else { None },
+            "winc" => winc = if args.len() > idx + 1 { args[idx + 1].parse::<u128>().ok() } else { None },
+            "binc" => binc = if args.len() > idx + 1 { args[idx + 1].parse::<u128>().ok() } else { None },
+            _ => continue,
+        }
+    }
+
+    search_limits.set_iters(iters);
+    search_limits.set_depth(depth);
+    search_limits.set_infinite(infinite);
+    
+    if let Some(move_time) = move_time {
+        search_limits.set_time(move_time);
+        return search_limits;
+    }
+
+    let (time_remaining, increment) = if board.side() == Side::WHITE { (wtime, winc) } else { (btime, binc) };
+
+    search_limits.calculate_time_limit(time_remaining, increment, moves_to_go);
+
+    search_limits
 }

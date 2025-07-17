@@ -1,4 +1,3 @@
-use chess::Move;
 use utils::AlignString;
 
 use crate::search_engine::tree::Tree;
