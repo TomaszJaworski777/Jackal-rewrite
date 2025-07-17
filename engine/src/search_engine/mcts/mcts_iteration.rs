@@ -31,11 +31,11 @@ pub fn perform_iteration(tree: &Tree, position: &mut ChessPosition, depth: &mut 
     }
 
     //3. Simulation
-    let score = 0.0;
+    let score = 0.5;
 
     //4. Backpropagation
     let mut alternate_score = false;
-    for node_idx in iteration_history {
+    for &node_idx in iteration_history.iter().rev() {
         tree.get_node(node_idx).add_visist(if alternate_score { 1.0 - score } else { score });
         alternate_score = !alternate_score;
     }

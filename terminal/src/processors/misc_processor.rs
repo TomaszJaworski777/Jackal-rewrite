@@ -14,7 +14,14 @@ impl MiscProcessor {
                 let node_idx = if args.len() >= 2 { 
                     usize::from_str_radix(args[1].strip_prefix("0x").unwrap_or(args[1].as_str()), 16).ok() 
                 } else { None };
-                search_engine.tree().draw_tree(depth, node_idx);
+                search_engine.tree().draw_tree::<true>(depth, node_idx);
+            },
+            "raw_tree" => {
+                let depth = if args.len() >= 1 { args[0].parse::<u8>().ok() } else { None };
+                let node_idx = if args.len() >= 2 { 
+                    usize::from_str_radix(args[1].strip_prefix("0x").unwrap_or(args[1].as_str()), 16).ok() 
+                } else { None };
+                search_engine.tree().draw_tree::<false>(depth, node_idx);
             },
             "perft" => {
                 let depth = if args.len() >= 1 { args[0].parse::<u8>().ok() } else { None };
@@ -23,6 +30,12 @@ impl MiscProcessor {
             "bulk" => {
                 let depth = if args.len() >= 1 { args[0].parse::<u8>().ok() } else { None };
                 perft(search_engine, depth, true);
+            },
+            "bench" => {
+                let depth = if args.len() >= 1 { args[0].parse::<u64>().ok() } else { None };
+                let (result, duration) = search_engine.bench(depth);
+                let nps = result as f64 / duration.as_secs_f64();
+                println!("Bench: {result} nodes {:.0} nps", nps);
             },
             _ => return false,
         }

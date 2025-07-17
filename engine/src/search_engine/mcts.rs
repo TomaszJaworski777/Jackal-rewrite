@@ -18,7 +18,12 @@ impl SearchEngine {
             let mut position = *self.current_position();
 
             if !perform_iteration(&self.tree, &mut position, &mut depth) {
-                self.interrupt_search();
+                if search_limits.is_inifinite() {
+                    while !self.is_search_interrupted() { }
+                    break;
+                } else {
+                    self.interrupt_search();
+                }
             }
 
             search_stats.push_iteration(depth);
@@ -32,7 +37,7 @@ impl SearchEngine {
             }
 
             if search_limits.is_timeout(search_stats) {
-                //self.interrupt_search();
+                self.interrupt_search();
             } 
         }
     }

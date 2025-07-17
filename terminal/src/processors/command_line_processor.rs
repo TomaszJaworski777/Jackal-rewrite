@@ -1,7 +1,7 @@
 use engine::SearchEngine;
 
 #[allow(clippy::ptr_arg)]
-pub fn process_command_line_args(args: &Vec<String>, search_engine: &SearchEngine) -> bool {
+pub fn process_command_line_args(args: &Vec<String>, search_engine: &mut SearchEngine) -> bool {
     let mut commmand_processed = false;
 
     for (idx, arg) in args.iter().enumerate() {
@@ -10,7 +10,7 @@ pub fn process_command_line_args(args: &Vec<String>, search_engine: &SearchEngin
                 let depth = if idx >= args.len() - 1 {
                     None
                 } else {
-                    args[idx + 1].parse::<u8>().ok()
+                    args[idx + 1].parse::<u64>().ok()
                 };
 
                 let (result, duration) = search_engine.bench(depth);

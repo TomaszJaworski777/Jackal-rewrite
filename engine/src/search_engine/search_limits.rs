@@ -26,7 +26,15 @@ impl SearchLimits {
         self.infinite = infinite
     }
 
+    pub fn is_inifinite(&self) -> bool {
+        self.infinite
+    }
+
     pub fn calculate_time_limit(&mut self, time_remaining: Option<u128>, increment: Option<u128>, moves_to_go: Option<u128>) {
+        if time_remaining.is_none() {
+            return;
+        }
+
         if let Some(moves_to_go) = moves_to_go {
             self.time = Some(time_remaining.unwrap_or(0) / moves_to_go);
             return;

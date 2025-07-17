@@ -13,7 +13,7 @@ fn main() {
 
     let mut search_engine = SearchEngine::new();
 
-    if process_command_line_args(&std::env::args().collect(), &search_engine) {
+    if process_command_line_args(&std::env::args().collect(), &mut search_engine) {
         return;
     }
 
