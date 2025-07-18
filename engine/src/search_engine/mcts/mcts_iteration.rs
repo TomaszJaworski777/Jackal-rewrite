@@ -3,12 +3,13 @@ use chess::ChessPosition;
 use crate::search_engine::tree::Tree;
 
 pub fn perform_iteration(tree: &Tree, node_idx: usize, position: &mut ChessPosition, depth: &mut u16) -> Option<f32> {
-    *depth += 1;
-
     let score = {
         if tree.get_node(node_idx).children_count() == 0 {
-            tree.expand_node(node_idx, position.board());
-            Some(0.0)
+            if !tree.expand_node(node_idx, position.board()) {
+                return None;
+            }
+
+            Some(0.5)
         } else {
             let new_index = tree.select_child(node_idx, |node| {
                 let score = if node.visits() == 0 { 0.5 } else { node.score() as f64 };
@@ -21,6 +22,7 @@ pub fn perform_iteration(tree: &Tree, node_idx: usize, position: &mut ChessPosit
 
             position.make_move(tree.get_node(new_index).mv());
 
+            *depth += 1;
             perform_iteration(tree, new_index, position, depth)
         }
     };
