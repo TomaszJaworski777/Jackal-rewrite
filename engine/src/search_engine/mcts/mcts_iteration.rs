@@ -9,7 +9,7 @@ pub fn perform_iteration(tree: &Tree, node_idx: usize, position: &mut ChessPosit
                 return None;
             }
 
-            Some(0.5)
+            Some(0.0)
         } else {
             let new_index = tree.select_child(node_idx, |node| {
                 let score = if node.visits() == 0 { 0.5 } else { node.score() as f64 };
@@ -38,5 +38,5 @@ pub fn perform_iteration(tree: &Tree, node_idx: usize, position: &mut ChessPosit
 }
 
 fn ucb1(score: f64, c: f64, parent_visits: u32, child_visits: u32) -> f64 {
-    score + c * (f64::from(parent_visits.max(1)).ln() / f64::from(child_visits.max(1)))
+    score + c * (f64::from(parent_visits.max(1)).ln() / f64::from(child_visits.max(1))).sqrt()
 }
