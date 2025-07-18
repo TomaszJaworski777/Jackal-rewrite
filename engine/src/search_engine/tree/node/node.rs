@@ -61,7 +61,7 @@ impl Node {
         self.children_count.load(Ordering::Relaxed)
     }
 
-    pub fn add_visist(&self, score: f32) {
+    pub fn add_visit(&self, score: f32) {
         self.visit_count.fetch_add(1, Ordering::Relaxed);
         self.cumulative_score.fetch_add((score as f64 * f64::from(SCORE_SCALE)) as u64, Ordering::Relaxed);
     }
