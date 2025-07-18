@@ -2,16 +2,16 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::{search_engine::tree::Tree};
+use crate::search_engine::tree::Tree;
 
 mod bench;
 mod mcts;
-mod tree;
-mod search_stats;
 mod search_limits;
+mod search_stats;
+mod tree;
 
-pub use search_stats::SearchStats;
 pub use search_limits::SearchLimits;
+pub use search_stats::SearchStats;
 
 #[derive(Debug)]
 pub struct SearchEngine {
@@ -22,10 +22,10 @@ pub struct SearchEngine {
 
 impl Clone for SearchEngine {
     fn clone(&self) -> Self {
-        Self { 
+        Self {
             position: self.position,
-            tree: self.tree.clone(), 
-            interruption_token: AtomicBool::new(self.interruption_token.load(Ordering::Relaxed)) 
+            tree: self.tree.clone(),
+            interruption_token: AtomicBool::new(self.interruption_token.load(Ordering::Relaxed)),
         }
     }
 }

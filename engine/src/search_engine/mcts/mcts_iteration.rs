@@ -2,7 +2,12 @@ use chess::ChessPosition;
 
 use crate::search_engine::tree::Tree;
 
-pub fn perform_iteration(tree: &Tree, node_idx: usize, position: &mut ChessPosition, depth: &mut u16) -> Option<f32> {
+pub fn perform_iteration(
+    tree: &Tree,
+    node_idx: usize,
+    position: &mut ChessPosition,
+    depth: &mut u16,
+) -> Option<f32> {
     let score = {
         if tree.get_node(node_idx).children_count() == 0 {
             if !tree.expand_node(node_idx, position.board()) {
@@ -12,7 +17,11 @@ pub fn perform_iteration(tree: &Tree, node_idx: usize, position: &mut ChessPosit
             Some(0.0)
         } else {
             let new_index = tree.select_child(node_idx, |node| {
-                let score = if node.visits() == 0 { 0.5 } else { node.score() as f64 };
+                let score = if node.visits() == 0 {
+                    0.5
+                } else {
+                    node.score() as f64
+                };
                 ucb1(score, 2.0, tree.get_node(node_idx).visits(), node.visits())
             });
 

@@ -82,7 +82,6 @@ pub fn miliseconds_to_string(miliseconds: u128) -> String {
 }
 
 pub fn number_to_string(number: u128) -> String {
-        
     if number < 1000 {
         return format!("{number}");
     }
@@ -103,7 +102,6 @@ pub fn number_to_string(number: u128) -> String {
 }
 
 pub fn bytes_to_string(number: u128) -> String {
-    
     if number < 1024 {
         return format!("{number}");
     }
@@ -143,7 +141,7 @@ impl AlignString for String {
         let space = " ".repeat(len - string_len);
         format!("{space}{self}")
     }
-    
+
     fn align_to_left(&self, len: usize) -> String {
         let string_len = self.len();
 
@@ -160,7 +158,7 @@ impl AlignString for &str {
     fn align_to_right(&self, len: usize) -> String {
         self.to_string().align_to_right(len)
     }
-    
+
     fn align_to_left(&self, len: usize) -> String {
         self.to_string().align_to_left(len)
     }

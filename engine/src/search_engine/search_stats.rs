@@ -1,4 +1,7 @@
-use std::{sync::atomic::{AtomicU64, Ordering}, time::Instant};
+use std::{
+    sync::atomic::{AtomicU64, Ordering},
+    time::Instant,
+};
 
 pub struct SearchStats {
     iterations: AtomicU64,
@@ -8,10 +11,10 @@ pub struct SearchStats {
 
 impl SearchStats {
     pub fn new(_threads: usize) -> Self {
-        SearchStats { 
-            iterations: AtomicU64::new(0), 
-            cumulative_depth: AtomicU64::new(0), 
-            timer: Instant::now()
+        SearchStats {
+            iterations: AtomicU64::new(0),
+            cumulative_depth: AtomicU64::new(0),
+            timer: Instant::now(),
         }
     }
 
@@ -29,6 +32,7 @@ impl SearchStats {
 
     pub fn push_iteration(&self, depth: u16) {
         self.iterations.fetch_add(1, Ordering::Relaxed);
-        self.cumulative_depth.fetch_add(depth as u64, Ordering::Relaxed);
+        self.cumulative_depth
+            .fetch_add(depth as u64, Ordering::Relaxed);
     }
 }

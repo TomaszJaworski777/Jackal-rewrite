@@ -1,12 +1,11 @@
 use crate::search_engine::SearchStats;
 
-
 #[derive(Debug, Default)]
 pub struct SearchLimits {
     depth: Option<u64>,
     iters: Option<u64>,
     time: Option<u128>,
-    infinite: bool
+    infinite: bool,
 }
 
 impl SearchLimits {
@@ -30,7 +29,12 @@ impl SearchLimits {
         self.infinite
     }
 
-    pub fn calculate_time_limit(&mut self, time_remaining: Option<u128>, increment: Option<u128>, moves_to_go: Option<u128>) {
+    pub fn calculate_time_limit(
+        &mut self,
+        time_remaining: Option<u128>,
+        increment: Option<u128>,
+        moves_to_go: Option<u128>,
+    ) {
         if time_remaining.is_none() {
             return;
         }

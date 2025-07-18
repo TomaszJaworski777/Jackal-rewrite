@@ -19,9 +19,21 @@ pub use board::ChessPosition;
 
 pub const DEFAULT_PERFT_DEPTH: u8 = 5;
 
-pub fn perft(board: &ChessBoard, depth: Option<u8>, bulk: bool, chess960: bool, print_split: bool) -> (u128, Duration) {
+pub fn perft(
+    board: &ChessBoard,
+    depth: Option<u8>,
+    bulk: bool,
+    chess960: bool,
+    print_split: bool,
+) -> (u128, Duration) {
     let timer = Instant::now();
-    let result = perft_internal(board, depth.unwrap_or(DEFAULT_PERFT_DEPTH), bulk, chess960, print_split);
+    let result = perft_internal(
+        board,
+        depth.unwrap_or(DEFAULT_PERFT_DEPTH),
+        bulk,
+        chess960,
+        print_split,
+    );
     let duration = timer.elapsed();
 
     (result, duration)

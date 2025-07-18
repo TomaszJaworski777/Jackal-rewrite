@@ -1,10 +1,13 @@
 use engine::SearchEngine;
 
-use crate::{displays::welcome_message, processors::{process_command_line_args, MiscProcessor, UciProcessor}};
+use crate::{
+    displays::welcome_message,
+    processors::{process_command_line_args, MiscProcessor, UciProcessor},
+};
 
-mod processors;
 mod displays;
 mod input_wrapper;
+mod processors;
 
 pub use input_wrapper::InputWrapper;
 
@@ -36,11 +39,22 @@ fn main() {
             .map(|&arg_str| arg_str.to_string())
             .collect::<Vec<String>>();
 
-        if MiscProcessor::execute(command, &command_args, &mut search_engine, &mut shutdown_token) {
+        if MiscProcessor::execute(
+            command,
+            &command_args,
+            &mut search_engine,
+            &mut shutdown_token,
+        ) {
             continue;
         }
 
-        if uci_processor.execute(command, &command_args, &mut search_engine, &mut input_wrapper, &mut shutdown_token) {
+        if uci_processor.execute(
+            command,
+            &command_args,
+            &mut search_engine,
+            &mut input_wrapper,
+            &mut shutdown_token,
+        ) {
             continue;
         }
     }

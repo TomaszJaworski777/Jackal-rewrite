@@ -45,7 +45,7 @@ impl From<ChessBoard> for ChessPosition {
         };
 
         position.history.push(value.hash());
-        
+
         position
     }
 }

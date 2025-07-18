@@ -1,15 +1,15 @@
 use std::io::stdin;
 
 pub struct InputWrapper {
-    command_queue: Vec<String>
+    command_queue: Vec<String>,
 }
 
 impl InputWrapper {
     pub fn new() -> Self {
-        Self {  
-            command_queue: Vec::new()
+        Self {
+            command_queue: Vec::new(),
         }
-    }    
+    }
 
     pub fn get_input(&mut self) -> String {
         if self.command_queue.len() > 0 {

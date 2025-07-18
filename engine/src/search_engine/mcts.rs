@@ -1,4 +1,7 @@
-use crate::{search_engine::{mcts::mcts_iteration::perform_iteration, SearchLimits, SearchStats}, SearchEngine};
+use crate::{
+    search_engine::{mcts::mcts_iteration::perform_iteration, SearchLimits, SearchStats},
+    SearchEngine,
+};
 
 mod mcts_iteration;
 
@@ -21,7 +24,7 @@ impl SearchEngine {
 
             if result.is_none() {
                 if search_limits.is_inifinite() {
-                    while !self.is_search_interrupted() { }
+                    while !self.is_search_interrupted() {}
                     break;
                 } else {
                     self.interrupt_search();
@@ -40,7 +43,7 @@ impl SearchEngine {
 
             if search_limits.is_timeout(search_stats) {
                 self.interrupt_search();
-            } 
+            }
         }
     }
 }
