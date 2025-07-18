@@ -1,38 +1,33 @@
 use colored::Colorize;
 
-use crate::color_config;
+use crate::{color_config::{self, BRIGHT_ORANGE}, DARK_WHITE, GRAY};
 
-pub trait Labels {
-    fn label(&self) -> String;
-    fn highlight(&self) -> String;
-    fn highlight_alt(&self) -> String;
+pub trait Theme {
+    fn primary(&self, gradient: f32) -> String;
+    fn secondary(&self, gradient: f32) -> String;
 }
 
-impl Labels for String {
-    fn label(&self) -> Self {
-        apply_color(&self, color_config::LABEL_COLOR)
+impl Theme for String {
+    fn primary(&self, gradient: f32) -> String {
+        let (orange_r, orange_g, orange_b) = BRIGHT_ORANGE;
+        let dest = (orange_r + 61, orange_g - 72, orange_b - 60);
+        let color = lerp_color(BRIGHT_ORANGE, dest, gradient);
+        self.custom_color(color)
     }
 
-    fn highlight(&self) -> Self {
-        apply_color(&self, color_config::HIGHLIGHT_COLOR)
-    }
-
-    fn highlight_alt(&self) -> Self {
-        apply_color(&self, color_config::HIGHLIGHT_ALT_COLOR)
+    fn secondary(&self, gradient: f32) -> String {
+        let color = lerp_color(DARK_WHITE, GRAY, gradient);
+        self.custom_color(color)
     }
 }
 
-impl Labels for &str {
-    fn label(&self) -> String {
-        apply_color(&self, color_config::LABEL_COLOR)
+impl Theme for &str {
+    fn primary(&self, gradient: f32) -> String {
+        self.to_string().primary(gradient)
     }
 
-    fn highlight(&self) -> String {
-        apply_color(&self, color_config::HIGHLIGHT_COLOR)
-    }
-
-    fn highlight_alt(&self) -> String {
-        apply_color(&self, color_config::HIGHLIGHT_ALT_COLOR)
+    fn secondary(&self, gradient: f32) -> String {
+        self.to_string().secondary(gradient)
     }
 }
 
@@ -41,6 +36,7 @@ pub trait Colors {
     fn yellow(&self) -> String;
     fn red(&self) -> String;
     fn orange(&self) -> String;
+    fn bright_orange(&self) -> String;
     fn blue(&self) -> String;
     fn dark_blue(&self) -> String;
     fn purple(&self) -> String;
@@ -65,6 +61,10 @@ impl Colors for String {
 
     fn orange(&self) -> Self {
         apply_color(&self, color_config::ORANGE)
+    }
+
+    fn bright_orange(&self) -> Self {
+        apply_color(&self, color_config::BRIGHT_ORANGE)
     }
 
     fn blue(&self) -> Self {
@@ -111,6 +111,10 @@ impl Colors for &str {
 
     fn orange(&self) -> String {
         apply_color(&self, color_config::ORANGE)
+    }
+
+    fn bright_orange(&self) -> String {
+        apply_color(&self, color_config::BRIGHT_ORANGE)
     }
 
     fn blue(&self) -> String {

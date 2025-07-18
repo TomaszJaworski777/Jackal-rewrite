@@ -31,7 +31,7 @@ pub fn perform_iteration(tree: &Tree, position: &mut ChessPosition, depth: &mut 
     }
 
     //3. Simulation
-    let score = 0.5;
+    let score = 0.0;
 
     //4. Backpropagation
     let mut alternate_score = false;

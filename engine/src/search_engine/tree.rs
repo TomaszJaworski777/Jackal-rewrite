@@ -37,25 +37,39 @@ impl Tree {
         tree
     }
 
+    #[inline]
     pub fn clear(&self) {
         self.idx.store(1, Ordering::Relaxed);
         self.reset_root();
     }
 
+    #[inline]
     pub fn reset_root(&self) {
         self.nodes[0].clear(Move::NULL);
     }
 
+    #[inline]
+    pub fn current_index(&self) -> usize {
+        self.idx.load(Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn tree_size(&self) -> usize {
+        self.nodes.len()
+    }
+
+    #[inline]
     pub fn root_node(&self) -> &Node {
         &self.nodes[0]
     }
 
+    #[inline]
     pub fn get_node(&self, node_idx: usize) -> &Node {
         &self.nodes[node_idx]
     }
 
     pub fn expand_node(&self, node_idx: usize, board: &ChessBoard) -> bool {
-        assert_eq!(self.nodes[node_idx].children_count(), 0, "{node_idx}");
+        assert_eq!(self.nodes[node_idx].children_count(), 0, "Node {node_idx} already have children.");
 
         let mut moves = Vec::new();
         board.map_legal_moves(|mv| moves.push(mv));
@@ -90,6 +104,7 @@ impl Tree {
         best_idx
     }
 
+    #[inline]
     fn reserve_nodes(&self, count: usize) -> usize {
         self.idx.fetch_add(count, Ordering::Relaxed)
     }

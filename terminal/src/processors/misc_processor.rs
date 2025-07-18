@@ -16,7 +16,7 @@ impl MiscProcessor {
                 } else { None };
                 search_engine.tree().draw_tree::<true>(depth, node_idx);
             },
-            "raw_tree" => {
+            "rawtree" => {
                 let depth = if args.len() >= 1 { args[0].parse::<u8>().ok() } else { None };
                 let node_idx = if args.len() >= 2 { 
                     usize::from_str_radix(args[1].strip_prefix("0x").unwrap_or(args[1].as_str()), 16).ok() 

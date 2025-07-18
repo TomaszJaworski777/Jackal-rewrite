@@ -82,21 +82,49 @@ pub fn miliseconds_to_string(miliseconds: u128) -> String {
 }
 
 pub fn number_to_string(number: u128) -> String {
-    match number {
-        0..1000 => format!("{number}"),
-        1000..1_000_000 => format!("{:.2}K", number as f64 / 1000.0),
-        1_000_000..1_000_000_000 => format!("{:.2}M", number as f64 / 1_000_000.0),
-        1_000_000_000.. => format!("{:.2}B", number as f64 / 1_000_000_000.0),
+        
+    if number < 1000 {
+        return format!("{number}");
     }
+
+    let number = round(number as f64 / 1000.0);
+
+    if number < 1000.0 {
+        return format!("{:.2}K", number);
+    }
+
+    let number = round(number as f64 / 1000.0);
+
+    if number < 1000.0 {
+        return format!("{:.2}M", number);
+    }
+
+    format!("{:.2}B", round(number as f64 / 1000.0))
 }
 
 pub fn bytes_to_string(number: u128) -> String {
-    match number {
-        0..1024 => format!("{number}"),
-        1024..1_048_576 => format!("{:.2}K", number as f64 / 1024.0),
-        1_048_576..1_073_741_824 => format!("{:.2}M", number as f64 / 1_048_576.0),
-        1_073_741_824.. => format!("{:.2}G", number as f64 / 1_073_741_824.0),
+    
+    if number < 1024 {
+        return format!("{number}");
     }
+
+    let number = round(number as f64 / 1024.0);
+
+    if number < 1024.0 {
+        return format!("{:.2}K", number);
+    }
+
+    let number = round(number as f64 / 1024.0);
+
+    if number < 1024.0 {
+        return format!("{:.2}M", number);
+    }
+
+    format!("{:.2}G", round(number as f64 / 1024.0))
+}
+
+fn round(number: f64) -> f64 {
+    (number * 100.0).round() / 100.0
 }
 
 pub trait AlignString {
