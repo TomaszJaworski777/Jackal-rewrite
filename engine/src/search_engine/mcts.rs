@@ -17,7 +17,9 @@ impl SearchEngine {
             let mut depth = 0;
             let mut position = *self.current_position();
 
-            if !perform_iteration(&self.tree, &mut position, &mut depth) {
+            let result = perform_iteration(&self.tree, 0, &mut position, &mut depth);
+
+            if result.is_none() {
                 if search_limits.is_inifinite() {
                     while !self.is_search_interrupted() { }
                     break;
