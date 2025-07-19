@@ -54,7 +54,7 @@ impl MiscProcessor {
                 } else {
                     None
                 };
-                perft(search_engine, depth, false);
+                perft::<false, false>(search_engine, depth);
             }
             "bulk" => {
                 let depth = if args.len() >= 1 {
@@ -62,7 +62,7 @@ impl MiscProcessor {
                 } else {
                     None
                 };
-                perft(search_engine, depth, true);
+                perft::<true, false>(search_engine, depth);
             }
             "bench" => {
                 let depth = if args.len() >= 1 {
@@ -81,7 +81,7 @@ impl MiscProcessor {
     }
 }
 
-fn perft(search_engine: &SearchEngine, depth: Option<u8>, bulk: bool) {
+fn perft<const BULK: bool, const CHESS_960: bool>(search_engine: &SearchEngine, depth: Option<u8>) {
     println!("");
 
     search_engine.current_position().board().draw_board();
@@ -89,15 +89,12 @@ fn perft(search_engine: &SearchEngine, depth: Option<u8>, bulk: bool) {
     println!("-----------------------------------------------------------");
     println!("  Running PERFT");
     println!("  Depth: {}", depth.unwrap_or(DEFAULT_PERFT_DEPTH));
-    println!("  Bulk: {bulk}");
+    println!("  Bulk: {BULK}");
     println!("-----------------------------------------------------------\n");
 
-    let (result, duration) = chess::perft(
+    let (result, duration) = chess::perft::<BULK, true, CHESS_960>(
         search_engine.current_position().board(),
-        depth,
-        bulk,
-        false,
-        true,
+        depth
     );
     let miliseconds = duration.as_millis();
 

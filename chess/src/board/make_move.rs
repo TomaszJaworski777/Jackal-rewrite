@@ -1,14 +1,19 @@
 use crate::{ChessBoard, Move, MoveFlag, Piece, Side, Square};
 
 impl ChessBoard {
-    pub fn make_move(&mut self, mv: Move) {
+    pub fn make_move_no_mask(&mut self, mv: Move) {
+        let mask = self.castle_rights().get_castle_mask();
+        self.make_move(mv, &mask);
+    }
+
+    pub fn make_move(&mut self, mv: Move, mask: &[u8; 64]) {
         let from = mv.get_from_square();
         let to = mv.get_to_square();
 
         if self.side() == Side::WHITE {
-            self.make_move_move_flag::<0>(mv, from, to);
+            self.make_move_move_flag::<0>(mv, from, to, mask);
         } else {
-            self.make_move_move_flag::<1>(mv, from, to);
+            self.make_move_move_flag::<1>(mv, from, to, mask);
         }
     }
 
@@ -18,88 +23,103 @@ impl ChessBoard {
         mv: Move,
         from_square: Square,
         to_square: Square,
+        mask: &[u8; 64],
     ) {
         match mv.get_flag() {
             MoveFlag::QUIET_MOVE => self.make_move_moved_piece::<COLOR, { MoveFlag::QUIET_MOVE }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             MoveFlag::DOUBLE_PUSH => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::DOUBLE_PUSH }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::KING_SIDE_CASTLE => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::KING_SIDE_CASTLE }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::QUEEN_SIDE_CASTLE => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_SIDE_CASTLE }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::CAPTURE => self.make_move_moved_piece::<COLOR, { MoveFlag::CAPTURE }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             MoveFlag::EN_PASSANT => self.make_move_moved_piece::<COLOR, { MoveFlag::EN_PASSANT }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             MoveFlag::KNIGHT_PROMOTION => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::KNIGHT_PROMOTION }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::BISHOP_PROMOTION => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::BISHOP_PROMOTION }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::ROOK_PROMOTION => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::ROOK_PROMOTION }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::QUEEN_PROMOTION => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_PROMOTION }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::KNIGHT_PROMOTION_CAPTURE => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::KNIGHT_PROMOTION_CAPTURE }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::BISHOP_PROMOTION_CAPTURE => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::BISHOP_PROMOTION_CAPTURE }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::ROOK_PROMOTION_CAPTURE => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::ROOK_PROMOTION_CAPTURE }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             MoveFlag::QUEEN_PROMOTION_CAPTURE => self
                 .make_move_moved_piece::<COLOR, { MoveFlag::QUEEN_PROMOTION_CAPTURE }>(
                     mv,
                     from_square,
                     to_square,
+                    mask,
                 ),
             _ => unreachable!(),
         }
@@ -111,6 +131,7 @@ impl ChessBoard {
         mv: Move,
         from_square: Square,
         to_square: Square,
+        mask: &[u8; 64],
     ) {
         let moved_piece = self.piece_on_square(from_square);
         match moved_piece {
@@ -118,36 +139,43 @@ impl ChessBoard {
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::KNIGHT => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { KNIGHT }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::BISHOP => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { BISHOP }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::ROOK => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { ROOK }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::QUEEN => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { QUEEN }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::KING => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { KING }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::NONE => self.make_move_captured_piece::<COLOR, MOVE_FLAG, { NONE }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             _ => unreachable!(),
         }
@@ -159,12 +187,14 @@ impl ChessBoard {
         mv: Move,
         from_square: Square,
         to_square: Square,
+        mask: &[u8; 64],
     ) {
         if MOVE_FLAG & MoveFlag::CAPTURE == 0 {
             self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { NONE }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             );
             return;
         }
@@ -175,31 +205,37 @@ impl ChessBoard {
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::KNIGHT => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { KNIGHT }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::BISHOP => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { BISHOP }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::ROOK => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { ROOK }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::QUEEN => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { QUEEN }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             Piece::NONE => self.make_move_internal::<COLOR, MOVE_FLAG, MOVED_PIECE, { NONE }>(
                 mv,
                 from_square,
                 to_square,
+                mask,
             ),
             _ => {
                 self.draw_board();
@@ -219,6 +255,7 @@ impl ChessBoard {
         mv: Move,
         from_square: Square,
         to_square: Square,
+        mask: &[u8; 64],
     ) {
         if CAPTURED_PIECE != NONE {
             self.remove_piece_on_square(
@@ -240,7 +277,6 @@ impl ChessBoard {
             self.half_moves += 1;
         }
 
-        let mask = self.castle_rights().get_castle_mask();
         let mut castle_rights = u8::from(self.castle_rights());
         castle_rights &= !(mask[usize::from(from_square)] | mask[usize::from(to_square)]);
         self.castle_rights.set_rights(castle_rights);

@@ -88,7 +88,7 @@ fn position(args: &[String], search_engine: &mut SearchEngine) {
     for mv in moves {
         chess_position.board().clone().map_legal_moves(|legal_mv| {
             if *mv == legal_mv.to_string(false) {
-                chess_position.make_move(legal_mv);
+                chess_position.make_move_no_mask(legal_mv);
             }
         });
     }

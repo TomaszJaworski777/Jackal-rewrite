@@ -7,6 +7,7 @@ pub fn perform_iteration(
     node_idx: usize,
     position: &mut ChessPosition,
     depth: &mut u16,
+    mask: &[u8; 64],
 ) -> Option<f32> {
     let score = {
         if tree.get_node(node_idx).children_count() == 0 {
@@ -29,10 +30,10 @@ pub fn perform_iteration(
 
             let new_index = new_index.unwrap();
 
-            position.make_move(tree.get_node(new_index).mv());
+            position.make_move(tree.get_node(new_index).mv(), mask);
 
             *depth += 1;
-            perform_iteration(tree, new_index, position, depth)
+            perform_iteration(tree, new_index, position, depth, mask)
         }
     };
 
@@ -47,5 +48,5 @@ pub fn perform_iteration(
 }
 
 fn ucb1(score: f64, c: f64, parent_visits: u32, child_visits: u32) -> f64 {
-    score + c * (f64::from(parent_visits.max(1)).ln() / f64::from(child_visits.max(1))).sqrt()
+    score + c * (f64::from(parent_visits.max(1)).ln() / f64::from(child_visits.max(1)))
 }

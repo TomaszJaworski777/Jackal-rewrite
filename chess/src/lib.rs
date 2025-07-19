@@ -19,36 +19,30 @@ pub use board::ChessPosition;
 
 pub const DEFAULT_PERFT_DEPTH: u8 = 5;
 
-pub fn perft(
+pub fn perft<const BULK: bool, const SPLIT: bool, const CHESS_960: bool>(
     board: &ChessBoard,
     depth: Option<u8>,
-    bulk: bool,
-    chess960: bool,
-    print_split: bool,
 ) -> (u128, Duration) {
     let timer = Instant::now();
-    let result = perft_internal(
+    let mask = board.castle_rights().get_castle_mask();
+    let result = perft_internal::<BULK, SPLIT, CHESS_960>(
         board,
         depth.unwrap_or(DEFAULT_PERFT_DEPTH),
-        bulk,
-        chess960,
-        print_split,
+        &mask
     );
     let duration = timer.elapsed();
 
     (result, duration)
 }
 
-fn perft_internal(
+fn perft_internal<const BULK: bool, const SPLIT: bool, const CHESS_960: bool>(
     board: &ChessBoard,
     depth: u8,
-    bulk: bool,
-    chess960: bool,
-    print_split: bool,
+    mask: &[u8; 64],
 ) -> u128 {
     let mut node_count = 0u128;
 
-    if bulk && depth == 1 {
+    if BULK && depth == 1 {
         board.map_legal_moves(|_| node_count += 1);
         return node_count;
     }
@@ -59,12 +53,12 @@ fn perft_internal(
 
     board.map_legal_moves(|mv| {
         let mut board_copy = *board;
-        board_copy.make_move(mv);
-        let result = perft_internal(&board_copy, depth - 1, bulk, chess960, false);
+        board_copy.make_move(mv, mask);
+        let result = perft_internal::<BULK, false, CHESS_960>(&board_copy, depth - 1, mask);
         node_count += result;
 
-        if print_split {
-            println!("  {} - {result}", mv.to_string(chess960))
+        if SPLIT {
+            println!("  {} - {result}", mv.to_string(CHESS_960))
         }
     });
 

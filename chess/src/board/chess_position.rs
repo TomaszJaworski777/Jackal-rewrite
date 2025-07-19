@@ -26,8 +26,14 @@ impl ChessPosition {
     }
 
     #[inline]
-    pub fn make_move(&mut self, mv: Move) {
-        self.board.make_move(mv);
+    pub fn make_move_no_mask(&mut self, mv: Move) { 
+        let mask = self.board.castle_rights().get_castle_mask();
+        self.make_move(mv, &mask);
+    }
+
+    #[inline]
+    pub fn make_move(&mut self, mv: Move, mask: &[u8; 64]) {
+        self.board.make_move(mv, mask);
 
         if self.board.half_moves() == 0 {
             self.history.reset()

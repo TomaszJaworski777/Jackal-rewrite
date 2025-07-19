@@ -16,11 +16,13 @@ impl SearchEngine {
     }
 
     fn main_loop(&self, search_stats: &mut SearchStats, search_limits: &SearchLimits) {
+        let mask = self.current_position().board().castle_rights().get_castle_mask();
+
         while !self.is_search_interrupted() {
             let mut depth = 0;
             let mut position = *self.current_position();
 
-            let result = perform_iteration(&self.tree, 0, &mut position, &mut depth);
+            let result = perform_iteration(&self.tree, 0, &mut position, &mut depth, &mask);
 
             if result.is_none() {
                 if search_limits.is_inifinite() {

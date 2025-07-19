@@ -246,7 +246,7 @@ fn handle_en_passant<F: FnMut(Move), const COLOR: u8>(
     pawns.map(|from_square| {
         let mut board = *board;
         let mv = Move::from_squares(from_square, en_passant_square, MoveFlag::EN_PASSANT);
-        board.make_move(mv);
+        board.make_move_no_mask(mv);
 
         if !board.is_square_attacked(board.king_square(Side::from(COLOR)), Side::from(COLOR)) {
             apply_move(mv)
