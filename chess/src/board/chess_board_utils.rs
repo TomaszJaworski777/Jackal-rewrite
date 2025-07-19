@@ -60,13 +60,14 @@ impl ChessBoard {
     }
 
     pub fn generate_pin_masks(&self, defender_side: Side) -> (Bitboard, Bitboard) {
+        let attacker_side = defender_side.flipped();
         let king_square = self.king_square(defender_side);
         let defender_occupancy = self.occupancy_for_side(defender_side);
-        let attacker_occupancy = self.occupancy_for_side(defender_side.flipped());
-        let queens = self.piece_mask_for_side(Piece::QUEEN, defender_side.flipped());
+        let attacker_occupancy = self.occupancy_for_side(attacker_side);
+        let queens = self.piece_mask_for_side(Piece::QUEEN, attacker_side);
 
         let potential_pinners = Attacks::get_bishop_attacks(king_square, attacker_occupancy)
-            & (self.piece_mask_for_side(Piece::BISHOP, defender_side.flipped()) | queens);
+            & (self.piece_mask_for_side(Piece::BISHOP, attacker_side) | queens);
 
         let mut diag_result = Bitboard::EMPTY;
         potential_pinners.map(|potential_pinner| {
@@ -77,7 +78,7 @@ impl ChessBoard {
         });
 
         let potential_pinners = Attacks::get_rook_attacks(king_square, attacker_occupancy)
-            & (self.piece_mask_for_side(Piece::ROOK, defender_side.flipped()) | queens);
+            & (self.piece_mask_for_side(Piece::ROOK, attacker_side) | queens);
         let mut orto_result = Bitboard::EMPTY;
         potential_pinners.map(|potential_pinner| {
             let ray = Rays::get_ray(king_square, potential_pinner);

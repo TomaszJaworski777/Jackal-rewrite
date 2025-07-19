@@ -17,6 +17,13 @@ impl ChessBoard {
         }
     }
 
+    pub(crate) fn make_move_templated<const COLOR: u8>(&mut self, mv: Move, castle_mask: &[u8; 64]) {
+        let from = mv.get_from_square();
+        let to = mv.get_to_square();
+
+        self.make_move_move_flag::<COLOR>(mv, from, to, castle_mask);
+    }
+
     #[inline]
     fn make_move_move_flag<const COLOR: u8>(
         &mut self,

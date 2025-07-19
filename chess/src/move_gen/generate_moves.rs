@@ -11,6 +11,11 @@ pub(super) struct MoveGen;
 
 impl ChessBoard {
     #[inline]
+    pub(crate) fn map_legal_moves_templated<F: FnMut(Move), const COLOR: u8>(&self, mut apply_move: F) {
+        self.map_legal_moves_internal::<_, COLOR, false>(&mut apply_move)
+    }
+
+    #[inline]
     pub fn map_legal_moves<F: FnMut(Move)>(&self, mut apply_move: F) {
         if self.side() == Side::WHITE {
             self.map_legal_moves_internal::<_, WHITE, false>(&mut apply_move)

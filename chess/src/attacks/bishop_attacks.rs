@@ -10,7 +10,7 @@ impl BishopAttacks {
         let mut reverse_diagonal = diagonal.flip();
         diagonal = diagonal.wrapping_sub(Bitboard::from(mask.bitboard));
         reverse_diagonal =
-            reverse_diagonal.wrapping_sub(Bitboard::from(mask.bitboard.swap_bytes()));
+            reverse_diagonal.wrapping_sub(Bitboard::from(mask.swap));
         diagonal ^= reverse_diagonal.flip();
         diagonal &= mask.diagonal;
 
@@ -18,7 +18,7 @@ impl BishopAttacks {
         let mut reverse_diagonal = anti.flip();
         anti = anti.wrapping_sub(Bitboard::from(mask.bitboard));
         reverse_diagonal =
-            reverse_diagonal.wrapping_sub(Bitboard::from(mask.bitboard.swap_bytes()));
+            reverse_diagonal.wrapping_sub(Bitboard::from(mask.swap));
         anti ^= reverse_diagonal.flip();
         anti &= mask.anti;
 
@@ -29,6 +29,7 @@ impl BishopAttacks {
 #[derive(Clone, Copy, Default)]
 struct Mask {
     bitboard: u64,
+    swap: u64,
     diagonal: u64,
     anti: u64,
 }
@@ -36,6 +37,7 @@ struct Mask {
 const BISHOP: [Mask; 64] = {
     let mut result = [Mask {
         bitboard: 0,
+        swap: 0,
         diagonal: 0,
         anti: 0,
     }; 64];
@@ -48,6 +50,7 @@ const BISHOP: [Mask; 64] = {
         let rank = square.get_rank() as usize;
         result[square_index] = Mask {
             bitboard: bit,
+            swap: bit.swap_bytes(),
             diagonal: bit ^ DIAGS[7 + file - rank],
             anti: bit ^ DIAGS[file + rank].swap_bytes(),
         };
