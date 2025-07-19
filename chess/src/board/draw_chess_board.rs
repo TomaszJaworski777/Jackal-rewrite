@@ -1,4 +1,4 @@
-use utils::PieceColors;
+use utils::{PieceColors, Theme};
 
 use crate::{board::ChessBoard, Piece, Side, Square, FEN};
 
@@ -10,27 +10,58 @@ impl ChessBoard {
         ];
 
         let mut info = Vec::new();
-        let fen = format!("FEN: {}", FEN::from(self));
+        let fen = format!(
+            "FEN: {}",
+            FEN::from(self).to_string().secondary(1.0 / 18.0 + 0.15)
+        );
         info.push(fen.as_str());
-        let zobrist = format!("Zobrist Key: {}", self.hash());
+        let zobrist = format!(
+            "Zobrist Key: {}",
+            self.hash().to_string().secondary(2.0 / 18.0 + 0.15)
+        );
         info.push(zobrist.as_str());
 
-        let castle_rights = format!("Castle Rights: {}", self.castle_rights());
+        let castle_rights = format!(
+            "Castle Rights: {}",
+            self.castle_rights()
+                .to_string()
+                .secondary(3.0 / 18.0 + 0.15)
+        );
         info.push(castle_rights.as_str());
-        let side_sign = format!("Side To Move: {}", self.side());
+        let side_sign = format!(
+            "Side To Move: {}",
+            self.side().to_string().secondary(4.0 / 18.0 + 0.15)
+        );
         info.push(side_sign.as_str());
-        let en_passant = format!("En Passant: {}", self.en_passant_square());
+        let en_passant = format!(
+            "En Passant: {}",
+            self.en_passant_square()
+                .to_string()
+                .secondary(5.0 / 18.0 + 0.15)
+        );
         info.push(en_passant.as_str());
-        let half_moves = format!("Half Moves: {}", self.half_moves());
+        let half_moves = format!(
+            "Half Moves: {}",
+            self.half_moves().to_string().secondary(6.0 / 18.0 + 0.15)
+        );
         info.push(half_moves.as_str());
-        let in_check = format!("In Check: {}", self.is_in_check());
+        let in_check = format!(
+            "In Check: {}",
+            self.is_in_check().to_string().secondary(7.0 / 18.0 + 0.15)
+        );
         info.push(in_check.as_str());
-        let phase = format!("Phase: {}", self.phase());
+        let phase = format!(
+            "Phase: {}",
+            self.phase().to_string().secondary(8.0 / 18.0 + 0.15)
+        );
         info.push(phase.as_str());
 
-        let mut result = " -----------------\n".to_string();
+        let mut result = " -----------------\n".to_string().primary(0.15);
         for rank in (0..8).rev() {
-            result += "|".to_string().as_str();
+            result += "|"
+                .to_string()
+                .primary((7 - rank + 1) as f32 / 18.0 + 0.15)
+                .as_str();
             for file in 0..8 {
                 let square = Square::from_coords(rank, file);
                 if square == self.en_passant_square() {
@@ -52,10 +83,12 @@ impl ChessBoard {
                         .as_str();
                 }
             }
-            result += format!(" | {}", info[(7 - rank) as usize]).as_str();
+            result += format!(" | {}", info[(7 - rank) as usize])
+                .primary((7 - rank + 1) as f32 / 18.0 + 0.15)
+                .as_str();
             result += "\n".to_string().as_str();
         }
-        result += " -----------------\n".to_string().as_str();
+        result += " -----------------\n".to_string().primary(0.75).as_str();
         println!("{}", result);
     }
 }

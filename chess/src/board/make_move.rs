@@ -17,7 +17,11 @@ impl ChessBoard {
         }
     }
 
-    pub(crate) fn make_move_templated<const COLOR: u8>(&mut self, mv: Move, castle_mask: &[u8; 64]) {
+    pub(crate) fn make_move_templated<const COLOR: u8>(
+        &mut self,
+        mv: Move,
+        castle_mask: &[u8; 64],
+    ) {
         let from = mv.get_from_square();
         let to = mv.get_to_square();
 
@@ -274,7 +278,10 @@ impl ChessBoard {
 
         self.remove_piece_on_square(from_square, Piece::from(MOVED_PIECE), Side::from(COLOR));
 
-        if MOVE_FLAG < MoveFlag::KNIGHT_PROMOTION && MOVE_FLAG != MoveFlag::KING_SIDE_CASTLE && MOVE_FLAG != MoveFlag::QUEEN_SIDE_CASTLE {
+        if MOVE_FLAG < MoveFlag::KNIGHT_PROMOTION
+            && MOVE_FLAG != MoveFlag::KING_SIDE_CASTLE
+            && MOVE_FLAG != MoveFlag::QUEEN_SIDE_CASTLE
+        {
             self.set_piece_on_square(to_square, Piece::from(MOVED_PIECE), Side::from(COLOR));
         }
 

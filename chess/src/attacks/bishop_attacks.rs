@@ -9,16 +9,14 @@ impl BishopAttacks {
         let mut diagonal = occupancy & mask.diagonal;
         let mut reverse_diagonal = diagonal.flip();
         diagonal = diagonal.wrapping_sub(Bitboard::from(mask.bitboard));
-        reverse_diagonal =
-            reverse_diagonal.wrapping_sub(Bitboard::from(mask.swap));
+        reverse_diagonal = reverse_diagonal.wrapping_sub(Bitboard::from(mask.swap));
         diagonal ^= reverse_diagonal.flip();
         diagonal &= mask.diagonal;
 
         let mut anti = occupancy & mask.anti;
         let mut reverse_diagonal = anti.flip();
         anti = anti.wrapping_sub(Bitboard::from(mask.bitboard));
-        reverse_diagonal =
-            reverse_diagonal.wrapping_sub(Bitboard::from(mask.swap));
+        reverse_diagonal = reverse_diagonal.wrapping_sub(Bitboard::from(mask.swap));
         anti ^= reverse_diagonal.flip();
         anti &= mask.anti;
 

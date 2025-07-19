@@ -7,7 +7,11 @@ mod mcts_iteration;
 
 impl SearchEngine {
     pub(super) fn mcts(&self, search_limits: &SearchLimits) -> SearchStats {
-        let castle_mask = self.current_position().board().castle_rights().get_castle_mask();
+        let castle_mask = self
+            .current_position()
+            .board()
+            .castle_rights()
+            .get_castle_mask();
 
         let mut search_stats = SearchStats::new(0);
 
@@ -17,7 +21,12 @@ impl SearchEngine {
         search_stats
     }
 
-    fn main_loop(&self, search_stats: &mut SearchStats, search_limits: &SearchLimits, castle_mask: &[u8; 64]) {
+    fn main_loop(
+        &self,
+        search_stats: &mut SearchStats,
+        search_limits: &SearchLimits,
+        castle_mask: &[u8; 64],
+    ) {
         while !self.is_search_interrupted() {
             let mut depth = 0;
             let mut position = *self.current_position();

@@ -26,7 +26,7 @@ impl ChessPosition {
     }
 
     #[inline]
-    pub fn make_move_no_mask(&mut self, mv: Move) { 
+    pub fn make_move_no_mask(&mut self, mv: Move) {
         let mask = self.board.castle_rights().get_castle_mask();
         self.make_move(mv, &mask);
     }

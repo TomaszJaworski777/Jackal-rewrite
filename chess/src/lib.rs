@@ -29,13 +29,13 @@ pub fn perft<const BULK: bool, const SPLIT: bool, const CHESS_960: bool>(
         perft_internal_white::<BULK, SPLIT, CHESS_960>(
             board,
             depth.unwrap_or(DEFAULT_PERFT_DEPTH),
-            &mask
+            &mask,
         )
     } else {
         perft_internal_black::<BULK, SPLIT, CHESS_960>(
             board,
             depth.unwrap_or(DEFAULT_PERFT_DEPTH),
-            &mask
+            &mask,
         )
     };
     let duration = timer.elapsed();
@@ -102,4 +102,3 @@ fn perft_internal_black<const BULK: bool, const SPLIT: bool, const CHESS_960: bo
 
     node_count
 }
-
