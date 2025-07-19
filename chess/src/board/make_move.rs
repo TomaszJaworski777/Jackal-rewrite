@@ -6,14 +6,14 @@ impl ChessBoard {
         self.make_move(mv, &mask);
     }
 
-    pub fn make_move(&mut self, mv: Move, mask: &[u8; 64]) {
+    pub fn make_move(&mut self, mv: Move, castle_mask: &[u8; 64]) {
         let from = mv.get_from_square();
         let to = mv.get_to_square();
 
         if self.side() == Side::WHITE {
-            self.make_move_move_flag::<0>(mv, from, to, mask);
+            self.make_move_move_flag::<0>(mv, from, to, castle_mask);
         } else {
-            self.make_move_move_flag::<1>(mv, from, to, mask);
+            self.make_move_move_flag::<1>(mv, from, to, castle_mask);
         }
     }
 
@@ -267,7 +267,7 @@ impl ChessBoard {
 
         self.remove_piece_on_square(from_square, Piece::from(MOVED_PIECE), Side::from(COLOR));
 
-        if !mv.is_promotion() && !mv.is_castle() {
+        if MOVE_FLAG < MoveFlag::KNIGHT_PROMOTION && MOVE_FLAG != MoveFlag::KING_SIDE_CASTLE && MOVE_FLAG != MoveFlag::QUEEN_SIDE_CASTLE {
             self.set_piece_on_square(to_square, Piece::from(MOVED_PIECE), Side::from(COLOR));
         }
 

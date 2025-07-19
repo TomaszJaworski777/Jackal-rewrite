@@ -7,7 +7,7 @@ pub fn perform_iteration(
     node_idx: usize,
     position: &mut ChessPosition,
     depth: &mut u16,
-    mask: &[u8; 64],
+    castle_mask: &[u8; 64],
 ) -> Option<f32> {
     let score = {
         if tree.get_node(node_idx).children_count() == 0 {
@@ -30,10 +30,10 @@ pub fn perform_iteration(
 
             let new_index = new_index.unwrap();
 
-            position.make_move(tree.get_node(new_index).mv(), mask);
+            position.make_move(tree.get_node(new_index).mv(), castle_mask);
 
             *depth += 1;
-            perform_iteration(tree, new_index, position, depth, mask)
+            perform_iteration(tree, new_index, position, depth, castle_mask)
         }
     };
 
