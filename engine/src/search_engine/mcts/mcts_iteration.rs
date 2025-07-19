@@ -42,7 +42,7 @@ pub fn perform_iteration(
     }
 
     let score = score.unwrap();
-    tree.get_node(node_idx).add_visit(score);
+    tree.add_visit(node_idx, score);
 
     Some(1.0 - score)
 }

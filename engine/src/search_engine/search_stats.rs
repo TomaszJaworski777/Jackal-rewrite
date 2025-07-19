@@ -23,7 +23,7 @@ impl SearchStats {
     }
 
     pub fn avg_depth(&self) -> u64 {
-        self.cumulative_depth.load(Ordering::Relaxed) / self.iterations()
+        self.cumulative_depth.load(Ordering::Relaxed) / self.iterations().max(1)
     }
 
     pub fn time_passesd(&self) -> u128 {

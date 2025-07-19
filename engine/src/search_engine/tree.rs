@@ -27,25 +27,16 @@ impl Tree {
     pub fn from_bytes(bytes: usize) -> Self {
         let tree_size = bytes / std::mem::size_of::<Node>();
 
-        let tree = Self {
+        Self {
             nodes: vec![Node::new(); tree_size],
             idx: AtomicUsize::new(1),
-        };
-
-        tree.reset_root();
-
-        tree
+        }
     }
 
     #[inline]
     pub fn clear(&self) {
         self.idx.store(1, Ordering::Relaxed);
-        self.reset_root();
-    }
-
-    #[inline]
-    pub fn reset_root(&self) {
-        self.nodes[0].clear(Move::NULL);
+        self.nodes[0].clear(Move::NULL)
     }
 
     #[inline]
@@ -59,13 +50,18 @@ impl Tree {
     }
 
     #[inline]
-    pub fn root_node(&self) -> &Node {
-        &self.nodes[0]
+    pub fn root_node(&self) -> Node {
+        self.nodes[0].clone()
     }
 
     #[inline]
-    pub fn get_node(&self, node_idx: usize) -> &Node {
-        &self.nodes[node_idx]
+    pub fn get_node(&self, node_idx: usize) -> Node {
+        self.nodes[node_idx].clone()
+    }
+
+    #[inline]
+    pub fn add_visit(&self, node_idx: usize, score: f32) {
+        self.nodes[node_idx].add_visit(score);
     }
 
     pub fn expand_node(&self, node_idx: usize, board: &ChessBoard) -> bool {

@@ -65,9 +65,6 @@ impl SearchEngine {
         let mut search_limits = SearchLimits::default();
         search_limits.set_depth(Some(depth));
 
-        self.reset_position();
-        self.tree().clear();
-
         let timer = Instant::now();
         let mut nodes = 0u64;
 
@@ -76,7 +73,7 @@ impl SearchEngine {
             let board = ChessBoard::from(&fen);
             self.set_position(&ChessPosition::from(board));
 
-            let result = self.mcts(&search_limits);
+            let result = self.search(&search_limits);
             nodes += result.iterations();
         }
 

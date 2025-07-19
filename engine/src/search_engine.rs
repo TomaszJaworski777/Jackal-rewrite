@@ -76,7 +76,7 @@ impl SearchEngine {
 
         self.tree.clear();
 
-        if self.tree.root_node().children_count() == 0 {
+        if self.tree.root_node().children_count() == 0 {  //TEMP: It should be replaced by tree reuse code
             self.tree.expand_node(0, self.current_position().board());
         }
 
