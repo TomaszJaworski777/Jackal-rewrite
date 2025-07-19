@@ -6,7 +6,7 @@ pub fn perform_iteration(
     tree: &Tree,
     node_idx: usize,
     position: &mut ChessPosition,
-    depth: &mut u16,
+    depth: &mut u64,
     castle_mask: &[u8; 64],
 ) -> Option<f32> {
     let score = {

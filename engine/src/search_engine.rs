@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::search_engine::tree::Tree;
+use crate::{search_engine::tree::Tree, search_report_trait::SearchReport};
 
 mod bench;
 mod mcts;
@@ -71,7 +71,7 @@ impl SearchEngine {
         self.interruption_token.load(Ordering::Relaxed)
     }
 
-    pub fn search(&self, search_limits: &SearchLimits) -> SearchStats {
+    pub fn search<Display: SearchReport>(&self, search_limits: &SearchLimits) -> SearchStats {
         self.interruption_token.store(false, Ordering::Relaxed);
 
         self.tree.clear();
@@ -80,6 +80,13 @@ impl SearchEngine {
             self.tree.expand_node(0, self.current_position().board());
         }
 
-        self.mcts(search_limits)
+        Display::search_started(search_limits, self);
+
+        let result = self.mcts::<Display>(search_limits);
+
+        Display::search_report(search_limits, &result, self);
+        Display::search_ended(self);
+
+        result
     }
 }

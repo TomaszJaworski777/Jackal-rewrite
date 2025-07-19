@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::{SearchEngine, SearchLimits};
+use crate::{search_report_trait::NoReport, SearchEngine, SearchLimits};
 
 const DEFAULT_BENCH_DEPTH: u64 = 4;
 
@@ -73,7 +73,7 @@ impl SearchEngine {
             let board = ChessBoard::from(&fen);
             self.set_position(&ChessPosition::from(board));
 
-            let result = self.search(&search_limits);
+            let result = self.search::<NoReport>(&search_limits);
             nodes += result.iterations();
         }
 

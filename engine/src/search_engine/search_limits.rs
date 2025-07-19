@@ -73,7 +73,7 @@ impl SearchLimits {
             return false;
         }
 
-        let time_passed_ms = search_stats.time_passesd();
+        let time_passed_ms = search_stats.time_passesd_ms();
         time_passed_ms >= self.time.unwrap()
     }
 }

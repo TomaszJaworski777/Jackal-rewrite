@@ -6,6 +6,7 @@ use std::{
 pub struct SearchStats {
     iterations: AtomicU64,
     cumulative_depth: AtomicU64,
+    max_depth: AtomicU64,
     timer: Instant,
 }
 
@@ -14,6 +15,7 @@ impl SearchStats {
         SearchStats {
             iterations: AtomicU64::new(0),
             cumulative_depth: AtomicU64::new(0),
+            max_depth: AtomicU64::new(0),
             timer: Instant::now(),
         }
     }
@@ -26,13 +28,18 @@ impl SearchStats {
         self.cumulative_depth.load(Ordering::Relaxed) / self.iterations().max(1)
     }
 
-    pub fn time_passesd(&self) -> u128 {
+    pub fn max_depth(&self) -> u64 {
+        self.max_depth.load(Ordering::Relaxed)
+    }
+
+    pub fn time_passesd_ms(&self) -> u128 {
         self.timer.elapsed().as_millis()
     }
 
-    pub fn push_iteration(&self, depth: u16) {
+    pub fn add_iteration(&self, depth: u64) {
         self.iterations.fetch_add(1, Ordering::Relaxed);
         self.cumulative_depth
-            .fetch_add(depth as u64, Ordering::Relaxed);
+            .fetch_add(depth, Ordering::Relaxed);
+        self.max_depth.fetch_max(depth, Ordering::Relaxed);
     }
 }

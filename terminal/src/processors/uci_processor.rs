@@ -2,7 +2,7 @@ use chess::{ChessBoard, ChessPosition, Side, FEN};
 use engine::{SearchEngine, SearchLimits};
 use utils::clear_terminal_screen;
 
-use crate::InputWrapper;
+use crate::{displays::{PrettySearchReport, UciSearchReport}, InputWrapper};
 
 pub struct UciProcessor {
     uci_initialized: bool,
@@ -24,127 +24,121 @@ impl UciProcessor {
         shutdown_token: &mut bool,
     ) -> bool {
         match command {
-            "uci" => uci(search_engine),
+            "uci" => self.uci(search_engine),
             "isready" => println!("readyok"),
             "ucinewgame" => search_engine.reset_position(),
-            "setoption" => set_option(args, search_engine),
-            "position" => position(args, search_engine),
-            "go" => go(args, search_engine, input_wrapper, shutdown_token),
+            "setoption" => self.set_option(args, search_engine),
+            "position" => self.position(args, search_engine),
+            "go" => self.go(args, search_engine, input_wrapper, shutdown_token),
             _ => return false,
         }
 
         true
     }
-}
 
-fn uci(search_engine: &SearchEngine) {
-    clear_terminal_screen();
+    fn uci(&mut self, search_engine: &SearchEngine) {
+        clear_terminal_screen();
 
-    println!("id name Jackal v{}", env!("CARGO_PKG_VERSION"));
-    println!("id author Tomasz Jaworski");
+        self.uci_initialized = true;
+        
+        println!("id name Jackal v{}", env!("CARGO_PKG_VERSION"));
+        println!("id author Tomasz Jaworski");
 
-    //options
+        //options
 
-    println!("uciok");
-}
+        println!("uciok");
+    }
 
-fn set_option(args: &[String], search_engine: &mut SearchEngine) {}
+    fn set_option(&self, args: &[String], search_engine: &mut SearchEngine) {}
 
-fn position(args: &[String], search_engine: &mut SearchEngine) {
-    let mut move_flag = false;
-    let mut fen_flag = false;
-    let mut fen = String::new();
-    let mut moves = Vec::new();
+    fn position(&self, args: &[String], search_engine: &mut SearchEngine) {
+        let mut move_flag = false;
+        let mut fen_flag = false;
+        let mut fen = String::new();
+        let mut moves = Vec::new();
 
-    for arg in args {
-        match arg.as_str() {
-            "startpos" => fen = String::from(FEN::start_position()),
-            "fen" => {
-                fen_flag = true;
-                move_flag = false;
-            }
-            "moves" => {
-                fen_flag = false;
-                move_flag = true;
-            }
-            _ => {
-                if fen_flag {
-                    fen.push_str(&format!("{arg} "))
+        for arg in args {
+            match arg.as_str() {
+                "startpos" => fen = String::from(FEN::start_position()),
+                "fen" => {
+                    fen_flag = true;
+                    move_flag = false;
                 }
-
-                if move_flag {
-                    moves.push(arg)
-                }
-            }
-        }
-    }
-
-    if !FEN::validate_fen(&fen) {
-        println!("Provided fen is invalid.");
-        return;
-    }
-
-    let mut chess_position = ChessPosition::from(ChessBoard::from(&FEN::from(fen)));
-    for mv in moves {
-        chess_position.board().clone().map_legal_moves(|legal_mv| {
-            if *mv == legal_mv.to_string(false) {
-                chess_position.make_move_no_mask(legal_mv);
-            }
-        });
-    }
-
-    search_engine.set_position(&chess_position);
-    println!("Position has been set.");
-}
-
-fn go(
-    args: &[String],
-    search_engine: &mut SearchEngine,
-    input_wrapper: &mut InputWrapper,
-    shutdown_token: &mut bool,
-) {
-    let search_limits = create_search_limits(args, search_engine.current_position().board());
-
-    std::thread::scope(|s| {
-        s.spawn(|| {
-            let result = search_engine.search(&search_limits);
-            let best_node = search_engine
-                .tree()
-                .select_child(0, |node| node.score() as f64);
-            println!("avg_depth {}", result.avg_depth());
-            println!("iters {}", result.iterations());
-            println!(
-                "bestmove {}",
-                search_engine
-                    .tree()
-                    .get_node(best_node.unwrap())
-                    .mv()
-                    .to_string(false)
-            );
-        });
-
-        loop {
-            let input_command = input_wrapper.get_input_no_queue();
-
-            match input_command.trim() {
-                "isready" => println!("readyok"),
-                "stop" => search_engine.interrupt_search(),
-                "quit" => {
-                    search_engine.interrupt_search();
-                    *shutdown_token = true
+                "moves" => {
+                    fen_flag = false;
+                    move_flag = true;
                 }
                 _ => {
-                    if search_engine.is_search_interrupted() {
-                        input_wrapper.push_back(input_command)
+                    if fen_flag {
+                        fen.push_str(&format!("{arg} "))
+                    }
+
+                    if move_flag {
+                        moves.push(arg)
                     }
                 }
             }
-
-            if search_engine.is_search_interrupted() {
-                break;
-            }
         }
-    });
+
+        if !FEN::validate_fen(&fen) {
+            println!("Provided fen is invalid.");
+            return;
+        }
+
+        let mut chess_position = ChessPosition::from(ChessBoard::from(&FEN::from(fen)));
+        for mv in moves {
+            chess_position.board().clone().map_legal_moves(|legal_mv| {
+                if *mv == legal_mv.to_string(false) {
+                    chess_position.make_move_no_mask(legal_mv);
+                }
+            });
+        }
+
+        search_engine.set_position(&chess_position);
+        println!("Position has been set.");
+    }
+
+    fn go(
+        &self,
+        args: &[String],
+        search_engine: &mut SearchEngine,
+        input_wrapper: &mut InputWrapper,
+        shutdown_token: &mut bool,
+    ) {
+        let search_limits = create_search_limits(args, search_engine.current_position().board());
+
+        std::thread::scope(|s| {
+            s.spawn(|| {
+                let _ = if self.uci_initialized { 
+                    search_engine.search::<UciSearchReport>(&search_limits)
+                } else { 
+                    search_engine.search::<PrettySearchReport>(&search_limits)
+                };
+            });
+
+            loop {
+                let input_command = input_wrapper.get_input_no_queue();
+
+                match input_command.trim() {
+                    "isready" => println!("readyok"),
+                    "stop" => search_engine.interrupt_search(),
+                    "quit" => {
+                        search_engine.interrupt_search();
+                        *shutdown_token = true
+                    }
+                    _ => {
+                        if search_engine.is_search_interrupted() {
+                            input_wrapper.push_back(input_command)
+                        }
+                    }
+                }
+
+                if search_engine.is_search_interrupted() {
+                    break;
+                }
+            }
+        });
+    }
 }
 
 fn create_search_limits(args: &[String], board: &ChessBoard) -> SearchLimits {
