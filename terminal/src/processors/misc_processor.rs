@@ -29,6 +29,7 @@ impl MiscProcessor {
                 } else {
                     None
                 };
+
                 search_engine.tree().draw_tree::<true>(depth, node_idx);
             }
             "rawtree" => {

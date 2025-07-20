@@ -2,11 +2,12 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use chess::{ChessBoard, Move};
 
-use crate::search_engine::tree::node::Node;
-
 mod node;
 mod tree_draw;
 mod tree_utils;
+mod pv_line;
+
+pub use node::Node;
 
 #[derive(Debug)]
 pub struct Tree {
@@ -36,7 +37,7 @@ impl Tree {
     #[inline]
     pub fn clear(&self) {
         self.idx.store(1, Ordering::Relaxed);
-        self.nodes[0].clear(Move::NULL)
+        self.nodes[self.root_index()].clear(Move::NULL)
     }
 
     #[inline]
@@ -50,13 +51,18 @@ impl Tree {
     }
 
     #[inline]
-    pub fn root_node(&self) -> Node {
-        self.nodes[0].clone()
+    pub fn root_index(&self) -> usize {
+        0
     }
 
     #[inline]
     pub fn get_node(&self, node_idx: usize) -> Node {
         self.nodes[node_idx].clone()
+    }
+
+    #[inline]
+    pub fn get_root_node(&self) -> Node {
+        self.nodes[self.root_index()].clone()
     }
 
     #[inline]
@@ -87,25 +93,6 @@ impl Tree {
         }
 
         true
-    }
-
-    pub fn select_child<F: FnMut(&Node) -> f64>(
-        &self,
-        parent_idx: usize,
-        mut key: F,
-    ) -> Option<usize> {
-        let mut best_idx = None;
-        let mut best_score = f64::NEG_INFINITY;
-
-        self.nodes[parent_idx].map_children(|child_idx| {
-            let new_score = key(&self.nodes[child_idx]);
-            if new_score > best_score {
-                best_idx = Some(child_idx);
-                best_score = new_score;
-            }
-        });
-
-        best_idx
     }
 
     #[inline]

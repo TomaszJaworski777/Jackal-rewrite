@@ -17,7 +17,7 @@ pub fn perform_iteration(
 
             Some(0.0)
         } else {
-            let new_index = tree.select_child(node_idx, |node| {
+            let new_index = tree.select_child_by_key(node_idx, |node| {
                 let score = if node.visits() == 0 {
                     0.5
                 } else {

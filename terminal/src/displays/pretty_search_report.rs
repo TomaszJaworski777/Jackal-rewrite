@@ -9,7 +9,7 @@ impl SearchReport for PrettySearchReport {
     fn search_ended(search_engine: &SearchEngine) {
         let best_node = search_engine
                 .tree()
-                .select_child(0, |node| node.score() as f64);
+                .select_child_by_key(0, |node| node.score() as f64);
 
         println!(
             "bestmove {}",

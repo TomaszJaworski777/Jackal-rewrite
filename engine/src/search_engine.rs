@@ -12,6 +12,7 @@ mod tree;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
+pub use tree::Node;
 
 #[derive(Debug)]
 pub struct SearchEngine {
@@ -76,8 +77,8 @@ impl SearchEngine {
 
         self.tree.clear();
 
-        if self.tree.root_node().children_count() == 0 {  //TEMP: It should be replaced by tree reuse code
-            self.tree.expand_node(0, self.current_position().board());
+        if self.tree.get_root_node().children_count() == 0 {  //TEMP: It should be replaced by tree reuse code
+            self.tree.expand_node(self.tree.root_index(), self.current_position().board());
         }
 
         Display::search_started(search_limits, self);

@@ -5,7 +5,7 @@ use crate::search_engine::tree::{node::Node, Tree};
 impl Tree {
     pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<usize>) {
         let depth = depth.unwrap_or(1);
-        let node_idx = node_idx.unwrap_or(0);
+        let node_idx = node_idx.unwrap_or(self.root_index());
 
         let tree_size = self.tree_size();
         let current_size = self.current_index().min(tree_size);
@@ -54,6 +54,12 @@ impl Tree {
         );
         println!("{}", format!("Usage:  {usage}\n").primary(5.0 / 29.0));
 
+        let node_depth = self.find_node_depth(self.root_index(), node_idx);
+
+        if node_depth.is_none() {
+            return;
+        }
+
         self.print_branch::<FLIP_SCORE>(
             node_idx,
             0,
@@ -61,7 +67,7 @@ impl Tree {
             String::new(),
             false,
             true,
-            true,
+            node_depth.unwrap() % 2 == 0,
             0,
             20,
         );
