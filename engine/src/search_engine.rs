@@ -2,13 +2,14 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::{search_engine::tree::Tree, search_report_trait::SearchReport};
+use crate::{search_engine::{engine_options::EngineOptions, tree::Tree}, search_report_trait::SearchReport};
 
 mod bench;
 mod mcts;
 mod search_limits;
 mod search_stats;
 mod tree;
+mod engine_options;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
@@ -18,6 +19,7 @@ pub use tree::Node;
 pub struct SearchEngine {
     position: ChessPosition,
     tree: Tree,
+    options: EngineOptions,
     interruption_token: AtomicBool,
 }
 
@@ -26,6 +28,7 @@ impl Clone for SearchEngine {
         Self {
             position: self.position,
             tree: self.tree.clone(),
+            options: self.options.clone(),
             interruption_token: AtomicBool::new(self.interruption_token.load(Ordering::Relaxed)),
         }
     }
@@ -33,9 +36,12 @@ impl Clone for SearchEngine {
 
 impl SearchEngine {
     pub fn new() -> Self {
+        let options = EngineOptions::new();
+
         Self {
             position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
-            tree: Tree::from_bytes(1024 * 1024 * 1024),
+            tree: Tree::from_bytes(options.hash() as usize),
+            options,
             interruption_token: AtomicBool::new(false),
         }
     }
@@ -48,6 +54,21 @@ impl SearchEngine {
     #[inline]
     pub fn tree(&self) -> &Tree {
         &self.tree
+    }
+
+    #[inline]
+    pub fn resize_tree(&mut self) {
+        self.tree = Tree::from_bytes(self.options.hash() as usize)
+    }
+
+    #[inline]
+    pub fn options(&self) -> &EngineOptions {
+        &self.options
+    }
+
+    #[inline]
+    pub fn set_option(&mut self, name: &str, value: &str) -> bool {
+        self.options.set_option(name, value)
     }
 
     #[inline]

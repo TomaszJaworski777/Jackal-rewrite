@@ -1,4 +1,4 @@
-use engine::{Node, SearchEngine, SearchLimits, SearchReport, SearchStats};
+use engine::{SearchEngine, SearchLimits, SearchReport, SearchStats};
 
 pub struct UciSearchReport;
 impl SearchReport for UciSearchReport {

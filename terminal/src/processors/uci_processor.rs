@@ -25,6 +25,7 @@ impl UciProcessor {
     ) -> bool {
         match command {
             "uci" => self.uci(search_engine),
+            "tunables" => self.tunables(search_engine),
             "isready" => println!("readyok"),
             "ucinewgame" => search_engine.reset_position(),
             "setoption" => self.set_option(args, search_engine),
@@ -44,12 +45,31 @@ impl UciProcessor {
         println!("id name Jackal v{}", env!("CARGO_PKG_VERSION"));
         println!("id author Tomasz Jaworski");
 
-        //options
+        search_engine.options().print_options();
 
         println!("uciok");
     }
 
-    fn set_option(&self, args: &[String], search_engine: &mut SearchEngine) {}
+    fn tunables(&self, search_engine: &SearchEngine) {
+        search_engine.options().print_tunables();
+    }
+
+    fn set_option(&self, args: &[String], search_engine: &mut SearchEngine) {
+        match args.iter().map(|s| s.as_str()).collect::<Vec<&str>>().as_slice() {
+            ["name", name, "value", value] => {
+                if !search_engine.set_option(*name, *value) {
+                    return;
+                }
+
+                if name.eq_ignore_ascii_case("hash") {
+                    search_engine.resize_tree();
+                }
+
+                println!("Option {name} has been set to {value}");
+            },
+            _ => {}
+        }
+    }
 
     fn position(&self, args: &[String], search_engine: &mut SearchEngine) {
         let mut move_flag = false;
