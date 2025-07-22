@@ -1,10 +1,10 @@
 use crate::base_structures::ZobristKey;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct MoveHistory([ZobristKey; 100], usize);
+pub struct MoveHistory([ZobristKey; 101], usize);
 impl MoveHistory {
     pub fn new() -> Self {
-        Self([ZobristKey::default(); 100], 0)
+        Self([ZobristKey::default(); 101], 0)
     }
 
     #[inline]
@@ -34,7 +34,7 @@ impl MoveHistory {
     }
 
     #[inline]
-    pub fn get_key_repetitions(&self, key: ZobristKey) -> i32 {
+    pub fn get_repetitions(&self, key: ZobristKey) -> i32 {
         let mut repetitions = 0;
         for value in 0..self.1 {
             if key != self.0[value] {

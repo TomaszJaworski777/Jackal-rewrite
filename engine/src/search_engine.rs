@@ -67,7 +67,7 @@ impl SearchEngine {
     }
 
     #[inline]
-    pub fn set_option(&mut self, name: &str, value: &str) -> bool {
+    pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
         self.options.set_option(name, value)
     }
 

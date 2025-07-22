@@ -57,7 +57,8 @@ impl UciProcessor {
     fn set_option(&self, args: &[String], search_engine: &mut SearchEngine) {
         match args.iter().map(|s| s.as_str()).collect::<Vec<&str>>().as_slice() {
             ["name", name, "value", value] => {
-                if !search_engine.set_option(*name, *value) {
+                if let Err(msg) = search_engine.set_option(*name, *value) {
+                    eprintln!("{msg}");
                     return;
                 }
 

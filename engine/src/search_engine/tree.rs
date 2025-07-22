@@ -26,8 +26,6 @@ impl Clone for Tree {
 
 impl Tree {
     pub fn from_bytes(megabytes: usize) -> Self {
-        println!("megabytes: {megabytes}");
-
         let bytes = megabytes * 1024 * 1024;
         let tree_size = bytes / std::mem::size_of::<Node>();
 

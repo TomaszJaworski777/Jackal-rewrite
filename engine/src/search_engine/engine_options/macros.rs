@@ -46,7 +46,7 @@ macro_rules! create_options {
             }
             )+
 
-            pub fn set_option(&mut self, name: &str, value: &str) -> bool {
+            pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
                 match name {
                     $(
                     $option_key => {
@@ -54,22 +54,19 @@ macro_rules! create_options {
                             Ok(new_value) => {
                                 $(
                                 if new_value < $option_min || new_value > $option_max {
-                                    eprintln!("Value out of range for {}", name);
-                                    return false;
+                                    return Err(format!("Value out of range for {}", name));
                                 }
                                 )?
 
                                 if self.$option == new_value {
-                                    eprintln!("Value of {} is already {}", name, new_value);
-                                    return false;
+                                    return Err(format!("Value of {} is already {}", name, new_value));
                                 }
 
                                 self.$option = new_value;
-                                true
+                                Ok(())
                             }
                             Err(_) => {
-                                eprintln!("Incorrect param type for {}", name);
-                                false
+                                return Err(format!("Incorrect param type for {}", name));
                             }
                         }
                     }
@@ -80,29 +77,25 @@ macro_rules! create_options {
                         match value.parse::<$tunable_ty>() {
                             Ok(new_value) => {
                                 if new_value < $tunable_min || new_value > $tunable_max {
-                                    eprintln!("Value out of range for {}", name);
-                                    return false;
+                                    return Err(format!("Value out of range for {}", name));
                                 }
 
                                 if self.$tunable == new_value {
-                                    eprintln!("Value of {} is already {}", name, new_value);
-                                    return false;
+                                    return Err(format!("Value of {} is already {}", name, new_value));
                                 }
 
                                 self.$tunable = new_value;
-                                true
+                                Ok(())
                             }
                             Err(_) => {
-                                eprintln!("Incorrect param type for {}", name);
-                                false
+                                return Err(format!("Incorrect param type for {}", name));
                             }
                         }
                     }
                     )+
 
                     _ => {
-                        eprintln!("Unknown option '{}'", name);
-                        false
+                        return Err(format!("Unknown option '{}'", name));
                     }
                 }
             }

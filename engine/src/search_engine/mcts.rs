@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use crate::{
-    search_engine::{mcts::mcts_iteration::perform_iteration, SearchLimits, SearchStats},
+    search_engine::{SearchLimits, SearchStats},
     SearchEngine, SearchReport,
 };
 
@@ -36,7 +36,7 @@ impl SearchEngine {
             let mut depth = 0;
             let mut position = *self.current_position();
 
-            let result = perform_iteration(&self.tree, self.tree.root_index(), &mut position, &mut depth, castle_mask);
+            let result = self.perform_iteration(&self.tree, self.tree.root_index(), &mut position, &mut depth, castle_mask);
 
             if result.is_none() {
                 if search_limits.is_inifinite() {

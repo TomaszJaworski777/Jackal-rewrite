@@ -20,7 +20,7 @@ impl PvLine {
 
     #[inline]
     pub fn score(&self) -> f32 {
-        1.0 - self.0[0].score()
+        self.0[0].score()
     }
 
     #[inline]
