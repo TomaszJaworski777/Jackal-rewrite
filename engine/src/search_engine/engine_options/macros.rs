@@ -35,14 +35,14 @@ macro_rules! create_options {
             }
 
             $(
-            pub fn $option(&self) -> $option_ty {
-                self.$option.clone()
+            pub const fn $option(&self) -> $option_ty {
+                self.$option
             }
             )+
 
             $(
-            pub fn $tunable(&self) -> $tunable_ty {
-                self.$tunable.clone()
+            pub const fn $tunable(&self) -> $tunable_ty {
+                self.$tunable
             }
             )+
 

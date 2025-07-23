@@ -1,6 +1,6 @@
 use chess::{ChessPosition, Piece, Side};
 
-use crate::{search_engine::tree::Tree, SearchEngine};
+use crate::{search_engine::tree::{GameState, Tree}, SearchEngine};
 
 impl SearchEngine {
     pub(super) fn perform_iteration(
@@ -11,13 +11,21 @@ impl SearchEngine {
         depth: &mut u64,
         castle_mask: &[u8; 64],
     ) -> Option<f32> {
-        let score = {
-            if tree.get_node(node_idx).children_count() == 0 {
-                if !tree.expand_node(node_idx, position.board()) {
-                    return None;
+        let score = 1.0 - {
+            if tree.get_node(node_idx).children_count() == 0 || tree.get_node(node_idx).is_terminal() {
+                if tree.get_node(node_idx).children_count() == 0 {
+                    if !tree.expand_node(node_idx, position.board()) {
+                        return None;
+                    }
                 }
 
-                Some(get_position_score(position, self.current_position()))
+                let (score, state) = get_position_score(position, self.current_position());
+
+                if state != GameState::Ongoing {
+                    tree.set_state(node_idx, state);
+                }
+
+                score
             } else {
                 let new_index = tree.select_child_by_key(node_idx, |node| {
                     let score = if node.visits() == 0 {
@@ -35,18 +43,13 @@ impl SearchEngine {
                 position.make_move(tree.get_node(new_index).mv(), castle_mask);
 
                 *depth += 1;
-                self.perform_iteration(tree, new_index, position, depth, castle_mask)
+                self.perform_iteration(tree, new_index, position, depth, castle_mask)?
             }
         };
 
-        if score.is_none() {
-            return None;
-        }
-
-        let score = score.unwrap();
         tree.add_visit(node_idx, score);
 
-        Some(1.0 - score)
+        Some(score)
     }
 }
 
@@ -54,14 +57,30 @@ fn ucb1(score: f64, c: f64, parent_visits: u32, child_visits: u32) -> f64 {
     score + c * (f64::from(parent_visits.max(1)).ln() / f64::from(child_visits.max(1)))
 }
 
-fn get_position_score(position: &ChessPosition, root_position: &ChessPosition) -> f32 {
-    let result = if is_draw(position, root_position) {
-        0
+fn get_position_score(position: &ChessPosition, root_position: &ChessPosition) -> (f32, GameState) {
+    let mut possible_moves = 0;
+    position.board().map_legal_moves(|_| possible_moves += 1);
+
+    let state = if is_draw(position, root_position) {
+        GameState::Draw
+    } else if possible_moves == 0 {
+        if position.board().is_in_check() {
+            GameState::Loss(0)
+        } else {
+            GameState::Draw
+        }
     } else {
-        calculate_material(position)
+        GameState::Ongoing
     };
 
-    return sigmoid(result);
+    let result = match state {
+        GameState::Draw => 0.5,
+        GameState::Loss(_) => 0.0,
+        GameState::Win(_) => 1.0,
+        _ => sigmoid(calculate_material(position))
+    };
+
+    return (result, state);
 }
 
 fn sigmoid(x: i32) -> f32 {
@@ -69,13 +88,13 @@ fn sigmoid(x: i32) -> f32 {
 }
 
 fn is_draw(position: &ChessPosition, root_position: &ChessPosition) -> bool {
-    if position.board().half_moves() >= 100 {
+    if position.board().half_moves() >= 100 || position.board().is_insufficient_material() {
         return true;
     }
 
     let key = position.board().hash();
-    let history_repetitions = position.history().get_repetitions(key);
-    let search_repetitions = root_position.history().get_repetitions(key) - history_repetitions;
+    let history_repetitions = root_position.history().get_repetitions(key);
+    let search_repetitions = position.history().get_repetitions(key) - history_repetitions;
 
     if history_repetitions >=3 || search_repetitions >=2 || history_repetitions + search_repetitions >= 3 {
         return true;

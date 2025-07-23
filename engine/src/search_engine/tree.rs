@@ -7,7 +7,7 @@ mod tree_draw;
 mod tree_utils;
 mod pv_line;
 
-pub use node::Node;
+pub use node::{Node, GameState};
 
 #[derive(Debug)]
 pub struct Tree {
@@ -68,7 +68,12 @@ impl Tree {
 
     #[inline]
     pub fn add_visit(&self, node_idx: usize, score: f32) {
-        self.nodes[node_idx].add_visit(score);
+        self.nodes[node_idx].add_visit(score)
+    }
+
+    #[inline]
+    pub fn set_state(&self, node_idx: usize, state: GameState) {
+        self.nodes[node_idx].set_state(state)
     }
 
     pub fn expand_node(&self, node_idx: usize, board: &ChessBoard) -> bool {

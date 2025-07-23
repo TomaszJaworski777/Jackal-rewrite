@@ -1,6 +1,6 @@
 use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, Theme};
 
-use crate::search_engine::tree::{node::Node, Tree};
+use crate::search_engine::tree::{node::Node, GameState, Tree};
 
 impl Tree {
     pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<usize>) {
@@ -189,11 +189,19 @@ impl Tree {
 
         let visits = format!("{}", node.visits()).align_to_right(9);
 
+        let state = match node.state() {
+            GameState::Draw => String::from("DRAW"),
+            GameState::Win(len) => format!("WIN IN {len}"),
+            GameState::Loss(len) => format!("LOSS IN {len}"),
+            _ => String::new(),
+        };
+
         println!(
             "{}",
             format!(
-                "{prefix}  {score} score  {} visits",
-                visits.to_string().white()
+                "{prefix}  {score} score  {} visits  {}",
+                visits.to_string().white(),
+                state.white()
             )
             .secondary(color_gradient)
         );

@@ -2,6 +2,12 @@ use std::sync::atomic::{AtomicU16, AtomicU32, AtomicU64, AtomicU8, Ordering};
 
 use chess::Move;
 
+use crate::search_engine::tree::node::game_state::AtomicGameState;
+
+mod game_state;
+
+pub use game_state::GameState;
+
 const SCORE_SCALE: u32 = 1024 * 64;
 
 #[derive(Debug)]
@@ -11,6 +17,7 @@ pub struct Node {
     cumulative_score: AtomicU64,
     children_start_index: AtomicU32,
     children_count: AtomicU8,
+    state: AtomicGameState,
 }
 
 impl Clone for Node {
@@ -21,6 +28,7 @@ impl Clone for Node {
             cumulative_score: AtomicU64::new(self.cumulative_score.load(Ordering::Relaxed)),
             children_start_index: AtomicU32::new(self.children_start_index.load(Ordering::Relaxed)),
             children_count: AtomicU8::new(self.children_count.load(Ordering::Relaxed)),
+            state: self.state.clone(),
         }
     }
 }
@@ -33,35 +41,58 @@ impl Node {
             cumulative_score: AtomicU64::new(0),
             children_start_index: AtomicU32::new(0),
             children_count: AtomicU8::new(0),
+            state: AtomicGameState::new(GameState::Ongoing)
         }
     }
 
+    #[inline]
     pub fn clear(&self, mv: Move) {
         self.mv.store(u16::from(mv), Ordering::Relaxed);
         self.visit_count.store(0, Ordering::Relaxed);
         self.cumulative_score.store(0, Ordering::Relaxed);
         self.children_start_index.store(0, Ordering::Relaxed);
         self.children_count.store(0, Ordering::Relaxed);
+        self.state.set(GameState::Ongoing);
     }
 
+    #[inline]
     pub fn mv(&self) -> Move {
         Move::from(self.mv.load(Ordering::Relaxed))
     }
 
+    #[inline]
     pub fn visits(&self) -> u32 {
         self.visit_count.load(Ordering::Relaxed)
     }
 
+    #[inline]
+    pub fn state(&self) -> GameState {
+        self.state.get()
+    }
+
+    #[inline]
+    pub fn set_state(&self, state: GameState) {
+        self.state.set(state)
+    }
+
+    #[inline]
     pub fn score(&self) -> f32 {
         let cumulative_score =
             self.cumulative_score.load(Ordering::Relaxed) as f64 / f64::from(SCORE_SCALE);
         (cumulative_score / f64::from(self.visits())) as f32
     }
 
+    #[inline]
+    pub fn is_terminal(&self) -> bool {
+        self.state() != GameState::Ongoing
+    }
+
+    #[inline]
     pub fn children_count(&self) -> u8 {
         self.children_count.load(Ordering::Relaxed)
     }
 
+    #[inline]
     pub fn add_visit(&self, score: f32) {
         self.visit_count.fetch_add(1, Ordering::Relaxed);
         self.cumulative_score.fetch_add(
@@ -70,6 +101,7 @@ impl Node {
         );
     }
 
+    #[inline]
     pub fn add_children(&self, start_index: usize, chilren_count: usize) {
         self.children_start_index
             .store(start_index as u32, Ordering::Relaxed);
