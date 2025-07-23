@@ -34,7 +34,7 @@ impl MoveGen {
         board: &ChessBoard,
         attack_map: Bitboard,
         king_square: Square,
-        orthographic_pins: Bitboard,
+        rook_pins: Bitboard,
         apply_move: &mut F,
     ) {
         let validate_castle =
@@ -45,7 +45,7 @@ impl MoveGen {
                     board.occupancy() ^ Bitboard::from(rook_square) ^ Bitboard::from(king_square);
                 return (Rays::get_ray(king_square, king_destination) & attack_map).is_empty()
                     && (castle_path & occupancy).is_empty()
-                    && (orthographic_pins & Bitboard::from(rook_square)).is_empty();
+                    && (rook_pins & Bitboard::from(rook_square)).is_empty();
             };
 
         if COLOR == WHITE {

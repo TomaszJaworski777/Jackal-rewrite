@@ -16,33 +16,33 @@ impl MoveGen {
         board: &ChessBoard,
         push_map: Bitboard,
         capture_map: Bitboard,
-        diagonal_pins: Bitboard,
-        orthographic_pins: Bitboard,
+        bishop_pins: Bitboard,
+        rook_pins: Bitboard,
         apply_move: &mut F,
     ) {
         let pieces = match PIECE_TYPE {
             KNIGHT => {
                 board.piece_mask_for_side(Piece::KNIGHT, Side::from(COLOR))
-                    & !diagonal_pins
-                    & !orthographic_pins
+                    & !bishop_pins
+                    & !rook_pins
             }
             BISHOP => {
                 (board.piece_mask_for_side(Piece::BISHOP, Side::from(COLOR))
                     | board.piece_mask_for_side(Piece::QUEEN, Side::from(COLOR)))
-                    & !orthographic_pins
+                    & !rook_pins
             }
             ROOK => {
                 (board.piece_mask_for_side(Piece::ROOK, Side::from(COLOR))
                     | board.piece_mask_for_side(Piece::QUEEN, Side::from(COLOR)))
-                    & !diagonal_pins
+                    & !bishop_pins
             }
             _ => unreachable!(),
         };
 
         let pinned_pieces = match PIECE_TYPE {
             KNIGHT => Bitboard::EMPTY,
-            BISHOP => pieces & diagonal_pins,
-            ROOK => pieces & orthographic_pins,
+            BISHOP => pieces & bishop_pins,
+            ROOK => pieces & rook_pins,
             _ => unreachable!(),
         };
 
@@ -81,10 +81,10 @@ impl MoveGen {
             let attacks = match PIECE_TYPE {
                 KNIGHT => Bitboard::EMPTY,
                 BISHOP => {
-                    Attacks::get_bishop_attacks(piece_square, board.occupancy()) & diagonal_pins
+                    Attacks::get_bishop_attacks(piece_square, board.occupancy()) & bishop_pins
                 }
                 ROOK => {
-                    Attacks::get_rook_attacks(piece_square, board.occupancy()) & orthographic_pins
+                    Attacks::get_rook_attacks(piece_square, board.occupancy()) & rook_pins
                 }
                 _ => unreachable!(),
             };

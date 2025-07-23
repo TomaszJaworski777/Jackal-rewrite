@@ -42,7 +42,7 @@ impl ChessBoard {
     ) {
         let attack_map = self.generate_attack_map(Side::from(COLOR).flipped());
         let king_square = self.king_square(Side::from(COLOR));
-        let (diagonal_pins, orthographic_pins) = self.generate_pin_masks(Side::from(COLOR));
+        let (bishop_pins, rook_pins) = self.generate_pin_masks(Side::from(COLOR));
         let checkers = if attack_map.get_bit(king_square) {
             self.generate_checkers_mask(Side::from(COLOR))
         } else {
@@ -62,7 +62,7 @@ impl ChessBoard {
                     self,
                     attack_map,
                     king_square,
-                    orthographic_pins,
+                    rook_pins,
                     apply_move,
                 )
             }
@@ -74,32 +74,32 @@ impl ChessBoard {
                 self,
                 push_map,
                 capture_map,
-                diagonal_pins,
-                orthographic_pins,
+                bishop_pins,
+                rook_pins,
                 apply_move,
             );
             MoveGen::generate_piece_moves::<_, COLOR, { KNIGHT }, CAPTURE_ONLY>(
                 self,
                 push_map,
                 capture_map,
-                diagonal_pins,
-                orthographic_pins,
+                bishop_pins,
+                rook_pins,
                 apply_move,
             );
             MoveGen::generate_piece_moves::<_, COLOR, { BISHOP }, CAPTURE_ONLY>(
                 self,
                 push_map,
                 capture_map,
-                diagonal_pins,
-                orthographic_pins,
+                bishop_pins,
+                rook_pins,
                 apply_move,
             );
             MoveGen::generate_piece_moves::<_, COLOR, { ROOK }, CAPTURE_ONLY>(
                 self,
                 push_map,
                 capture_map,
-                diagonal_pins,
-                orthographic_pins,
+                bishop_pins,
+                rook_pins,
                 apply_move,
             );
         } else if (checkers & (checkers - 1)).is_empty() {
@@ -110,32 +110,32 @@ impl ChessBoard {
                 self,
                 push_map,
                 checkers,
-                diagonal_pins,
-                orthographic_pins,
+                bishop_pins,
+                rook_pins,
                 apply_move,
             );
             MoveGen::generate_piece_moves::<_, COLOR, { KNIGHT }, CAPTURE_ONLY>(
                 self,
                 push_map,
                 checkers,
-                diagonal_pins,
-                orthographic_pins,
+                bishop_pins,
+                rook_pins,
                 apply_move,
             );
             MoveGen::generate_piece_moves::<_, COLOR, { BISHOP }, CAPTURE_ONLY>(
                 self,
                 push_map,
                 checkers,
-                diagonal_pins,
-                orthographic_pins,
+                bishop_pins,
+                rook_pins,
                 apply_move,
             );
             MoveGen::generate_piece_moves::<_, COLOR, { ROOK }, CAPTURE_ONLY>(
                 self,
                 push_map,
                 checkers,
-                diagonal_pins,
-                orthographic_pins,
+                bishop_pins,
+                rook_pins,
                 apply_move,
             );
         }

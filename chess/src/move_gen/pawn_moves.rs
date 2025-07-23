@@ -8,16 +8,16 @@ impl MoveGen {
         board: &ChessBoard,
         push_map: Bitboard,
         capture_map: Bitboard,
-        diagonal_pins: Bitboard,
-        orthographic_pins: Bitboard,
+        bishop_pins: Bitboard,
+        rook_pins: Bitboard,
         apply_move: &mut F,
     ) {
         let pawns = board.piece_mask_for_side(Piece::PAWN, Side::from(COLOR));
 
         handle_pawn_captures::<_, COLOR>(
-            pawns & !orthographic_pins,
+            pawns & !rook_pins,
             capture_map,
-            diagonal_pins,
+            bishop_pins,
             apply_move,
         );
 
@@ -31,9 +31,9 @@ impl MoveGen {
 
         handle_pawn_pushes::<_, COLOR>(
             board,
-            pawns & !diagonal_pins,
+            pawns & !bishop_pins,
             push_map,
-            orthographic_pins,
+            rook_pins,
             apply_move,
         );
     }
@@ -43,11 +43,11 @@ fn handle_pawn_pushes<F: FnMut(Move), const COLOR: u8>(
     board: &ChessBoard,
     pawns: Bitboard,
     push_map: Bitboard,
-    orthographic_pins: Bitboard,
+    rook_pins: Bitboard,
     apply_move: &mut F,
 ) {
-    let vertical_pin = orthographic_pins & (orthographic_pins << 8);
-    let vertical_pin = vertical_pin | orthographic_pins >> 8;
+    let vertical_pin = rook_pins & (rook_pins << 8);
+    let vertical_pin = vertical_pin | rook_pins >> 8;
 
     let promotion_rank = if COLOR == WHITE {
         Bitboard::RANK_7
@@ -61,7 +61,7 @@ fn handle_pawn_pushes<F: FnMut(Move), const COLOR: u8>(
     };
 
     let moveable_pawns = pawns & !promotion_rank;
-    let moveable_pawns = (moveable_pawns & !orthographic_pins) | (moveable_pawns & vertical_pin);
+    let moveable_pawns = (moveable_pawns & !rook_pins) | (moveable_pawns & vertical_pin);
 
     let single_push_map = if COLOR == WHITE {
         push_map >> 8
@@ -109,7 +109,7 @@ fn handle_pawn_pushes<F: FnMut(Move), const COLOR: u8>(
         ))
     }
 
-    let promotion_pawns = pawns & promotion_rank;
+    let promotion_pawns = pawns & promotion_rank & !rook_pins;
     let targets = if COLOR == WHITE {
         promotion_pawns << 8
     } else {
@@ -147,7 +147,7 @@ fn handle_pawn_pushes<F: FnMut(Move), const COLOR: u8>(
 fn handle_pawn_captures<F: FnMut(Move), const COLOR: u8>(
     mut pawns: Bitboard,
     capture_map: Bitboard,
-    diagonal_pins: Bitboard,
+    bishop_pins: Bitboard,
     apply_move: &mut F,
 ) {
     let promotion_rank = if COLOR == WHITE {
@@ -158,7 +158,7 @@ fn handle_pawn_captures<F: FnMut(Move), const COLOR: u8>(
     let promotion_pawns = pawns & promotion_rank;
     pawns &= !promotion_rank;
 
-    (pawns & !diagonal_pins).map(|from_square| {
+    (pawns & !bishop_pins).map(|from_square| {
         let attacks = Attacks::get_pawn_attacks(from_square, Side::from(COLOR)) & capture_map;
         attacks.map(|to_square| {
             apply_move(Move::from_squares(
@@ -169,9 +169,9 @@ fn handle_pawn_captures<F: FnMut(Move), const COLOR: u8>(
         });
     });
 
-    (pawns & diagonal_pins).map(|from_square| {
+    (pawns & bishop_pins).map(|from_square| {
         let attacks =
-            Attacks::get_pawn_attacks(from_square, Side::from(COLOR)) & capture_map & diagonal_pins;
+            Attacks::get_pawn_attacks(from_square, Side::from(COLOR)) & capture_map & bishop_pins;
         attacks.map(|to_square| {
             apply_move(Move::from_squares(
                 from_square,
@@ -181,7 +181,7 @@ fn handle_pawn_captures<F: FnMut(Move), const COLOR: u8>(
         });
     });
 
-    (promotion_pawns & !diagonal_pins).map(|from_square| {
+    (promotion_pawns & !bishop_pins).map(|from_square| {
         let attacks = Attacks::get_pawn_attacks(from_square, Side::from(COLOR)) & capture_map;
         attacks.map(|to_square| {
             apply_move(Move::from_squares(
@@ -207,9 +207,9 @@ fn handle_pawn_captures<F: FnMut(Move), const COLOR: u8>(
         });
     });
 
-    (promotion_pawns & diagonal_pins).map(|from_square| {
+    (promotion_pawns & bishop_pins).map(|from_square| {
         let attacks =
-            Attacks::get_pawn_attacks(from_square, Side::from(COLOR)) & capture_map & diagonal_pins;
+            Attacks::get_pawn_attacks(from_square, Side::from(COLOR)) & capture_map & bishop_pins;
         attacks.map(|to_square| {
             apply_move(Move::from_squares(
                 from_square,

@@ -69,25 +69,25 @@ impl ChessBoard {
         let potential_pinners = Attacks::get_bishop_attacks(king_square, attacker_occupancy)
             & (self.piece_mask_for_side(Piece::BISHOP, attacker_side) | queens);
 
-        let mut diag_result = Bitboard::EMPTY;
+        let mut bishop_pins = Bitboard::EMPTY;
         potential_pinners.map(|potential_pinner| {
             let ray = Rays::get_ray(king_square, potential_pinner);
             if (ray & defender_occupancy).only_one_bit() {
-                diag_result |= ray;
+                bishop_pins |= ray;
             }
         });
 
         let potential_pinners = Attacks::get_rook_attacks(king_square, attacker_occupancy)
             & (self.piece_mask_for_side(Piece::ROOK, attacker_side) | queens);
-        let mut orto_result = Bitboard::EMPTY;
+        let mut rook_pins = Bitboard::EMPTY;
         potential_pinners.map(|potential_pinner| {
             let ray = Rays::get_ray(king_square, potential_pinner);
             if (ray & defender_occupancy).only_one_bit() {
-                orto_result |= ray;
+                rook_pins |= ray;
             }
         });
 
-        (diag_result, orto_result)
+        (bishop_pins, rook_pins)
     }
 
     pub fn generate_attack_map(&self, attacker_side: Side) -> Bitboard {
