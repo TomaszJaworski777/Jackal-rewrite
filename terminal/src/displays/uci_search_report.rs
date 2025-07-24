@@ -29,6 +29,10 @@ impl SearchReport for UciSearchReport {
     fn search_ended(search_engine: &SearchEngine) {
         let best_node_idx = search_engine.tree().select_best_child(search_engine.tree().root_index());
 
+        if best_node_idx.is_none() {
+            return;
+        }
+
         println!(
             "bestmove {}",
             search_engine
