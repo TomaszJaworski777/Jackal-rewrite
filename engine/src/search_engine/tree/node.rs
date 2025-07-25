@@ -79,7 +79,7 @@ impl Node {
     pub fn score(&self) -> f32 {
         let cumulative_score =
             self.cumulative_score.load(Ordering::Relaxed) as f64 / f64::from(SCORE_SCALE);
-        (cumulative_score / f64::from(self.visits())) as f32
+        (cumulative_score / f64::from(self.visits().max(1))) as f32
     }
 
     #[inline]

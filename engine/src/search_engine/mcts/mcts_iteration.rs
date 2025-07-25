@@ -26,13 +26,17 @@ impl SearchEngine {
                     }
                 }
 
+                let policy = 1.0 / tree.get_node(node_idx).children_count() as f64;
+                let parent_score = tree.get_node(node_idx).score() as f64;
                 let new_index = tree.select_child_by_key(node_idx, |node| {
                     let score = if node.visits() == 0 {
-                        0.5
+                        1.0 - parent_score
                     } else {
                         node.score() as f64
                     };
-                    ucb1(score, 2.0, tree.get_node(node_idx).visits(), node.visits())
+
+
+                    puct(score, 2.0, tree.get_node(node_idx).visits(), node.visits(), policy)
                 });
 
                 assert_ne!(new_index, None);
@@ -54,8 +58,8 @@ impl SearchEngine {
     }
 }
 
-fn ucb1(score: f64, c: f64, parent_visits: u32, child_visits: u32) -> f64 {
-    score + c * (f64::from(parent_visits.max(1)).ln() / f64::from(child_visits.max(1)))
+fn puct(score: f64, c: f64, parent_visits: u32, child_visits: u32, policy: f64) -> f64 {
+    score + c * policy * (f64::from(parent_visits.max(1)).sqrt() / f64::from(child_visits + 1))
 }
 
 fn get_node_state(position: &ChessPosition, root_position: &ChessPosition) -> GameState {
