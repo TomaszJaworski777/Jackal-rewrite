@@ -1,4 +1,4 @@
-use crate::search_engine::tree::node::Node;
+use crate::{networks::WDLScore, search_engine::tree::node::Node};
 
 #[derive(Debug, Default)]
 pub struct PvLine(Vec<Node>);
@@ -19,7 +19,7 @@ impl PvLine {
     }
 
     #[inline]
-    pub fn score(&self) -> f32 {
+    pub fn score(&self) -> WDLScore {
         self.0[0].score()
     }
 

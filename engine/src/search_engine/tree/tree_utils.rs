@@ -22,7 +22,7 @@ impl Tree {
     }
 
     pub fn select_best_child(&self, parent_idx: usize) -> Option<usize> {
-        self.select_child_by_key(parent_idx, |node| node.score() as f64)
+        self.select_child_by_key(parent_idx, |node| node.score().single(0.5) as f64)
     }
 
     pub fn get_pv(&self, node_idx: usize) -> PvLine {
@@ -62,7 +62,7 @@ impl Tree {
             return PvLine::new(&Node::new());
         }
 
-        chilren_nodes.sort_by(|&a, &b| self.get_node(b).score().total_cmp(&self.get_node(a).score()));
+        chilren_nodes.sort_by(|&a, &b| self.get_node(b).score().single(0.5).total_cmp(&self.get_node(a).score().single(0.5)));
 
         let pv_node_idx = chilren_nodes[index.min(chilren_nodes.len() - 1)];
         self.get_pv(pv_node_idx)

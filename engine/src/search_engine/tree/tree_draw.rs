@@ -181,10 +181,10 @@ impl Tree {
         .white();
 
         let score = if flip {
-            1.0 - node.score()
+            node.score().reversed()
         } else {
             node.score()
-        };
+        }.single(0.5);
         let score = heat_color(&format!("{:.2}", score).align_to_right(6), score, 0.0, 1.0);
 
         let visits = format!("{}", node.visits()).align_to_right(9);

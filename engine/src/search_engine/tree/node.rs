@@ -1,20 +1,18 @@
-use std::sync::atomic::{AtomicU16, AtomicU32, AtomicU64, AtomicU8, Ordering};
+use std::{sync::atomic::{AtomicU16, AtomicU32, AtomicU8, Ordering}};
 
 use chess::Move;
 
-use crate::search_engine::tree::node::game_state::AtomicGameState;
+use crate::{networks::{AtomicWDLScore, WDLScore}, search_engine::tree::node::game_state::AtomicGameState};
 
 mod game_state;
 
 pub use game_state::GameState;
 
-const SCORE_SCALE: u32 = 1024 * 64;
-
 #[derive(Debug)]
 pub struct Node {
     mv: AtomicU16,
     visit_count: AtomicU32,
-    cumulative_score: AtomicU64,
+    cumulative_score: AtomicWDLScore,
     children_start_index: AtomicU32,
     children_count: AtomicU8,
     state: AtomicGameState,
@@ -25,7 +23,7 @@ impl Clone for Node {
         Self {
             mv: AtomicU16::new(self.mv.load(Ordering::Relaxed)),
             visit_count: AtomicU32::new(self.visit_count.load(Ordering::Relaxed)),
-            cumulative_score: AtomicU64::new(self.cumulative_score.load(Ordering::Relaxed)),
+            cumulative_score: self.cumulative_score.clone(),
             children_start_index: AtomicU32::new(self.children_start_index.load(Ordering::Relaxed)),
             children_count: AtomicU8::new(self.children_count.load(Ordering::Relaxed)),
             state: self.state.clone(),
@@ -38,7 +36,7 @@ impl Node {
         Self {
             mv: AtomicU16::new(0),
             visit_count: AtomicU32::new(0),
-            cumulative_score: AtomicU64::new(0),
+            cumulative_score: AtomicWDLScore::default(),
             children_start_index: AtomicU32::new(0),
             children_count: AtomicU8::new(0),
             state: AtomicGameState::new(GameState::Ongoing)
@@ -49,7 +47,7 @@ impl Node {
     pub fn clear(&self, mv: Move) {
         self.mv.store(u16::from(mv), Ordering::Relaxed);
         self.visit_count.store(0, Ordering::Relaxed);
-        self.cumulative_score.store(0, Ordering::Relaxed);
+        self.cumulative_score.clear();
         self.children_start_index.store(0, Ordering::Relaxed);
         self.children_count.store(0, Ordering::Relaxed);
         self.state.set(GameState::Ongoing);
@@ -76,10 +74,8 @@ impl Node {
     }
 
     #[inline]
-    pub fn score(&self) -> f32 {
-        let cumulative_score =
-            self.cumulative_score.load(Ordering::Relaxed) as f64 / f64::from(SCORE_SCALE);
-        (cumulative_score / f64::from(self.visits().max(1))) as f32
+    pub fn score(&self) -> WDLScore {
+        self.cumulative_score.get_score(self.visits())
     }
 
     #[inline]
@@ -93,12 +89,9 @@ impl Node {
     }
 
     #[inline]
-    pub fn add_visit(&self, score: f32) {
+    pub fn add_visit(&self, score: WDLScore) {
         self.visit_count.fetch_add(1, Ordering::Relaxed);
-        self.cumulative_score.fetch_add(
-            (score as f64 * f64::from(SCORE_SCALE)) as u64,
-            Ordering::Relaxed,
-        );
+        self.cumulative_score.add(score);
     }
 
     #[inline]

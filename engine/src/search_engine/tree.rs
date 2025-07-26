@@ -9,6 +9,8 @@ mod pv_line;
 
 pub use node::{Node, GameState};
 
+use crate::networks::WDLScore;
+
 #[derive(Debug)]
 pub struct Tree {
     nodes: Vec<Node>,
@@ -67,7 +69,7 @@ impl Tree {
     }
 
     #[inline]
-    pub fn add_visit(&self, node_idx: usize, score: f32) {
+    pub fn add_visit(&self, node_idx: usize, score: WDLScore) {
         self.nodes[node_idx].add_visit(score)
     }
 

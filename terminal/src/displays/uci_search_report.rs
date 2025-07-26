@@ -12,7 +12,7 @@ impl SearchReport for UciSearchReport {
 
         let pv = search_engine.tree().get_best_pv(0);
 
-        let score = pv.score();
+        let score = pv.score().single(0.5);
 
         let time = search_stats.time_passesd_ms();
         let nodes = search_stats.iterations();

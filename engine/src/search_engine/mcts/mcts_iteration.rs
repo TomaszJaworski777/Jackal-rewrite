@@ -1,6 +1,6 @@
-use chess::{ChessPosition, Piece, Side};
+use chess::ChessPosition;
 
-use crate::{search_engine::tree::{GameState, Tree}, SearchEngine};
+use crate::{networks::{ValueNetwork, WDLScore}, search_engine::tree::{GameState, Tree}, SearchEngine};
 
 impl SearchEngine {
     pub(super) fn perform_iteration<const ROOT: bool>(
@@ -10,8 +10,8 @@ impl SearchEngine {
         position: &mut ChessPosition,
         depth: &mut u64,
         castle_mask: &[u8; 64],
-    ) -> Option<f32> {  
-        let score = 1.0 - {
+    ) -> Option<WDLScore> {  
+        let score = {
             if !ROOT && (tree.get_node(node_idx).visits() == 0 || tree.get_node(node_idx).is_terminal()) {
                 if tree.get_node(node_idx).visits() == 0 {
                     let state = get_node_state(position, self.current_position());
@@ -27,16 +27,16 @@ impl SearchEngine {
                 }
 
                 let policy = 1.0 / tree.get_node(node_idx).children_count() as f64;
-                let parent_score = tree.get_node(node_idx).score() as f64;
+                let parent_score = tree.get_node(node_idx).score();
                 let new_index = tree.select_child_by_key(node_idx, |node| {
                     let score = if node.visits() == 0 {
-                        1.0 - parent_score
+                        parent_score.reversed()
                     } else {
-                        node.score() as f64
-                    };
+                        node.score()
+                    }.single(0.5);
 
 
-                    puct(score, 2.0, tree.get_node(node_idx).visits(), node.visits(), policy)
+                    puct(score as f64, 2.0, tree.get_node(node_idx).visits(), node.visits(), policy)
                 });
 
                 assert_ne!(new_index, None);
@@ -48,7 +48,7 @@ impl SearchEngine {
                 *depth += 1;
                 self.perform_iteration::<false>(tree, new_index, position, depth, castle_mask)?
             }
-        };
+        }.reversed();
 
         tree.add_visit(node_idx, score);
 
@@ -79,17 +79,13 @@ fn get_node_state(position: &ChessPosition, root_position: &ChessPosition) -> Ga
     }
 }
 
-fn get_position_score(position: &ChessPosition, node_state: GameState) -> f32 {
+fn get_position_score(position: &ChessPosition, node_state: GameState) -> WDLScore {
     match node_state {
-        GameState::Draw => 0.5,
-        GameState::Loss(_) => 0.0,
-        GameState::Win(_) => 1.0,
-        _ => sigmoid(calculate_material(position))
+        GameState::Draw => WDLScore::DRAW,
+        GameState::Loss(_) => WDLScore::LOSE,
+        GameState::Win(_) => WDLScore::WIN,
+        _ => ValueNetwork.forward(position.board())
     }
-}
-
-fn sigmoid(x: i32) -> f32 {
-    1.0 / (1.0 + f32::exp(-x as f32 / 450.0))
 }
 
 fn is_draw(position: &ChessPosition, root_position: &ChessPosition) -> bool {
@@ -106,24 +102,6 @@ fn is_draw(position: &ChessPosition, root_position: &ChessPosition) -> bool {
     }
 
     false
-}
-
-fn calculate_material(position: &ChessPosition) -> i32 {
-    let mut result = 0;
-    
-    const PIECE_VALUES: [i32; 6] = [100, 300, 330, 500, 1000, 0];
-
-    for side in [Side::WHITE, Side::BLACK] {
-        for piece_idx in u8::from(Piece::PAWN)..=u8::from(Piece::KING) {
-            let piece = Piece::from(piece_idx);
-            let piece_count = position.board().piece_mask_for_side(piece, side).pop_count();
-            result += piece_count as i32 * PIECE_VALUES[piece_idx as usize];
-        }
-
-        result = -result;
-    }
-
-    result * if position.board().side() == Side::WHITE { 1 } else { -1 }
 }
 
 fn backprop_state(tree: &Tree, node_idx: usize) {
