@@ -1,3 +1,5 @@
+use chess::Move;
+
 use crate::{networks::WDLScore, search_engine::tree::node::Node};
 
 #[derive(Debug, Default)]
@@ -16,6 +18,11 @@ impl PvLine {
     #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    #[inline]
+    pub fn first_move(&self) -> Move {
+        self.0[0].mv()
     }
 
     #[inline]

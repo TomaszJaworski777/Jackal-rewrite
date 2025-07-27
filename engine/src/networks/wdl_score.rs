@@ -84,6 +84,6 @@ impl WDLScore {
 
     #[inline]
     pub const fn reversed(&self) -> Self {
-        Self(1.0 - self.win_chance(), self.draw_chance())
+        Self(self.lose_chance(), self.draw_chance())
     }
 }

@@ -13,7 +13,7 @@ mod engine_options;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
-pub use tree::Node;
+pub use tree::{Node, GameState};
 
 #[derive(Debug)]
 pub struct SearchEngine {
