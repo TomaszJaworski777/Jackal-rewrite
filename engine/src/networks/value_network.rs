@@ -1,43 +1,69 @@
-use chess::{ChessBoard, Piece, Side};
+use chess::ChessBoard;
 
-use crate::networks::WDLScore;
+use crate::networks::{inputs::Threats3072, layers::{Accumulator, NetworkLayer, TransposedNetworkLayer}, WDLScore};
 
+const INPUT_SIZE: usize = Threats3072::input_size();
+const L1_SIZE: usize = 3072;
+const NUM_OUTPUT_BUCKETS: usize = 8;
+
+const QA: i16 = 255;
+const QB: i16 = 64;
+
+#[repr(C)]
+#[repr(align(64))]
 #[derive(Debug)]
 pub struct ValueNetwork {
-
+    l0: NetworkLayer<i16, INPUT_SIZE, L1_SIZE>,
+    l1: TransposedNetworkLayer<i16, L1_SIZE, { 3 * NUM_OUTPUT_BUCKETS }>
 }
 
 impl ValueNetwork {
-    pub const fn new() -> Self {
-        Self {
-
-        }
-    }
-
     pub fn forward(&self, board: &ChessBoard) -> WDLScore {
-        let win_chance = sigmoid(calculate_material(board));
-        WDLScore::new(win_chance, 0.0)
-    }
-}
+        let mut l0_out = *self.l0.biases();
 
-fn sigmoid(x: i32) -> f32 {
-    1.0 / (1.0 + f32::exp(-x as f32 / 450.0))
-}
+        Threats3072::map_inputs(board, |input_index| {
+            for (bias, weight) in l0_out.values_mut().iter_mut().zip(self.l0.weights()[input_index].values()) {
+                *bias += *weight
+            }
+        });
 
-fn calculate_material(board: &ChessBoard) -> i32 {
-    let mut result = 0;
-    
-    const PIECE_VALUES: [i32; 6] = [100, 300, 330, 500, 1000, 0];
+        let mut out = Accumulator::<i32, 3>::default();
 
-    for side in [Side::WHITE, Side::BLACK] {
-        for piece_idx in u8::from(Piece::PAWN)..=u8::from(Piece::KING) {
-            let piece = Piece::from(piece_idx);
-            let piece_count = board.piece_mask_for_side(piece, side).pop_count();
-            result += piece_count as i32 * PIECE_VALUES[piece_idx as usize];
+        let bucket_idx = {
+            let divisor = 32usize.div_ceil(NUM_OUTPUT_BUCKETS);
+            (board.occupancy().pop_count() as usize - 2) / divisor
+        } * 3;
+
+        for (idx, output) in out.values_mut().iter_mut().enumerate() {
+            let weights = self.l1.weights()[bucket_idx + idx];
+
+            for (&weight, &l0_neuron) in weights.values().iter().zip(l0_out.values()) {
+                *output += screlu(l0_neuron) * i32::from(weight);
+            }
         }
 
-        result = -result;
-    }
+        let mut win_chance = (out.values()[2] as f32 / f32::from(QA)
+            + f32::from(self.l1.biases().values()[bucket_idx + 2]))
+            / f32::from(QA * QB);
+        let mut draw_chance = (out.values()[1] as f32 / f32::from(QA)
+            + f32::from(self.l1.biases().values()[bucket_idx + 1]))
+            / f32::from(QA * QB);
+        let mut loss_chance = (out.values()[0] as f32 / f32::from(QA)
+            + f32::from(self.l1.biases().values()[bucket_idx + 0]))
+            / f32::from(QA * QB);
 
-    result * if board.side() == Side::WHITE { 1 } else { -1 }
+        let max = win_chance.max(draw_chance).max(loss_chance);
+
+        win_chance = (win_chance - max).exp();
+        draw_chance = (draw_chance - max).exp();
+        loss_chance = (loss_chance - max).exp();
+
+        let sum = win_chance + draw_chance + loss_chance;
+
+        WDLScore::new(win_chance / sum, draw_chance / sum)
+    }
+}
+
+fn screlu(x: i16) -> i32 {
+    i32::from(x).clamp(0, i32::from(QA)).pow(2)
 }
