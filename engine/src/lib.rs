@@ -11,3 +11,4 @@ pub use search_report_trait::SearchReport;
 pub use search_report_trait::NoReport;
 pub use networks::AtomicWDLScore;
 pub use networks::WDLScore;
+pub use networks::ValueNetwork;

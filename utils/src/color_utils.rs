@@ -1,9 +1,6 @@
 use colored::Colorize;
 
-use crate::{
-    color_config::{self, BRIGHT_ORANGE},
-    DARK_WHITE, GRAY,
-};
+use crate::color_config::{self, BRIGHT_ORANGE, DARK_WHITE, GRAY};
 
 pub trait Theme {
     fn primary(&self, gradient: f32) -> String;
