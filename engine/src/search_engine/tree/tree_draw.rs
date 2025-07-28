@@ -60,6 +60,8 @@ impl Tree {
             return;
         }
 
+        let policy = self.get_node(node_idx).policy() as f32;
+
         self.print_branch::<FLIP_SCORE>(
             node_idx,
             0,
@@ -70,6 +72,8 @@ impl Tree {
             node_depth.unwrap() % 2 == 0,
             0,
             20,
+            policy,
+            policy
         );
     }
 
@@ -84,6 +88,8 @@ impl Tree {
         mut flip: bool,
         iter_idx: usize,
         iter_size: usize,
+        mut min_policy: f32,
+        mut max_policy: f32
     ) {
         self.print_node(
             node_idx,
@@ -93,6 +99,8 @@ impl Tree {
             flip && FLIP_SCORE,
             iter_idx,
             iter_size,
+            min_policy,
+            max_policy
         );
 
         if FLIP_SCORE {
@@ -120,6 +128,15 @@ impl Tree {
 
         children.sort_by(|&a, &b| self.get_node(b).visits().cmp(&self.get_node(a).visits()));
 
+        min_policy = 0.0;
+        max_policy = 0.0;
+
+        for &child_idx in &children {
+            let policy = self.get_node(child_idx).policy() as f32;
+            min_policy = min_policy.min(policy);
+            max_policy = max_policy.max(policy);
+        }
+
         for (idx, &child_idx) in (&children).into_iter().enumerate() {
             self.print_branch::<FLIP_SCORE>(
                 child_idx,
@@ -131,6 +148,8 @@ impl Tree {
                 flip,
                 idx,
                 children.len(),
+                min_policy,
+                max_policy
             );
         }
     }
@@ -144,6 +163,8 @@ impl Tree {
         flip: bool,
         iter_idx: usize,
         iter_size: usize,
+        min_policy: f32,
+        max_policy: f32
     ) {
         let node = self.get_node(node_idx);
         let color_gradient = (iter_idx + 5) as f32 / (iter_size + 10) as f32;
@@ -191,6 +212,8 @@ impl Tree {
 
         let visits = format!("{}", node.visits()).align_to_right(9);
 
+        let policy = heat_color(&format!("{:.2}%", node.policy() * 100.0).align_to_right(6), node.policy() as f32, min_policy, max_policy);
+
         let state = match node.state() {
             GameState::Draw => String::from("DRAW"),
             GameState::Win(len) => format!("WIN IN {len}"),
@@ -201,8 +224,9 @@ impl Tree {
         println!(
             "{}",
             format!(
-                "{prefix}  {score} score  {} visits  {}",
+                "{prefix}  {score} score  {} visits  {} policy  {}",
                 visits.to_string().white(),
+                policy,
                 state.white()
             )
             .secondary(color_gradient)

@@ -1,6 +1,6 @@
 use chess::{ChessBoard, DEFAULT_PERFT_DEPTH, FEN};
-use engine::{SearchEngine, ValueNetwork};
-use utils::{clear_terminal_screen, miliseconds_to_string, number_to_string, CustomColor, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
+use engine::{PolicyNetwork, SearchEngine, ValueNetwork};
+use utils::{clear_terminal_screen, heat_color, miliseconds_to_string, number_to_string, AlignString, CustomColor, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 pub struct MiscProcessor;
 impl MiscProcessor {
@@ -111,6 +111,49 @@ impl MiscProcessor {
                                 format!("{:.2}%", wdl_score.lose_chance() * 100.0).custom_color(LOSE_COLOR),
                             ).secondary(10.0/18.0)
                         ).primary(10.0/18.0)
+                    )
+                }
+            },
+            "policy" => {
+                let board = search_engine.current_position().board();
+
+                board.draw_board();
+
+                let inputs = PolicyNetwork.get_inputs(board);
+                let mut max = f32::NEG_INFINITY;
+                let mut total = 0f32;
+
+                let mut min_policy = 0.0f32;
+                let mut max_policy = 0.0f32;
+                let mut moves = Vec::new();
+
+                board.map_legal_moves(|mv| {
+                    let p = PolicyNetwork.forward(board, &inputs, mv);
+                    max = max.max(p);
+                    moves.push((mv, p));
+                });
+
+                for (_, p) in moves.iter_mut() {
+                    *p = (*p - max).exp();
+                    total += *p;
+                }
+
+                for (_, p) in moves.iter_mut() {
+                    *p = *p / total;
+                    min_policy = min_policy.min(*p);
+                    max_policy = max_policy.max(*p);
+                }
+
+                if moves.len() == 1 {
+                    moves[0].1 = 1.0
+                }
+
+                moves.sort_by(|&a, &b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+                for (idx, &(mv, p)) in moves.iter().enumerate() {
+                    println!(" {} {}", 
+                        format!("{}:", mv.to_string(false)).align_to_left(6).primary((idx as f32 + 10.0)/(moves.len() as f32 + 18.0)), 
+                        heat_color(&format!("{:.2}%", p * 100.0), p, min_policy, max_policy)
                     )
                 }
             },

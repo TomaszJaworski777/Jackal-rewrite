@@ -16,6 +16,20 @@ impl ChessBoard {
         &self,
         occupancy: Bitboard,
         square: Square,
+    ) -> Bitboard {
+        let queens = self.piece_mask(Piece::QUEEN);
+        (Attacks::get_knight_attacks(square) & self.piece_mask(Piece::KNIGHT))
+        | (Attacks::get_pawn_attacks(square, Side::WHITE) & self.piece_mask_for_side(Piece::PAWN, Side::BLACK))
+        | (Attacks::get_pawn_attacks(square, Side::BLACK) & self.piece_mask_for_side(Piece::PAWN, Side::WHITE))
+        | (Attacks::get_rook_attacks(square, occupancy) & (self.piece_mask(Piece::ROOK) | queens))
+        | (Attacks::get_bishop_attacks(square, occupancy) & (self.piece_mask(Piece::BISHOP) | queens))
+        | (Attacks::get_king_attacks(square) & self.piece_mask(Piece::KING))
+    }
+    
+    pub fn all_attackers_to_square_for_side(
+        &self,
+        occupancy: Bitboard,
+        square: Square,
         defender_side: Side,
     ) -> Bitboard {
         let queens = self.piece_mask(Piece::QUEEN);
@@ -36,7 +50,7 @@ impl ChessBoard {
         occupancy: Bitboard,
         defender_side: Side,
     ) -> bool {
-        self.all_attackers_to_square(occupancy, square, defender_side)
+        self.all_attackers_to_square_for_side(occupancy, square, defender_side)
             .is_not_empty()
     }
 
@@ -52,7 +66,7 @@ impl ChessBoard {
 
     #[inline]
     pub fn generate_checkers_mask(&self, defender_side: Side) -> Bitboard {
-        self.all_attackers_to_square(
+        self.all_attackers_to_square_for_side(
             self.occupancy(),
             self.king_square(defender_side),
             defender_side,

@@ -53,7 +53,7 @@ impl ChessBoard {
 
         // Get all pieces which attack the target square. And with occupied
         // so that we do not let the same piece attack twice
-        let mut attackers = self.all_attackers_to_square(occupancy, to, self.side()) & occupancy;
+        let mut attackers = self.all_attackers_to_square(occupancy, to) & occupancy;
 
         // Now our opponents turn to recapture
         let mut side = self.side().flipped();

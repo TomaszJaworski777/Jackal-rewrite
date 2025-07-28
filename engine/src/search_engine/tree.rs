@@ -89,7 +89,7 @@ impl Tree {
 
         let mut moves = Vec::new();
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
-        let mut max = 0f32;
+        let mut max = f32::NEG_INFINITY;
         let mut total = 0f32;
 
         board.map_legal_moves(|mv| {
