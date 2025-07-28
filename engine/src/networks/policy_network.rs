@@ -1,4 +1,4 @@
-use chess::{ChessBoard, Move};
+use chess::{ChessBoard, Move, Side};
 
 use crate::networks::{inputs::Standard768, layers::NetworkLayer};
 
@@ -24,8 +24,9 @@ impl PolicyNetwork {
         result
     }
 
-    pub fn forward(&self, inputs: &Vec<usize>, mv: Move, vertical_flip: u8) -> f32 {
-        let see_idx = usize::from(false);
+    pub fn forward(&self, board: &ChessBoard, inputs: &Vec<usize>, mv: Move) -> f32 {
+        let see_idx = usize::from(board.see(mv, -108));
+        let vertical_flip = (usize::from(board.side() == Side::BLACK) * 56) as u8;
 
         let from_idx = usize::from(mv.get_from_square() ^ vertical_flip);
         let to_idx = usize::from(mv.get_to_square() ^ vertical_flip) + 64 + see_idx * 64;

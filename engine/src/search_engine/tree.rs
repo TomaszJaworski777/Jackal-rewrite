@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use chess::{ChessBoard, Move, Side};
+use chess::{ChessBoard, Move};
 
 mod node;
 mod tree_draw;
@@ -86,7 +86,6 @@ impl Tree {
         );
 
         let policy_inputs = PolicyNetwork.get_inputs(board);
-        let vertical_flip = (usize::from(board.side() == Side::BLACK) * 56) as u8;
 
         let mut moves = Vec::new();
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
@@ -95,7 +94,7 @@ impl Tree {
 
         board.map_legal_moves(|mv| {
             moves.push(mv);
-            let p = PolicyNetwork.forward(&policy_inputs, mv, vertical_flip);
+            let p = PolicyNetwork.forward(board, &policy_inputs, mv);
             policy.push(p);
             max = max.max(p);
         });

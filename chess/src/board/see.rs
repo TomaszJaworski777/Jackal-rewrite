@@ -118,7 +118,7 @@ impl ChessBoard {
         let mut value = 0;
 
         // Start with the value of the piece on the target square
-        if mv.is_capture() {
+        if mv.is_capture() & !mv.is_en_passant() {
             value += see_value(self.piece_on_square(mv.get_to_square()));
         }
 
