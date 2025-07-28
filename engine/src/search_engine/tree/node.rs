@@ -16,6 +16,7 @@ pub struct Node {
     children_start_index: AtomicU32,
     children_count: AtomicU8,
     state: AtomicGameState,
+    policy: AtomicU16,
 }
 
 impl Clone for Node {
@@ -27,6 +28,7 @@ impl Clone for Node {
             children_start_index: AtomicU32::new(self.children_start_index.load(Ordering::Relaxed)),
             children_count: AtomicU8::new(self.children_count.load(Ordering::Relaxed)),
             state: self.state.clone(),
+            policy: AtomicU16::new(self.policy.load(Ordering::Relaxed))
         }
     }
 }
@@ -39,7 +41,8 @@ impl Node {
             cumulative_score: AtomicWDLScore::default(),
             children_start_index: AtomicU32::new(0),
             children_count: AtomicU8::new(0),
-            state: AtomicGameState::new(GameState::Ongoing)
+            state: AtomicGameState::new(GameState::Ongoing),
+            policy: AtomicU16::new(0),
         }
     }
 
@@ -51,6 +54,7 @@ impl Node {
         self.children_start_index.store(0, Ordering::Relaxed);
         self.children_count.store(0, Ordering::Relaxed);
         self.state.set(GameState::Ongoing);
+        self.policy.store(0, Ordering::Relaxed);
     }
 
     #[inline]
@@ -69,8 +73,18 @@ impl Node {
     }
 
     #[inline]
+    pub fn policy(&self) -> f64 {
+        self.policy.load(Ordering::Relaxed) as f64 / f64::from(u16::MAX)
+    }
+
+    #[inline]
     pub fn set_state(&self, state: GameState) {
         self.state.set(state)
+    }
+
+    #[inline]
+    pub fn set_policy(&self, policy: f64) {
+        self.policy.store((policy * f64::from(u16::MAX)) as u16, Ordering::Relaxed)
     }
 
     #[inline]

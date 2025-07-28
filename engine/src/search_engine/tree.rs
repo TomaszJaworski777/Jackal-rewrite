@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use chess::{ChessBoard, Move};
+use chess::{ChessBoard, Move, Side};
 
 mod node;
 mod tree_draw;
@@ -9,7 +9,7 @@ mod pv_line;
 
 pub use node::{Node, GameState};
 
-use crate::networks::WDLScore;
+use crate::networks::{PolicyNetwork, WDLScore};
 
 #[derive(Debug)]
 pub struct Tree {
@@ -85,8 +85,20 @@ impl Tree {
             "Node {node_idx} already have children."
         );
 
+        let policy_inputs = PolicyNetwork.get_inputs(board);
+        let vertical_flip = (usize::from(board.side() == Side::BLACK) * 56) as u8;
+
         let mut moves = Vec::new();
-        board.map_legal_moves(|mv| moves.push(mv));
+        let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
+        let mut max = 0f32;
+        let mut total = 0f32;
+
+        board.map_legal_moves(|mv| {
+            moves.push(mv);
+            let p = PolicyNetwork.forward(&policy_inputs, mv, vertical_flip);
+            policy.push(p);
+            max = max.max(p);
+        });
 
         let start_index = self.reserve_nodes(moves.len());
 
@@ -94,10 +106,22 @@ impl Tree {
             return false;
         }
 
+        for p in policy.iter_mut() {
+            *p = (*p - max).exp();
+            total += *p;
+        }
+
         self.nodes[node_idx].add_children(start_index, moves.len());
 
         for (idx, mv) in moves.into_iter().enumerate() {
+            let p = if policy.len() == 1 {
+                1.0
+            } else {
+                policy[idx] / total
+            };
+
             self.nodes[start_index + idx].clear(mv);
+            self.nodes[start_index + idx].set_policy(p as f64);
         }
 
         true

@@ -1,6 +1,7 @@
 use chess::{Piece, Side};
 
 pub struct Threats3072;
+#[allow(unused)]
 impl Threats3072 {
     pub const fn input_size() -> usize {
         3072

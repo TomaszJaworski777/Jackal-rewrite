@@ -26,7 +26,6 @@ impl SearchEngine {
                     }
                 }
 
-                let policy = 1.0 / tree.get_node(node_idx).children_count() as f64;
                 let parent_score = tree.get_node(node_idx).score();
                 let new_index = tree.select_child_by_key(node_idx, |node| {
                     let score = if node.visits() == 0 {
@@ -36,7 +35,7 @@ impl SearchEngine {
                     }.single(0.5);
 
 
-                    puct(score as f64, 2.0, tree.get_node(node_idx).visits(), node.visits(), policy)
+                    puct(score as f64, 2.0, tree.get_node(node_idx).visits(), node.visits(), node.policy())
                 });
 
                 assert_ne!(new_index, None);
