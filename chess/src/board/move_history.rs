@@ -19,6 +19,12 @@ impl MoveHistory {
             result ^= u64::from(self.0[value])
         }
 
+        result &= !0b1111111;
+        result |= self.1 as u64 & 0b1111111;
+
+        result &= !0xFFFF0000;
+        result |= u64::from(self.0[self.1 - 1]) & 0xFFFF0000;
+
         result
     }
 
