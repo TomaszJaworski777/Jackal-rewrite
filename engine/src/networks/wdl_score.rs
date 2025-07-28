@@ -78,12 +78,19 @@ impl WDLScore {
     }
 
     #[inline]
+    pub const fn reversed(&self) -> Self {
+        Self(self.lose_chance(), self.draw_chance())
+    }
+
+    #[inline]
     pub const fn single(&self, draw_reference: f32) -> f32 {
         self.win_chance() + self.draw_chance() * draw_reference
     }
 
     #[inline]
-    pub const fn reversed(&self) -> Self {
-        Self(self.lose_chance(), self.draw_chance())
+    pub fn cp(&self, draw_reference: f32) -> i32 {
+        let score = self.single(draw_reference);
+        let score = (-400.0 * (1.0 / score.clamp(0.0, 1.0) - 1.0).ln()) as i32;
+        score.clamp(-30000, 30000)
     }
 }

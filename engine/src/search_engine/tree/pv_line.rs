@@ -26,6 +26,11 @@ impl PvLine {
     }
 
     #[inline]
+    pub fn first_node(&self) -> Node {
+        self.0[0].clone()
+    }
+
+    #[inline]
     pub fn score(&self) -> WDLScore {
         self.0[0].score()
     }

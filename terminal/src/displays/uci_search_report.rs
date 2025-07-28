@@ -12,7 +12,12 @@ impl SearchReport for UciSearchReport {
 
         let pv = search_engine.tree().get_best_pv(0);
 
-        let score = pv.score().single(0.5);
+        let state = pv.first_node().state();
+        let score = match state {
+            engine::GameState::Loss(len) => format!("mate {}", (len + 1).div_ceil(2)),
+            engine::GameState::Win(len) => format!("mate -{}", (len + 1).div_ceil(2)),
+            _ => format!("cp {}", pv.score().cp(0.5))
+        };
 
         let time = search_stats.time_passesd_ms();
         let nodes = search_stats.iterations();
@@ -23,7 +28,7 @@ impl SearchReport for UciSearchReport {
 
         let pv = pv.to_string(false);
 
-        println!("info depth {depth} seldepth {max_depth} score cp {score} time {time} nodes {nodes} nps {nps} hashfull {hashfull} multipv 1 pv {pv}")
+        println!("info depth {depth} seldepth {max_depth} score {score} time {time} nodes {nodes} nps {nps} hashfull {hashfull} multipv 1 pv {pv}")
     }
 
     fn search_ended(search_engine: &SearchEngine) {
