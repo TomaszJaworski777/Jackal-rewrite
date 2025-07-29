@@ -86,6 +86,7 @@ impl Tree {
         );
 
         let policy_inputs = PolicyNetwork.get_inputs(board);
+        let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
 
         let mut moves = Vec::new();
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
@@ -94,7 +95,7 @@ impl Tree {
 
         board.map_legal_moves(|mv| {
             moves.push(mv);
-            let p = PolicyNetwork.forward(board, &policy_inputs, mv);
+            let p = PolicyNetwork.forward(board, &policy_inputs, mv, &mut policy_cache);
             policy.push(p);
             max = max.max(p);
         });

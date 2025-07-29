@@ -127,8 +127,10 @@ impl MiscProcessor {
                 let mut max_policy = 0.0f32;
                 let mut moves = Vec::new();
 
+                let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
+
                 board.map_legal_moves(|mv| {
-                    let p = PolicyNetwork.forward(board, &inputs, mv);
+                    let p = PolicyNetwork.forward(board, &inputs, mv, &mut policy_cache);
                     max = max.max(p);
                     moves.push((mv, p));
                 });
