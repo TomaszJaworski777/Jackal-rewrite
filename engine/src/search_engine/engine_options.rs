@@ -17,7 +17,8 @@ create_options! {
 
         }
         Tunables {
-            some_tunable: f64  =>  1.01,  0.1,  5.0,  0.055,  0.002;
+            root_pst:   f64  =>  3.25,  0.1,  10.0,  0.4,  0.002;
+            common_pst: f64  =>  1.00,  0.1,  10.0,  0.1,  0.002;
         }
     }
 }

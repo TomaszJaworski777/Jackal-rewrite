@@ -123,8 +123,8 @@ impl MiscProcessor {
                 let mut max = f32::NEG_INFINITY;
                 let mut total = 0f32;
 
-                let mut min_policy = 0.0f32;
-                let mut max_policy = 0.0f32;
+                let mut min_policy = f32::INFINITY;
+                let mut max_policy = f32::NEG_INFINITY;
                 let mut moves = Vec::new();
 
                 let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];

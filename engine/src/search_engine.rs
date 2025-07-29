@@ -99,7 +99,7 @@ impl SearchEngine {
         self.tree.clear();
 
         if self.tree.get_root_node().children_count() == 0 {  //TEMP: It should be replaced by tree reuse code
-            self.tree.expand_node(self.tree.root_index(), self.current_position().board());
+            self.tree.expand_node(self.tree.root_index(), self.current_position().board(), self.options());
         }
 
         Display::search_started(search_limits, self);

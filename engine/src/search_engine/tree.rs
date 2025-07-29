@@ -9,7 +9,7 @@ mod pv_line;
 
 pub use node::{Node, GameState};
 
-use crate::networks::{PolicyNetwork, WDLScore};
+use crate::{networks::{PolicyNetwork, WDLScore}, search_engine::engine_options::EngineOptions};
 
 #[derive(Debug)]
 pub struct Tree {
@@ -78,7 +78,7 @@ impl Tree {
         self.nodes[node_idx].set_state(state)
     }
 
-    pub fn expand_node(&self, node_idx: usize, board: &ChessBoard) -> bool {
+    pub fn expand_node(&self, node_idx: usize, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
         assert_eq!(
             self.nodes[node_idx].children_count(),
             0,
@@ -87,6 +87,12 @@ impl Tree {
 
         let policy_inputs = PolicyNetwork.get_inputs(board);
         let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
+
+        let pst = if node_idx == self.root_index() {
+            engine_options.root_pst()
+        } else {
+            engine_options.common_pst()
+        } as f32;
 
         let mut moves = Vec::new();
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
@@ -107,7 +113,7 @@ impl Tree {
         }
 
         for p in policy.iter_mut() {
-            *p = (*p - max).exp();
+            *p = ((*p - max)/pst).exp();
             total += *p;
         }
 

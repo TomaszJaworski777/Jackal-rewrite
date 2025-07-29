@@ -128,8 +128,8 @@ impl Tree {
 
         children.sort_by(|&a, &b| self.get_node(b).visits().cmp(&self.get_node(a).visits()));
 
-        min_policy = 0.0;
-        max_policy = 0.0;
+        min_policy = f32::INFINITY;
+        max_policy = f32::NEG_INFINITY;
 
         for &child_idx in &children {
             let policy = self.get_node(child_idx).policy() as f32;

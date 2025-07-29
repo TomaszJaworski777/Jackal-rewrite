@@ -21,7 +21,7 @@ impl SearchEngine {
                 get_position_score(position, tree.get_node(node_idx).state())
             } else {
                 if tree.get_node(node_idx).children_count() == 0 {
-                    if !tree.expand_node(node_idx, position.board()) {
+                    if !tree.expand_node(node_idx, position.board(), self.options()) {
                         return None;
                     }
                 }
