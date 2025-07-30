@@ -126,7 +126,7 @@ impl UciProcessor {
         input_wrapper: &mut InputWrapper,
         shutdown_token: &mut bool,
     ) {
-        let search_limits = create_search_limits(args, search_engine.current_position().board());
+        let search_limits = create_search_limits(args, search_engine.current_position().board(), search_engine);
 
         std::thread::scope(|s| {
             s.spawn(|| {
@@ -162,7 +162,7 @@ impl UciProcessor {
     }
 }
 
-fn create_search_limits(args: &[String], board: &ChessBoard) -> SearchLimits {
+fn create_search_limits(args: &[String], board: &ChessBoard, search_engine: &SearchEngine) -> SearchLimits {
     let mut search_limits = SearchLimits::default();
 
     let mut iters = None;
@@ -250,7 +250,7 @@ fn create_search_limits(args: &[String], board: &ChessBoard) -> SearchLimits {
         (btime, binc)
     };
 
-    search_limits.calculate_time_limit(time_remaining, increment, moves_to_go);
+    search_limits.calculate_time_limit(time_remaining, increment, moves_to_go, search_engine.options().move_overhead() as u128);
 
     search_limits
 }

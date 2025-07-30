@@ -138,9 +138,9 @@ pub fn welcome_message() -> String {
         result[16] = "   perft <depth>".secondary(16.0 / 24.0);
         result[17] = "   bulk  <depth>".secondary(17.0 / 24.0);
         result[18] = "   bench <depth>".secondary(18.0 / 24.0);
-        result[19] = "   eval".secondary(19.0 / 24.0);
-        result[20] = "   policy".secondary(20.0 / 24.0);
-        result[21] = "   analyse <iters>".secondary(21.0 / 24.0);
+        result[19] = "   analyse <nodes>".secondary(19.0 / 24.0);
+        result[20] = "   eval".secondary(20.0 / 24.0);
+        result[21] = "   policy".secondary(21.0 / 24.0);
 
         result
     };

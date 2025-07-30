@@ -34,17 +34,20 @@ impl SearchLimits {
         time_remaining: Option<u128>,
         increment: Option<u128>,
         moves_to_go: Option<u128>,
+        move_overhead: u128
     ) {
         if time_remaining.is_none() {
             return;
         }
 
+        let time_remaining = time_remaining.unwrap_or(0) - move_overhead;
+
         if let Some(moves_to_go) = moves_to_go {
-            self.time = Some(time_remaining.unwrap_or(0) / moves_to_go);
+            self.time = Some(time_remaining / moves_to_go);
             return;
         }
 
-        let time = time_remaining.unwrap_or(0) / 40 + increment.unwrap_or(0) / 2;
+        let time = time_remaining / 40 + increment.unwrap_or(0) / 2;
         self.time = Some(time)
     }
 
