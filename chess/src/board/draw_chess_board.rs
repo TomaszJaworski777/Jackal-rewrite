@@ -57,13 +57,17 @@ impl ChessBoard {
         info.push(phase.as_str());
 
         let mut result = " -----------------\n".to_string().primary(0.15);
-        for rank in (0..8).rev() {
+        for rank in 0..8 {
             result += "|"
                 .to_string()
-                .primary((7 - rank + 1) as f32 / 18.0 + 0.15)
+                .primary((rank + 1) as f32 / 18.0 + 0.15)
                 .as_str();
             for file in 0..8 {
-                let square = Square::from_coords(rank, file);
+                let square = Square::from_coords(
+                    if self.side() == Side::WHITE { 7 - rank } else { rank }, 
+                    if self.side() == Side::WHITE { file } else { 7 - file }
+                );
+                
                 if square == self.en_passant_square() {
                     result += " x";
                     continue;
@@ -83,8 +87,8 @@ impl ChessBoard {
                         .as_str();
                 }
             }
-            result += format!(" | {}", info[(7 - rank) as usize])
-                .primary((7 - rank + 1) as f32 / 18.0 + 0.15)
+            result += format!(" | {}", info[rank as usize])
+                .primary((rank + 1) as f32 / 18.0 + 0.15)
                 .as_str();
             result += "\n".to_string().as_str();
         }

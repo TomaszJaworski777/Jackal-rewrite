@@ -128,6 +128,7 @@ fn round(number: f64) -> f64 {
 pub trait AlignString {
     fn align_to_right(&self, len: usize) -> String;
     fn align_to_left(&self, len: usize) -> String;
+    fn align_to_center(&self, len: usize) -> String;
 }
 
 impl AlignString for String {
@@ -152,6 +153,19 @@ impl AlignString for String {
         let space = " ".repeat(len - string_len);
         format!("{self}{space}")
     }
+
+    fn align_to_center(&self, len: usize) -> String {
+        let string_len = self.len();
+
+        if string_len >= len {
+            return self.clone();
+        }
+
+        let space_size = len - string_len;
+        let modulo = " ".repeat(space_size % 2);
+        let space = " ".repeat(space_size / 2);
+        format!("{space}{self}{space}{modulo}")
+    }
 }
 
 impl AlignString for &str {
@@ -161,5 +175,9 @@ impl AlignString for &str {
 
     fn align_to_left(&self, len: usize) -> String {
         self.to_string().align_to_left(len)
+    }
+
+    fn align_to_center(&self, len: usize) -> String {
+        self.to_string().align_to_center(len)
     }
 }

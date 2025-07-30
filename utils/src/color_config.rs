@@ -5,6 +5,11 @@ pub const LOSE_COLOR: (u8, u8, u8) = RED;
 pub const WHITE_PIECES: (u8, u8, u8) = (225, 225, 160);
 pub const BLACK_PIECES: (u8, u8, u8) = (15, 60, 220);
 
+pub const PRIMARY_A: (u8, u8, u8) = (194, 142, 60);
+pub const PRIMARY_B: (u8, u8, u8) = (255, 70, 0);
+pub const SECONDARY_A: (u8, u8, u8) = (191, 191, 191);
+pub const SECONDARY_B: (u8, u8, u8) = (75, 75, 75);
+
 pub const GREEN: (u8, u8, u8) = (80, 191, 71);
 pub const YELLOW: (u8, u8, u8) = (225, 225, 120);
 pub const RED: (u8, u8, u8) = (200, 71, 71);

@@ -1,6 +1,6 @@
 use colored::Colorize;
 
-use crate::color_config::{self, BRIGHT_ORANGE, DARK_WHITE, GRAY};
+use crate::color_config::{self, PRIMARY_A, PRIMARY_B, SECONDARY_A, SECONDARY_B};
 
 pub trait Theme {
     fn primary(&self, gradient: f32) -> String;
@@ -9,14 +9,12 @@ pub trait Theme {
 
 impl Theme for String {
     fn primary(&self, gradient: f32) -> String {
-        let (orange_r, orange_g, orange_b) = BRIGHT_ORANGE;
-        let dest = (orange_r + 61, orange_g - 72, orange_b - 60);
-        let color = lerp_color(BRIGHT_ORANGE, dest, gradient);
+        let color = lerp_color(PRIMARY_A, PRIMARY_B, gradient);
         self.custom_color(color)
     }
 
     fn secondary(&self, gradient: f32) -> String {
-        let color = lerp_color(DARK_WHITE, GRAY, gradient);
+        let color = lerp_color(SECONDARY_A, SECONDARY_B, gradient);
         self.custom_color(color)
     }
 }
