@@ -10,25 +10,29 @@ impl SearchReport for UciSearchReport {
         let depth = search_stats.avg_depth();
         let max_depth = search_stats.max_depth();
 
-        let pv = search_engine.tree().get_best_pv(0);
+        let pv_count = search_engine.tree().get_root_node().children_count().min(search_engine.options().multi_pv() as u8);
 
-        let state = pv.first_node().state();
-        let score = match state {
-            engine::GameState::Loss(len) => format!("mate {}", (len + 1).div_ceil(2)),
-            engine::GameState::Win(len) => format!("mate -{}", (len + 1).div_ceil(2)),
-            _ => format!("cp {}", pv.score().cp(0.5))
-        };
+        for pv_idx in 0..pv_count {
+            let pv = search_engine.tree().get_best_pv(pv_idx as usize);
 
-        let time = search_stats.time_passesd_ms();
-        let nodes = search_stats.iterations();
+            let state = pv.first_node().state();
+            let score = match state {
+                engine::GameState::Loss(len) => format!("mate {}", (len + 1).div_ceil(2)),
+                engine::GameState::Win(len) => format!("mate -{}", (len + 1).div_ceil(2)),
+                _ => format!("cp {}", pv.score().cp(0.5))
+            };
 
-        let nps = (nodes as u128 * 1000) / time.max(1);
+            let time = search_stats.time_passesd_ms();
+            let nodes = search_stats.iterations();
 
-        let hashfull = search_engine.tree().current_index() * 1000 / search_engine.tree().tree_size();
+            let nps = (nodes as u128 * 1000) / time.max(1);
 
-        let pv = pv.to_string(false);
+            let hashfull = search_engine.tree().current_index() * 1000 / search_engine.tree().tree_size();
 
-        println!("info depth {depth} seldepth {max_depth} score {score} time {time} nodes {nodes} nps {nps} hashfull {hashfull} multipv 1 pv {pv}")
+            let pv = pv.to_string(false);
+
+            println!("info depth {depth} seldepth {max_depth} score {score} time {time} nodes {nodes} nps {nps} hashfull {hashfull} multipv {} pv {pv}", pv_idx + 1)   
+        }
     }
 
     fn search_ended(search_engine: &SearchEngine) {
