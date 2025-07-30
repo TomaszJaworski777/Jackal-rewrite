@@ -1,6 +1,8 @@
-use chess::{ChessBoard, Piece, Side, Square, DEFAULT_PERFT_DEPTH, FEN};
-use engine::{PolicyNetwork, SearchEngine, ValueNetwork};
-use utils::{clear_terminal_screen, heat_color, miliseconds_to_string, number_to_string, AlignString, Colors, CustomColor, PieceColors, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
+use std::io::Write;
+
+use chess::{ChessBoard, ChessPosition, Piece, Side, Square, DEFAULT_PERFT_DEPTH, FEN};
+use engine::{NoReport, PolicyNetwork, SearchEngine, SearchLimits, ValueNetwork};
+use utils::{clear_terminal_screen, create_loading_bar, heat_color, miliseconds_to_string, number_to_string, AlignString, Colors, CustomColor, PieceColors, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 pub struct MiscProcessor;
 impl MiscProcessor {
@@ -75,9 +77,18 @@ impl MiscProcessor {
                 let nps = result as f64 / duration.as_secs_f64();
                 println!("Bench: {result} nodes {:.0} nps", nps);
             },
-            "eval" => eval(search_engine),
             "eval-bench" => eval_bench(),
             "policy" => draw_policy(search_engine),
+            "eval" => eval(search_engine),
+            "analyse" => {
+                let iters = if args.len() >= 1 {
+                    args[0].parse::<u64>().ok()
+                } else {
+                    None
+                };
+
+                analyse(search_engine, iters);
+            },
             _ => return false,
         }
 
@@ -133,96 +144,6 @@ fn eval_bench() {
     }
 }
 
-fn eval(search_engine: &SearchEngine) {
-    let board = search_engine.current_position().board();
-    let wdl_score = ValueNetwork.forward(board);
-    let current_eval = wdl_score.cp(0.5);
-
-    println!("\n{} {}\n", " FEN:".primary(0.0), FEN::from(board).to_string().secondary(0.1));
-
-    for rank in 0..9 {
-        for file in 0..8 {
-            print!("{}", "+-------".primary(rank as f32 * 4.0 / 32.0));
-            if file == 7 {
-                println!("{}", "+".primary(rank as f32 * 4.0 / 32.0));
-            }
-        }
-
-        if rank == 8 {
-            break;
-        }
-
-        let square_data = |row_idx: u8, rank: u8, file: u8| -> String {
-            let square = Square::from_coords(rank, file);
-
-            let piece = board.piece_on_square(square);
-            let side = board.color_on_square(square);
-
-            match row_idx {
-                0 => String::new().align_to_center(7),
-                1 => {
-                    if board.en_passant_square() == square {
-                        return "x".align_to_center(7);
-                    }
-
-                    let piece_char = char::from(piece).to_string();
-                    
-                    if side == Side::WHITE {
-                        piece_char.to_ascii_uppercase().align_to_center(7).white_pieces()
-                    } else {
-                        piece_char.to_ascii_lowercase().align_to_center(7).black_pieces()
-                    }
-                },
-                2 => {
-                    if piece == Piece::NONE || piece == Piece::KING {
-                        return String::new().align_to_center(7);
-                    }
-
-                    let mut board_cpy = *board;
-                    board_cpy.remove_piece_on_square(square, piece, side);
-
-                    if board_cpy.is_square_attacked(board.king_square(board.side().flipped()), board.side().flipped()) {
-                        return "PIN".align_to_center(7).gray();
-                    }
-
-                    let modified_eval = ValueNetwork.forward(&board_cpy).cp(0.5);
-                    let diff = current_eval - modified_eval;
-                    let sign = if diff > 0 { "+" } else { "-" };
-                    heat_color(format!("{}{}", sign, diff.abs()).align_to_center(7).as_str(), diff as f32 / 100.0, -20.0, 20.0)
-                },
-                _ => unreachable!()
-            }
-        };
-
-        let mut info: [String; 33] = [const { String::new() }; 33];
-        info[1] = format!("Raw: {}", 
-            format!("[{}, {}, {}] ({}{})",
-                format!("{:.2}%", wdl_score.win_chance() * 100.0).custom_color(WIN_COLOR),
-                format!("{:.2}%", wdl_score.draw_chance() * 100.0).custom_color(DRAW_COLOR),
-                format!("{:.2}%", wdl_score.lose_chance() * 100.0).custom_color(LOSE_COLOR),
-                heat_color(if current_eval > 0 { "+" } else { "-" }, current_eval as f32 / 100.0, -20.0, 20.0),
-                heat_color(format!("{:.2}", current_eval as f32 / 100.0).as_str(), current_eval as f32 / 100.0, -20.0, 20.0),
-            ).secondary(1.0/32.0)
-        ).primary(1.0/32.0);
-
-        for row_idx in 0..3 {
-            for temp_file in 0..8 {
-                let square_rank = if board.side() == Side::WHITE { 7 - rank } else { rank };
-                let square_file = if board.side() == Side::WHITE { temp_file} else { 7 - temp_file };
-                print!("{}{}", "|".primary((rank * 4 + row_idx + 1) as f32 / 32.0), square_data(row_idx, square_rank, square_file));
-                if temp_file == 7 {
-                    println!("{}   {}", 
-                        "|".primary((rank * 4 + row_idx + 1) as f32 / 32.0),
-                        info[(rank * 4 + row_idx + 1) as usize]
-                    )
-                }
-            }
-        }
-    }
-
-    println!()
-}
-
 fn draw_policy(search_engine: &SearchEngine) {
     let board = search_engine.current_position().board();
 
@@ -267,4 +188,186 @@ fn draw_policy(search_engine: &SearchEngine) {
             heat_color(&format!("{:.2}%", p * 100.0), p, min_policy, max_policy)
         )
     }
+}
+
+fn eval(search_engine: &SearchEngine) {
+    let board = search_engine.current_position().board();
+
+    let wdl_score = ValueNetwork.forward(board);
+    let current_eval = wdl_score.cp(0.5);
+
+    let mut info: [String; 33] = [const { String::new() }; 33];
+    info[1] = format!("Raw: {}", 
+        format!("[{}, {}, {}] ({}{})",
+            format!("{:.2}%", wdl_score.win_chance() * 100.0).custom_color(WIN_COLOR),
+            format!("{:.2}%", wdl_score.draw_chance() * 100.0).custom_color(DRAW_COLOR),
+            format!("{:.2}%", wdl_score.lose_chance() * 100.0).custom_color(LOSE_COLOR),
+            heat_color(if current_eval > 0 { "+" } else { "-" }, current_eval as f32 / 100.0, -20.0, 20.0),
+            heat_color(format!("{:.2}", current_eval as f32 / 100.0).as_str(), current_eval as f32 / 100.0, -20.0, 20.0),
+        ).secondary(1.0/32.0)
+    ).primary(1.0/32.0);
+
+    let mut evals = [0; 64];
+    board.occupancy().map(|square| {
+        let piece = board.piece_on_square(square);
+        let side = board.color_on_square(square);
+
+        if piece == Piece::NONE || piece == Piece::KING {
+            return;
+        }
+
+        let mut board_cpy = *board;
+        board_cpy.remove_piece_on_square(square, piece, side);
+
+        if board_cpy.is_square_attacked(board.king_square(board.side().flipped()), board.side().flipped()) {
+            return;
+        }
+
+        evals[usize::from(square)] = ValueNetwork.forward(&board_cpy).cp(0.5);
+    });
+
+    println!("\n{} {}\n", " FEN:".primary(0.0), FEN::from(board).to_string().secondary(0.1));
+
+    draw_eval_board(board, &info, current_eval, evals);
+}
+
+fn analyse(search_engine: &mut SearchEngine, iters: Option<u64>) {
+    let position = *search_engine.current_position();
+    let board = *position.board();
+    let iters = iters.unwrap_or(50000);
+
+    let mut search_limits = SearchLimits::default();
+    search_limits.set_iters(Some(iters));
+
+    println!("\n{} {}", " FEN:   ".primary(0.0/32.0), FEN::from(&board).to_string().secondary(0.0/32.0));
+    println!("{} {}\n", " Nodes: ".primary(1.0/32.0), iters.to_string().secondary(1.0/32.0));
+
+    let piece_count = board.occupancy().pop_count() - 2 + 1;
+    let mut progress = 0.0;
+
+    print!("{} {}\r", " Progress:".primary(4.0/32.0), create_loading_bar(50, progress, (225,225,225), (225,225,225)).secondary(4.0/32.0));
+    let _ = std::io::stdout().flush();
+
+    search_engine.search::<NoReport>(&search_limits);
+    progress += 1.0;
+
+    print!("{} {}\r", " Progress:".primary(5.0/32.0), create_loading_bar(50, progress / piece_count as f32, (225,225,225), (225,225,225)).secondary(5.0/32.0));
+    let _ = std::io::stdout().flush();
+
+    let wdl_score = search_engine.tree().get_best_pv(0).score();
+    let current_eval = wdl_score.cp(0.5);
+
+    let info = [const { String::new() }; 33];
+
+    let mut evals = [0; 64];
+    board.occupancy().map(|square| {
+        let piece = board.piece_on_square(square);
+        let side = board.color_on_square(square);
+
+        if piece == Piece::NONE || piece == Piece::KING {
+            return;
+        }
+
+        progress += 1.0;
+
+        let mut board_cpy = board;
+        board_cpy.remove_piece_on_square(square, piece, side);
+
+        if board_cpy.is_square_attacked(board.king_square(board.side().flipped()), board.side().flipped()) {
+            print!("{} {}\r", " Progress:".primary(5.0/32.0), create_loading_bar(50, progress / piece_count as f32, (225,225,225), (225,225,225)).secondary(5.0/32.0));
+            let _ = std::io::stdout().flush();
+            return;
+        }
+
+        search_engine.set_position(&ChessPosition::from(board_cpy));
+        search_engine.search::<NoReport>(&search_limits);
+
+        evals[usize::from(square)] = search_engine.tree().get_best_pv(0).score().cp(0.5);
+
+        print!("{} {}\r", " Progress:".primary(5.0/32.0), create_loading_bar(50, progress / piece_count as f32, (225,225,225), (225,225,225)).secondary(5.0/32.0));
+        let _ = std::io::stdout().flush();
+    });
+
+    print!("{}\r", " ".repeat(68));
+    let _ = std::io::stdout().flush();
+
+    draw_eval_board(&board, &info, current_eval, evals);
+
+    search_engine.set_position(&position);
+}
+
+fn draw_eval_board(board: &ChessBoard, info: &[String; 33], current_eval: i32, board_evals: [i32; 64]) {
+    for rank in 0..9 {
+        for file in 0..8 {
+            print!("{}", "+-------".primary(rank as f32 * 4.0 / 32.0));
+            if file == 7 {
+                println!("{}   {}", 
+                    "+".primary((rank * 4) as f32 / 32.0),
+                    info[(rank * 4) as usize]
+                )
+            }
+        }
+
+        if rank == 8 {
+            break;
+        }
+
+        let square_data = |row_idx: u8, rank: u8, file: u8| -> String {
+            let square = Square::from_coords(rank, file);
+
+            let piece = board.piece_on_square(square);
+            let side = board.color_on_square(square);
+
+            match row_idx {
+                0 => String::new().align_to_center(7),
+                1 => {
+                    if board.en_passant_square() == square {
+                        return "x".align_to_center(7);
+                    }
+
+                    let piece_char = char::from(piece).to_string();
+                    
+                    if side == Side::WHITE {
+                        piece_char.to_ascii_uppercase().align_to_center(7).white_pieces()
+                    } else {
+                        piece_char.to_ascii_lowercase().align_to_center(7).black_pieces()
+                    }
+                },
+                2 => {
+                    if piece == Piece::NONE || piece == Piece::KING {
+                        return String::new().align_to_center(7);
+                    }
+
+                    let mut board_cpy = *board;
+                    board_cpy.remove_piece_on_square(square, piece, side);
+
+                    if board_cpy.is_square_attacked(board.king_square(board.side().flipped()), board.side().flipped()) {
+                        return "PIN".align_to_center(7).gray();
+                    }
+
+                    let modified_eval = board_evals[usize::from(square)];
+                    let diff = current_eval - modified_eval;
+                    let sign = if diff > 0 { "+" } else { "-" };
+                    heat_color(format!("{}{}", sign, diff.abs()).align_to_center(7).as_str(), diff as f32 / 100.0, -20.0, 20.0)
+                },
+                _ => unreachable!()
+            }
+        };
+
+        for row_idx in 0..3 {
+            for temp_file in 0..8 {
+                let square_rank = if board.side() == Side::WHITE { 7 - rank } else { rank };
+                let square_file = if board.side() == Side::WHITE { temp_file} else { 7 - temp_file };
+                print!("{}{}", "|".primary((rank * 4 + row_idx + 1) as f32 / 32.0), square_data(row_idx, square_rank, square_file));
+                if temp_file == 7 {
+                    println!("{}   {}", 
+                        "|".primary((rank * 4 + row_idx + 1) as f32 / 32.0),
+                        info[(rank * 4 + row_idx + 1) as usize]
+                    )
+                }
+            }
+        }
+    }
+
+    println!()
 }
