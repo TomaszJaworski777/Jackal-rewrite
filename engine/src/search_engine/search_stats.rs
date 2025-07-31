@@ -32,6 +32,10 @@ impl SearchStats {
         self.max_depth.load(Ordering::Relaxed)
     }
 
+    pub fn cumulative_depth(&self) -> u64 {
+        self.cumulative_depth.load(Ordering::Relaxed)
+    }
+
     pub fn time_passesd_ms(&self) -> u128 {
         self.timer.elapsed().as_millis()
     }

@@ -33,7 +33,11 @@ impl SearchReport for UciSearchReport {
             };
             
             let time = search_stats.time_passesd_ms();
-            let nodes = search_stats.iterations();
+            let nodes = if search_engine.options().report_iters() {
+                search_stats.iterations()
+            } else {
+                search_stats.cumulative_depth()
+            };
 
             let nps = (nodes as u128 * 1000) / time.max(1);
 
