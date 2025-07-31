@@ -28,13 +28,23 @@ impl SearchEngine {
 
                 let parent_score = tree.get_node(node_idx).score();
                 let new_index = tree.select_child_by_key(node_idx, |node| {
-                    let score = if node.visits() == 0 {
+                    let visits = node.visits();
+
+                    let mut score = if visits == 0 {
                         parent_score.reversed()
                     } else {
                         node.score()
-                    }.single(0.5);
+                    };
 
+                    let threads = node.threads() as f32;
+                    if threads > 0.0 {
+                        let v: f32 = visits as f32;
+                        let w = (score.win_chance() * v) / (v + threads);
+                        let d = (score.draw_chance() * v) / (v + threads);
+                        score = WDLScore::new(w, d)
+                    }
 
+                    let score = score.single(0.5);
                     puct(score as f64, 2.0, tree.get_node(node_idx).visits(), node.visits(), node.policy())
                 });
 
@@ -44,8 +54,16 @@ impl SearchEngine {
 
                 position.make_move(tree.get_node(new_index).mv(), castle_mask);
 
+                self.tree().inc_threads(new_index, 1);
+
                 *depth += 1;
-                self.perform_iteration::<false>(tree, new_index, position, depth, castle_mask)?
+                let score = self.perform_iteration::<false>(tree, new_index, position, depth, castle_mask);
+
+                self.tree().dec_threads(new_index, 1);
+
+                let score = score?;
+
+                score
             }
         }.reversed();
 
@@ -110,6 +128,8 @@ fn backprop_state(tree: &Tree, node_idx: usize) {
     if tree.get_node(node_idx).children_count() == 0 {
         return;
     }
+
+    let _lock = tree.read_lock(node_idx);
 
     tree.get_node(node_idx).map_children(|child_idx| {
         match tree.get_node(child_idx).state() {

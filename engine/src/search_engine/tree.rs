@@ -1,6 +1,6 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{atomic::{AtomicUsize, Ordering}, LockResult, RwLockReadGuard, RwLockWriteGuard};
 
-use chess::{ChessBoard, Move};
+use chess::Move;
 
 mod node;
 mod tree_draw;
@@ -9,7 +9,7 @@ mod pv_line;
 
 pub use node::{Node, GameState};
 
-use crate::{networks::{PolicyNetwork, WDLScore}, search_engine::engine_options::EngineOptions};
+use crate::networks::WDLScore;
 
 #[derive(Debug)]
 pub struct Tree {
@@ -78,63 +78,23 @@ impl Tree {
         self.nodes[node_idx].set_state(state)
     }
 
-    pub fn expand_node(&self, node_idx: usize, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
-        assert_eq!(
-            self.nodes[node_idx].children_count(),
-            0,
-            "Node {node_idx} already have children."
-        );
-
-        let policy_inputs = PolicyNetwork.get_inputs(board);
-        let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
-
-        let pst = if node_idx == self.root_index() {
-            engine_options.root_pst()
-        } else {
-            engine_options.common_pst()
-        } as f32;
-
-        let mut moves = Vec::new();
-        let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
-        let mut max = f32::NEG_INFINITY;
-        let mut total = 0f32;
-
-        board.map_legal_moves(|mv| {
-            moves.push(mv);
-            let p = PolicyNetwork.forward(board, &policy_inputs, mv, &mut policy_cache);
-            policy.push(p);
-            max = max.max(p);
-        });
-
-        let start_index = self.reserve_nodes(moves.len());
-
-        if start_index + moves.len() >= self.nodes.len() {
-            return false;
-        }
-
-        for p in policy.iter_mut() {
-            *p = ((*p - max)/pst).exp();
-            total += *p;
-        }
-
-        self.nodes[node_idx].add_children(start_index, moves.len());
-
-        for (idx, mv) in moves.into_iter().enumerate() {
-            let p = if policy.len() == 1 {
-                1.0
-            } else {
-                policy[idx] / total
-            };
-
-            self.nodes[start_index + idx].clear(mv);
-            self.nodes[start_index + idx].set_policy(p as f64);
-        }
-
-        true
+    #[inline]
+    pub fn inc_threads(&self, node_idx: usize, value: u8) -> u8 {
+        self.nodes[node_idx].inc_threads(value)
     }
 
     #[inline]
-    fn reserve_nodes(&self, count: usize) -> usize {
-        self.idx.fetch_add(count, Ordering::Relaxed)
+    pub fn dec_threads(&self, node_idx: usize, value: u8) -> u8 {
+        self.nodes[node_idx].dec_threads(value)
+    }
+
+    #[inline]
+    pub fn read_lock(&self, node_idx: usize) -> LockResult<RwLockReadGuard<'_, bool>> {
+        self.nodes[node_idx].read_lock()
+    }
+
+    #[inline]
+    pub fn write_lock(&self, node_idx: usize) -> LockResult<RwLockWriteGuard<'_, bool>> {
+        self.nodes[node_idx].write_lock()
     }
 }

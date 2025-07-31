@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::{ops::Mul, sync::atomic::{AtomicU64, Ordering}};
 
 const SCORE_SCALE: u32 = 1024 * 64;
 
@@ -92,5 +92,14 @@ impl WDLScore {
         let score = self.single(draw_reference);
         let score = (-400.0 * (1.0 / score.clamp(0.0, 1.0) - 1.0).ln()) as i32;
         score.clamp(-30000, 30000)
+    }
+}
+
+impl Mul<u32> for WDLScore {
+    type Output = WDLScore;
+
+    fn mul(self, rhs: u32) -> Self::Output {
+        let rhs = rhs as f32;
+        Self(self.win_chance() * rhs, self.draw_chance() * rhs)
     }
 }

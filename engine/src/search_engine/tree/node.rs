@@ -1,4 +1,4 @@
-use std::{sync::atomic::{AtomicU16, AtomicU32, AtomicU8, Ordering}};
+use std::sync::{atomic::{AtomicU16, AtomicU32, AtomicU8, Ordering}, LockResult, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use chess::Move;
 
@@ -17,6 +17,8 @@ pub struct Node {
     children_count: AtomicU8,
     state: AtomicGameState,
     policy: AtomicU16,
+    threads: AtomicU8,
+    lock: RwLock<bool>
 }
 
 impl Clone for Node {
@@ -28,7 +30,9 @@ impl Clone for Node {
             children_start_index: AtomicU32::new(self.children_start_index.load(Ordering::Relaxed)),
             children_count: AtomicU8::new(self.children_count.load(Ordering::Relaxed)),
             state: self.state.clone(),
-            policy: AtomicU16::new(self.policy.load(Ordering::Relaxed))
+            policy: AtomicU16::new(self.policy.load(Ordering::Relaxed)),
+            threads: AtomicU8::new(self.threads.load(Ordering::Relaxed)),
+            lock: RwLock::new(false)
         }
     }
 }
@@ -43,6 +47,8 @@ impl Node {
             children_count: AtomicU8::new(0),
             state: AtomicGameState::new(GameState::Ongoing),
             policy: AtomicU16::new(0),
+            threads: AtomicU8::new(0),
+            lock: RwLock::new(false),
         }
     }
 
@@ -55,6 +61,7 @@ impl Node {
         self.children_count.store(0, Ordering::Relaxed);
         self.state.set(GameState::Ongoing);
         self.policy.store(0, Ordering::Relaxed);
+        self.threads.store(0, Ordering::Relaxed);
     }
 
     #[inline]
@@ -78,6 +85,21 @@ impl Node {
     }
 
     #[inline]
+    pub fn threads(&self) -> u8 {
+        self.threads.load(Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn read_lock(&self) -> LockResult<RwLockReadGuard<'_, bool>> {
+        self.lock.read()
+    }
+
+    #[inline]
+    pub fn write_lock(&self) -> LockResult<RwLockWriteGuard<'_, bool>> {
+        self.lock.write()
+    }
+
+    #[inline]
     pub fn set_state(&self, state: GameState) {
         self.state.set(state)
     }
@@ -85,6 +107,16 @@ impl Node {
     #[inline]
     pub fn set_policy(&self, policy: f64) {
         self.policy.store((policy * f64::from(u16::MAX)) as u16, Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn inc_threads(&self, value: u8) -> u8 {
+        self.threads.fetch_add(value, Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn dec_threads(&self, value: u8) -> u8 {
+        self.threads.fetch_sub(value, Ordering::Relaxed)
     }
 
     #[inline]
@@ -106,6 +138,12 @@ impl Node {
     pub fn add_visit(&self, score: WDLScore) {
         self.visit_count.fetch_add(1, Ordering::Relaxed);
         self.cumulative_score.add(score);
+    }
+
+    #[inline]
+    pub fn add_visits(&self, count: u32, score: WDLScore) {
+        self.visit_count.fetch_add(count, Ordering::Relaxed);
+        self.cumulative_score.add(score * count);
     }
 
     #[inline]
