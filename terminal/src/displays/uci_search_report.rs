@@ -22,6 +22,16 @@ impl SearchReport for UciSearchReport {
                 _ => format!("cp {}", pv.score().cp(0.5))
             };
 
+            let wdl = if search_engine.options().show_wdl() {
+                format!(" wdl {:.0} {:.0} {:.0}", 
+                    pv.score().win_chance() * 1000.0, 
+                    pv.score().draw_chance() * 1000.0,
+                    pv.score().lose_chance() * 1000.0
+                )
+            } else {
+               String::new() 
+            };
+            
             let time = search_stats.time_passesd_ms();
             let nodes = search_stats.iterations();
 
@@ -31,7 +41,7 @@ impl SearchReport for UciSearchReport {
 
             let pv = pv.to_string(false);
 
-            println!("info depth {depth} seldepth {max_depth} score {score} time {time} nodes {nodes} nps {nps} hashfull {hashfull} multipv {} pv {pv}", pv_idx + 1)   
+            println!("info depth {depth} seldepth {max_depth} score {score}{wdl} time {time} nodes {nodes} nps {nps} hashfull {hashfull} multipv {} pv {pv}", pv_idx + 1)   
         }
     }
 
