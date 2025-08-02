@@ -5,7 +5,7 @@ use crate::{
     SearchEngine, SearchReport,
 };
 
-mod mcts_iteration;
+mod iteration;
 
 impl SearchEngine {
     pub(super) fn mcts<Display: SearchReport>(&self, search_limits: &SearchLimits) -> SearchStats {
@@ -24,7 +24,9 @@ impl SearchEngine {
 
             for _ in 0..(self.options().threads() - 1) {
                 s.spawn(|| {
-                    self.worker_loop(&search_stats, search_limits, &castle_mask);
+                    while !self.is_search_interrupted() {
+                        let _ = self.search_loop(&search_stats, search_limits, &castle_mask);
+                    }
                 });
             }
         });
@@ -42,24 +44,8 @@ impl SearchEngine {
         let mut max_avg_depth = 0;
 
         while !self.is_search_interrupted() {
-            let mut depth = 0;
-            let mut position = *self.current_position();
-
-            let result = self.perform_iteration::<true>(&self.tree, self.tree.root_index(), &mut position, &mut depth, castle_mask);
-
-            if result.is_none() {
-                if search_limits.is_inifinite() {
-                    while !self.is_search_interrupted() {}
-                } else {
-                    self.interrupt_search();
-                }
+            if !self.search_loop(search_stats, search_limits, castle_mask) {
                 break;
-            }
-
-            search_stats.add_iteration(depth);
-
-            if search_limits.is_limit_reached(search_stats) {
-                self.interrupt_search();
             }
 
             if search_stats.avg_depth() > max_avg_depth || search_report_timer.elapsed().as_secs_f64() > 1.0 / Display::refresh_rate_per_second() {
@@ -78,40 +64,31 @@ impl SearchEngine {
         }
     }
 
-    fn worker_loop(
+    fn search_loop(        
         &self,         
         search_stats: &SearchStats,
         search_limits: &SearchLimits,
         castle_mask: &[u8; 64],
-    ) {
-        while !self.is_search_interrupted() {
-            let mut depth = 0;
-            let mut position = *self.current_position();
+    ) -> bool {
+        let mut depth = 0;
+        let mut position = *self.current_position();
 
-            let result = self.perform_iteration::<true>(&self.tree, self.tree.root_index(), &mut position, &mut depth, castle_mask);
-
-            if result.is_none() {
-                if search_limits.is_inifinite() {
-                    while !self.is_search_interrupted() {}
-                } else {
-                    self.interrupt_search();
-                }
-                break;
+        if !self.perform_iteration(&mut position, &mut depth, castle_mask) {
+            if search_limits.is_inifinite() {
+                while !self.is_search_interrupted() {}
+            } else {
+                self.interrupt_search();
             }
 
-            search_stats.add_iteration(depth);
-
-            // if search_limits.is_limit_reached(search_stats) {
-            //     self.interrupt_search();
-            // }
-
-            // if search_stats.iterations() % 128 != 0 {
-            //     continue;
-            // }
-
-            // if search_limits.is_timeout(search_stats) {
-            //     self.interrupt_search();
-            // }
+            return false;
         }
+
+        search_stats.add_iteration(depth);
+
+        if search_limits.is_limit_reached(search_stats) {
+            self.interrupt_search();
+        }
+
+        true
     }
 }

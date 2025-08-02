@@ -109,7 +109,7 @@ fn perft<const BULK: bool, const CHESS_960: bool>(search_engine: &SearchEngine, 
 
     let (result, duration) =
         chess::perft::<BULK, true, CHESS_960>(search_engine.current_position().board(), depth);
-    let miliseconds = duration.as_millis();
+    let miliseconds = duration.as_millis().max(1);
 
     println!("\n-----------------------------------------------------------");
     println!(
