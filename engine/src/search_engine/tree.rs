@@ -44,7 +44,8 @@ impl Tree {
     #[inline]
     pub fn clear(&self) {
         self.idx.store(1, Ordering::Relaxed);
-        self.nodes[self.root_index()].clear(Move::NULL)
+        self.nodes[self.root_index()].clear(Move::NULL);
+        self.hash_table.clear();
     }
 
     #[inline]

@@ -27,6 +27,13 @@ impl HashTable {
         Self(vec![TableEntry::default(); size])
     }
 
+    pub fn clear(&self) {
+        for entry in &self.0 {
+            entry.score.clear();
+            entry.hash.store(0, Ordering::Relaxed);
+        }
+    }
+
     pub fn get(&self, key: ZobristKey) -> Option<WDLScore> {
         let idx = u64::from(key) % self.0.len() as u64;
         let entry = &self.0[idx as usize];

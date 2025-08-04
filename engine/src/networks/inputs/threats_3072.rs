@@ -1,5 +1,9 @@
 use chess::{Piece, Side};
 
+//-----------------------------------------------
+// This input code was written based on Monty 3072 inputs logic.
+//-----------------------------------------------
+
 pub struct Threats3072;
 #[allow(unused)]
 impl Threats3072 {
