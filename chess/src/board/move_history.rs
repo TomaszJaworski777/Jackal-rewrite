@@ -13,17 +13,18 @@ impl MoveHistory {
     }
 
     #[inline]
-    pub fn hash(&self) -> u64 {
-        let mut result = 0u64;
+    pub fn hash(&self) -> u128 {
+        let mut result = 0u128;
         for value in 0..self.1 {
-            result ^= u64::from(self.0[value])
+            let hash = (u64::from(self.0[value]) as u128) << 64 | u64::from(self.0[value]) as u128;
+            result ^= (hash >> value) << 7;
         }
 
         result &= !0b1111111;
-        result |= self.1 as u64 & 0b1111111;
+        result |= self.1 as u128 & 0b1111111;
 
-        result &= !0xFFFF0000;
-        result |= u64::from(self.0[self.1 - 1]) & 0xFFFF0000;
+        result &= !((u64::MAX as u128) << 64);
+        result |= (u64::from(self.0[self.1 - 1]) as u128) << 64;
 
         result
     }
