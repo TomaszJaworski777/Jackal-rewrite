@@ -9,12 +9,13 @@ mod pv_line;
 
 pub use node::{Node, GameState};
 
-use crate::networks::WDLScore;
+use crate::{networks::WDLScore, search_engine::hash_table::HashTable};
 
 #[derive(Debug)]
 pub struct Tree {
     nodes: Vec<Node>,
     idx: AtomicUsize,
+    hash_table: HashTable,
 }
 
 impl Clone for Tree {
@@ -22,25 +23,29 @@ impl Clone for Tree {
         Self {
             nodes: self.nodes.clone(),
             idx: AtomicUsize::new(self.idx.load(Ordering::Relaxed)),
+            hash_table: self.hash_table.clone()
         }
     }
 }
 
 impl Tree {
-    pub fn from_bytes(megabytes: usize) -> Self {
+    pub fn from_bytes(megabytes: usize, hash_percentage: f64) -> Self {
         let bytes = megabytes * 1024 * 1024;
-        let tree_size = bytes / std::mem::size_of::<Node>();
+        let hash_bytes = (bytes as f64 * hash_percentage) as usize;
+        let tree_size = (bytes - hash_bytes) / std::mem::size_of::<Node>();
 
         Self {
             nodes: vec![Node::new(); tree_size],
             idx: AtomicUsize::new(1),
+            hash_table: HashTable::new(hash_bytes),
         }
     }
 
     #[inline]
     pub fn clear(&self) {
         self.idx.store(1, Ordering::Relaxed);
-        self.nodes[self.root_index()].clear(Move::NULL)
+        self.nodes[self.root_index()].clear(Move::NULL);
+        self.hash_table.clear();
     }
 
     #[inline]
@@ -52,6 +57,12 @@ impl Tree {
     pub fn tree_size(&self) -> usize {
         self.nodes.len()
     }
+
+    #[inline]
+    pub fn hash_table(&self) -> &HashTable {
+        &self.hash_table
+    }
+
 
     #[inline]
     pub fn root_index(&self) -> usize {

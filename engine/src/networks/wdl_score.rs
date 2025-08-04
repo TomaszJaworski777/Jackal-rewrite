@@ -28,9 +28,17 @@ impl From<WDLScore> for AtomicWDLScore {
 
 impl AtomicWDLScore {
     #[inline]
-    pub fn get_score(&self, visits: u32) -> WDLScore {
-        let win_chance = self.0.load(Ordering::Relaxed) as f64 / f64::from(SCORE_SCALE) / f64::from(visits.max(1));
-        let draw_chance = self.1.load(Ordering::Relaxed) as f64 / f64::from(SCORE_SCALE) / f64::from(visits.max(1));
+    pub fn get_score_with_visits(&self, visits: u32) -> WDLScore {
+        let score = self.get_score();
+        let win_chance = score.win_chance() / visits.max(1) as f32;
+        let draw_chance = score.draw_chance() / visits.max(1) as f32;
+        WDLScore(win_chance, draw_chance)
+    }
+
+    #[inline]
+    pub fn get_score(&self) -> WDLScore {
+        let win_chance = self.0.load(Ordering::Relaxed) as f64 / f64::from(SCORE_SCALE);
+        let draw_chance = self.1.load(Ordering::Relaxed) as f64 / f64::from(SCORE_SCALE);
         WDLScore(win_chance as f32, draw_chance as f32)
     }
 
@@ -38,6 +46,15 @@ impl AtomicWDLScore {
     pub fn clear(&self) {
         self.0.store(0, Ordering::Relaxed);
         self.1.store(0, Ordering::Relaxed);
+    }
+
+    #[inline]
+    pub fn store(&self, value: WDLScore) {
+        let win_chance = (value.win_chance() as f64 * f64::from(SCORE_SCALE)) as u64;
+        let draw_chance = (value.draw_chance() as f64 * f64::from(SCORE_SCALE)) as u64;
+
+        self.0.store(win_chance, Ordering::Relaxed);
+        self.1.store(draw_chance, Ordering::Relaxed);
     }
 
     #[inline]

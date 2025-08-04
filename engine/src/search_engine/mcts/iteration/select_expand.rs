@@ -1,12 +1,12 @@
-use chess::ChessPosition;
+use chess::{ChessPosition, ZobristKey};
 
 use crate::{SearchEngine, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn select_and_expand(&self, position: &mut ChessPosition, selection_stack: &mut Vec<usize>, castle_mask: &[u8; 64]) -> Option<usize> {
+    pub(super) fn select_and_expand(&self, position: &mut ChessPosition, selection_stack: &mut Vec<(usize, ZobristKey)>, castle_mask: &[u8; 64]) -> Option<usize> {
         let mut node_idx = self.tree().root_index();
 
-        selection_stack.push(node_idx);
+        selection_stack.push((node_idx, position.board().hash()));
 
         loop {
             let parent_node = self.tree().get_node(node_idx);
@@ -32,9 +32,9 @@ impl SearchEngine {
                 puct(score as f64, 2.0, self.tree().get_node(node_idx).visits(), child_node.visits(), child_node.policy())
             }).expect("Failed to select a valid node.");
 
-            selection_stack.push(node_idx);
-
             position.make_move(self.tree().get_node(node_idx).mv(), castle_mask);
+
+            selection_stack.push((node_idx, position.board().hash()));
             
             self.tree().inc_threads(node_idx, 1);
             

@@ -1,5 +1,9 @@
 use chess::{Piece, Side};
 
+//-----------------------------------------------
+// This input code was written based on Monty 768 inputs logic.
+//-----------------------------------------------
+
 pub struct Standard768;
 #[allow(unused)]
 impl Standard768 {
