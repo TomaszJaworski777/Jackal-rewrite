@@ -1,4 +1,4 @@
-use chess::ChessPosition;
+use chess::{ChessPosition, ZobristKey};
 
 use crate::SearchEngine;
 
@@ -13,7 +13,7 @@ impl SearchEngine {
         depth: &mut u64,
         castle_mask: &[u8; 64],
     ) -> bool { 
-        let mut selection_stack: Vec<usize> = Vec::new();
+        let mut selection_stack: Vec<(usize, ZobristKey)> = Vec::new();
 
         let selected_node = self.select_and_expand(position, &mut selection_stack, castle_mask);
 

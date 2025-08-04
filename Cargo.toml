@@ -6,6 +6,7 @@ members = [
   "datagen",
   "trainer",
 ]
+resolver = "1"
 
 [profile.release]
 panic = 'abort'

@@ -21,31 +21,31 @@ fn lose_chance() {
 fn atomic() { 
     let atomic = AtomicWDLScore::default();
 
-    assert_eq!(atomic.get_score(0), WDLScore::new(0.0, 0.0));
+    assert_eq!(atomic.get_score_with_visits(0), WDLScore::new(0.0, 0.0));
 
     atomic.add(WDLScore::WIN);
 
-    assert_eq!(atomic.get_score(0), WDLScore::WIN);
-    assert_eq!(atomic.get_score(1), WDLScore::WIN);
-    assert_eq!(atomic.get_score(2), WDLScore::new(0.5, 0.0));
+    assert_eq!(atomic.get_score_with_visits(0), WDLScore::WIN);
+    assert_eq!(atomic.get_score_with_visits(1), WDLScore::WIN);
+    assert_eq!(atomic.get_score_with_visits(2), WDLScore::new(0.5, 0.0));
 
     atomic.add(WDLScore::LOSE);
 
-    assert_eq!(atomic.get_score(0), WDLScore::WIN);
-    assert_eq!(atomic.get_score(1), WDLScore::WIN);
-    assert_eq!(atomic.get_score(2), WDLScore::new(0.5, 0.0));
+    assert_eq!(atomic.get_score_with_visits(0), WDLScore::WIN);
+    assert_eq!(atomic.get_score_with_visits(1), WDLScore::WIN);
+    assert_eq!(atomic.get_score_with_visits(2), WDLScore::new(0.5, 0.0));
 
     atomic.add(WDLScore::DRAW);
 
-    assert_eq!(atomic.get_score(0), WDLScore::new(1.0, 1.0));
-    assert_eq!(atomic.get_score(1), WDLScore::new(1.0, 1.0));
-    assert_eq!(atomic.get_score(2), WDLScore::new(0.5, 0.5));
-    assert_eq!(atomic.get_score(4), WDLScore::new(0.25, 0.25));
+    assert_eq!(atomic.get_score_with_visits(0), WDLScore::new(1.0, 1.0));
+    assert_eq!(atomic.get_score_with_visits(1), WDLScore::new(1.0, 1.0));
+    assert_eq!(atomic.get_score_with_visits(2), WDLScore::new(0.5, 0.5));
+    assert_eq!(atomic.get_score_with_visits(4), WDLScore::new(0.25, 0.25));
 
     atomic.add(WDLScore::WIN);
 
-    assert_eq!(atomic.get_score(0), WDLScore::new(2.0, 1.0));
-    assert_eq!(atomic.get_score(1), WDLScore::new(2.0, 1.0));
-    assert_eq!(atomic.get_score(2), WDLScore::new(1.0, 0.5));
-    assert_eq!(atomic.get_score(4), WDLScore::new(0.5, 0.25));
+    assert_eq!(atomic.get_score_with_visits(0), WDLScore::new(2.0, 1.0));
+    assert_eq!(atomic.get_score_with_visits(1), WDLScore::new(2.0, 1.0));
+    assert_eq!(atomic.get_score_with_visits(2), WDLScore::new(1.0, 0.5));
+    assert_eq!(atomic.get_score_with_visits(4), WDLScore::new(0.5, 0.25));
 }

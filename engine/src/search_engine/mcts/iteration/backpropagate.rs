@@ -1,13 +1,17 @@
+use chess::ZobristKey;
+
 use crate::{search_engine::tree::Tree, GameState, SearchEngine, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn backpropagate(&self, selection_stack: &Vec<usize>, mut score: WDLScore) {
-        for &node_idx in selection_stack.iter().rev() {
+    pub(super) fn backpropagate(&self, selection_stack: &Vec<(usize, ZobristKey)>, mut score: WDLScore) {
+        for &(node_idx, key) in selection_stack.iter().rev() {
             self.tree().dec_threads(node_idx, 1);
 
             self.tree().add_visit(node_idx, score);
             
             backprop_state(self.tree(), node_idx);
+
+            self.tree().hash_table().push(key, score.reversed());
 
             score = score.reversed();
         }

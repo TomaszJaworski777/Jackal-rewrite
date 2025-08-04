@@ -121,7 +121,7 @@ impl Node {
 
     #[inline]
     pub fn score(&self) -> WDLScore {
-        self.cumulative_score.get_score(self.visits())
+        self.cumulative_score.get_score_with_visits(self.visits())
     }
 
     #[inline]

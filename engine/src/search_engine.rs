@@ -10,6 +10,7 @@ mod search_limits;
 mod search_stats;
 mod tree;
 mod engine_options;
+mod hash_table;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
@@ -40,7 +41,7 @@ impl SearchEngine {
 
         Self {
             position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
-            tree: Tree::from_bytes(options.hash() as usize),
+            tree: Tree::from_bytes(options.hash() as usize, options.hash_size()),
             options,
             interruption_token: AtomicBool::new(false),
         }
@@ -58,7 +59,7 @@ impl SearchEngine {
 
     #[inline]
     pub fn resize_tree(&mut self) {
-        self.tree = Tree::from_bytes(self.options.hash() as usize)
+        self.tree = Tree::from_bytes(self.options.hash() as usize, self.options().hash_size())
     }
 
     #[inline]
