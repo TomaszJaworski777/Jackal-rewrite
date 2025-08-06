@@ -14,7 +14,7 @@ mod hash_table;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
-pub use tree::{Node, GameState};
+pub use tree::{Node, GameState, PvLine};
 
 #[derive(Debug)]
 pub struct SearchEngine {
@@ -108,7 +108,7 @@ impl SearchEngine {
         let result = self.mcts::<Display>(search_limits);
 
         Display::search_report(search_limits, &result, self);
-        Display::search_ended(self);
+        Display::search_ended(search_limits, &result, self);
 
         result
     }

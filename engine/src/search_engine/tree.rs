@@ -8,6 +8,7 @@ mod tree_utils;
 mod pv_line;
 
 pub use node::{Node, GameState};
+pub use pv_line::PvLine;
 
 use crate::{networks::WDLScore, search_engine::hash_table::HashTable};
 

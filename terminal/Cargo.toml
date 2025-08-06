@@ -7,3 +7,4 @@ edition = "2021"
 engine = { path = "../engine" }
 chess  = { path = "../chess" }
 utils  = { path = "../utils" }
+term_size = "0.3.2"

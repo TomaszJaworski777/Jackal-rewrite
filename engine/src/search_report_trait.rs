@@ -7,7 +7,7 @@ pub trait SearchReport {
     #[allow(unused)]
     fn search_report(search_limits: &SearchLimits, search_stats: &SearchStats, search_engine: &SearchEngine) { }
     #[allow(unused)]
-    fn search_ended(search_engine: &SearchEngine) { }
+    fn search_ended(search_limits: &SearchLimits, search_stats: &SearchStats, search_engine: &SearchEngine) { }
 }
 
 pub struct NoReport;

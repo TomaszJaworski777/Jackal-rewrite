@@ -2,7 +2,7 @@ use std::io::Write;
 
 use chess::{ChessBoard, ChessPosition, Piece, Side, Square, DEFAULT_PERFT_DEPTH, FEN};
 use engine::{NoReport, PolicyNetwork, SearchEngine, SearchLimits, ValueNetwork};
-use utils::{clear_terminal_screen, create_loading_bar, heat_color, miliseconds_to_string, number_to_string, AlignString, Colors, CustomColor, PieceColors, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
+use utils::{clear_terminal_screen, create_loading_bar, heat_color, time_to_string, number_to_string, AlignString, Colors, CustomColor, PieceColors, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 pub struct MiscProcessor;
 impl MiscProcessor {
@@ -114,7 +114,7 @@ fn perft<const BULK: bool, const CHESS_960: bool>(search_engine: &SearchEngine, 
     println!("\n-----------------------------------------------------------");
     println!(
         "  Perft ended! {result} nodes, {}, {}n/s",
-        miliseconds_to_string(miliseconds),
+        time_to_string(miliseconds),
         number_to_string(((result * 1000) as f64 / miliseconds as f64) as u128)
     );
     println!("-----------------------------------------------------------\n");

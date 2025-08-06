@@ -43,13 +43,13 @@ impl SearchReport for UciSearchReport {
 
             let hashfull = search_engine.tree().current_index() * 1000 / search_engine.tree().tree_size();
 
-            let pv = pv.to_string(false);
+            let pv = pv.to_string(search_engine.options().chess960());
 
             println!("info depth {depth} seldepth {max_depth} score {score}{wdl} time {time} nodes {nodes} nps {nps} hashfull {hashfull} multipv {} pv {pv}", pv_idx + 1)   
         }
     }
 
-    fn search_ended(search_engine: &SearchEngine) {
+    fn search_ended(_: &SearchLimits, _: &SearchStats, search_engine: &SearchEngine) {
         let best_node_idx = search_engine.tree().select_best_child(search_engine.tree().root_index());
 
         if best_node_idx.is_none() {
@@ -62,7 +62,7 @@ impl SearchReport for UciSearchReport {
                 .tree()
                 .get_node(best_node_idx.unwrap())
                 .mv()
-                .to_string(false)
+                .to_string(search_engine.options().chess960())
         );
     }
 }

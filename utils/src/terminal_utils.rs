@@ -62,7 +62,7 @@ pub fn seconds_to_string(seconds: u128) -> String {
     result.trim().to_string()
 }
 
-pub fn miliseconds_to_string(miliseconds: u128) -> String {
+pub fn time_to_string(miliseconds: u128) -> String {
     let mm = miliseconds / 60000;
     let ss = (miliseconds - (mm * 60000)) as f32 / 1000.0;
 
