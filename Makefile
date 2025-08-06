@@ -4,7 +4,6 @@ VER = X.X.X
 RELEASE_DIR = releases/$(VER)
 
 # Define binary path
-DEV_NAME := $(EXE)-dev
 X86_64_V2 := $(RELEASE_DIR)/$(EXE)-$(VER)-x86-64-v2
 X86_64_V3 := $(RELEASE_DIR)/$(EXE)-$(VER)-x86-64-v3
 X86_64_V4 := $(RELEASE_DIR)/$(EXE)-$(VER)-x86-64-v4
@@ -32,7 +31,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 default:
-	$(NATIVE_HEADER) -p terminal -- --emit link=$(DEV_NAME)$(EXT)
+	$(NATIVE_HEADER) -p terminal -- --emit link=$(EXE)$(EXT)
 
 release: create_version_dir
 	$(X86_64_v2_HEADER) -p terminal -- --emit link=$(X86_64_V2)$(EXT)
