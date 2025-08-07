@@ -9,3 +9,6 @@ chess  = { path = "../chess" }
 utils  = { path = "../utils" }
 term_size = "0.3.2"
 term_cursor = "0.2.1"
+
+[features]
+dev = ["engine/dev"]
