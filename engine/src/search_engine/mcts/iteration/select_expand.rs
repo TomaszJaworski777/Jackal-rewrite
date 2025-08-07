@@ -1,6 +1,6 @@
 use chess::{ChessPosition, ZobristKey};
 
-use crate::{SearchEngine, WDLScore};
+use crate::{search_engine::engine_options::EngineOptions, Node, SearchEngine, WDLScore};
 
 impl SearchEngine {
     pub(super) fn select_and_expand(&self, position: &mut ChessPosition, selection_stack: &mut Vec<(usize, ZobristKey)>, castle_mask: &[u8; 64]) -> Option<usize> {
@@ -10,33 +10,7 @@ impl SearchEngine {
 
         loop {
             let parent_node = self.tree().get_node(node_idx);
-            let parent_score = parent_node.score();
-            node_idx = self.tree().select_child_by_key(node_idx, |child_node| {
-                let visits = child_node.visits();
-
-                let mut score = if visits == 0 {
-                    parent_score.reversed()
-                } else {
-                    child_node.score()
-                };
-
-                let threads = child_node.threads() as f32;
-                if threads > 0.0 {
-                    let v: f32 = visits as f32;
-                    let w = (score.win_chance() * v) / (v + threads);
-                    let d = (score.draw_chance() * v) / (v + threads);
-                    score = WDLScore::new(w, d)
-                }
-
-                let score = score.single(0.5);
-
-                let mut cpuct = self.options().cpuct();
-
-                let visit_scale = self.options().cpuct_visit_scale();
-                cpuct *= 1.0 + ((parent_node.visits() as f64 + visit_scale) / visit_scale).ln();
-
-                puct(score as f64, cpuct, self.tree().get_node(node_idx).visits(), child_node.visits(), child_node.policy())
-            }).expect("Failed to select a valid node.");
+            node_idx = self.tree().select_child_by_key(node_idx, |child_node| self.selection_key(&parent_node, child_node)).expect("Failed to select a valid node.");
 
             position.make_move(self.tree().get_node(node_idx).mv(), castle_mask);
 
@@ -59,8 +33,44 @@ impl SearchEngine {
 
         Some(node_idx)
     }
+
+    fn selection_key(&self, parent_node: &Node, child_node: &Node) -> f64 {
+        let parent_score = parent_node.score();
+        let parent_visits = parent_node.visits();
+
+        let child_visits = child_node.visits();
+        let policy = child_node.policy();
+
+        let score = get_score(&parent_score, child_node, child_visits).single(0.5) as f64;
+        let cpuct = get_cpuct(&self.options(), parent_visits);
+
+        score + cpuct * policy * (f64::from(parent_visits.max(1)).sqrt() / f64::from(child_visits + 1))
+    }
 }
 
-fn puct(score: f64, cpuct: f64, parent_visits: u32, child_visits: u32, policy: f64) -> f64 {
-    score + cpuct * policy * (f64::from(parent_visits.max(1)).sqrt() / f64::from(child_visits + 1))
+fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> WDLScore {
+    let mut score = if child_visits == 0 {
+        parent_score.reversed()
+    } else {
+        child_node.score()
+    };
+
+    let threads = child_node.threads() as f32;
+    if threads > 0.0 {
+        let v: f32 = child_visits as f32;
+        let w = (score.win_chance() * v) / (v + threads);
+        let d = (score.draw_chance() * v) / (v + threads);
+        score = WDLScore::new(w, d)
+    }
+
+    score
+}
+
+fn get_cpuct(options: &EngineOptions, parent_visits: u32) -> f64 {
+    let mut cpuct = options.cpuct();
+
+    let visit_scale = options.cpuct_visit_scale();
+    cpuct *= 1.0 + ((f64::from(parent_visits) + visit_scale) / visit_scale).ln();
+
+    cpuct
 }
