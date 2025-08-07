@@ -123,6 +123,32 @@ macro_rules! create_options {
                     println!();
                 }
                 )+
+
+                #[cfg(feature = "dev")]
+                {
+                    $(
+                    {
+                        let uci_type = match stringify!($tunable_ty) {
+                            "bool" => "check",
+                            "i64"  => "spin",
+                            _      => "string",
+                        };
+
+                        let mut default_str = $tunable_default.to_string();
+                        if default_str.is_empty() {
+                            default_str = "<empty>".to_string();
+                        }
+
+                        print!(
+                            "option name {} type {} default {}",
+                            stringify!($tunable), uci_type, default_str
+                        );
+
+                        print!(" min {} max {}", $tunable_min, $tunable_max);
+                        println!();
+                    }
+                    )+
+                }
             }
 
             pub fn print_tunables(&self) {

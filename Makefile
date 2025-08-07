@@ -31,7 +31,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 default:
-	$(NATIVE_HEADER) -p terminal -- --emit link=$(EXE)$(EXT)
+	$(NATIVE_HEADER) -p terminal --features=dev -- --emit link=$(EXE)$(EXT)
 
 release: create_version_dir
 	$(X86_64_v2_HEADER) -p terminal -- --emit link=$(X86_64_V2)$(EXT)
@@ -39,7 +39,7 @@ release: create_version_dir
 	$(X86_64_v4_HEADER) -p terminal -- --emit link=$(X86_64_V4)$(EXT)
 
 gen:
-	$(NATIVE_HEADER) -p datagen -- --emit link=datagen$(EXT)
+	$(NATIVE_HEADER) -p datagen --features=datagen -- --emit link=datagen$(EXT)
 
 trainer:
 	$(NATIVE_HEADER) -p trainer -- --emit link=trainer$(EXT)
