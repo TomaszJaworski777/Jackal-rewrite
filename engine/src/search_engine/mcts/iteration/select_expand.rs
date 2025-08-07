@@ -29,7 +29,13 @@ impl SearchEngine {
                 }
 
                 let score = score.single(0.5);
-                puct(score as f64, 2.0, self.tree().get_node(node_idx).visits(), child_node.visits(), child_node.policy())
+
+                let mut cpuct = self.options().cpuct();
+
+                // let visit_scale = self.options().cpuct_visit_scale() * 128.0;
+                // cpuct *= 1.0 + ((parent_node.visits() as f64 + visit_scale) / visit_scale).exp();
+
+                puct(score as f64, cpuct, self.tree().get_node(node_idx).visits(), child_node.visits(), child_node.policy())
             }).expect("Failed to select a valid node.");
 
             position.make_move(self.tree().get_node(node_idx).mv(), castle_mask);
@@ -55,6 +61,6 @@ impl SearchEngine {
     }
 }
 
-fn puct(score: f64, c: f64, parent_visits: u32, child_visits: u32, policy: f64) -> f64 {
-    score + c * policy * (f64::from(parent_visits.max(1)).sqrt() / f64::from(child_visits + 1))
+fn puct(score: f64, cpuct: f64, parent_visits: u32, child_visits: u32, policy: f64) -> f64 {
+    score + cpuct * policy * (f64::from(parent_visits.max(1)).sqrt() / f64::from(child_visits + 1))
 }
