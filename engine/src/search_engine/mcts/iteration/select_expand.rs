@@ -32,8 +32,8 @@ impl SearchEngine {
 
                 let mut cpuct = self.options().cpuct();
 
-                // let visit_scale = self.options().cpuct_visit_scale() * 128.0;
-                // cpuct *= 1.0 + ((parent_node.visits() as f64 + visit_scale) / visit_scale).exp();
+                let visit_scale = self.options().cpuct_visit_scale();
+                cpuct *= 1.0 + ((parent_node.visits() as f64 + visit_scale) / visit_scale).ln();
 
                 puct(score as f64, cpuct, self.tree().get_node(node_idx).visits(), child_node.visits(), child_node.policy())
             }).expect("Failed to select a valid node.");

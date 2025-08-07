@@ -23,8 +23,8 @@ create_options! {
             common_pst: f64  =>  1.00,  0.1,  10.0,  0.1,  0.002;
 
             //Cpuct scaling
-            cpuct:             f64  =>  0.75,   0.1,  5.0,    0.075,  0.002;
-            cpuct_visit_scale: f64  =>  62.00,  1.0,  512.0,  6.2,    0.002;
+            cpuct:             f64  =>  0.75,     0.1,    5.0,      0.075,  0.002;
+            cpuct_visit_scale: f64  =>  8000.00,  128.0,  65536.0,  800.0,  0.002;
 
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;
