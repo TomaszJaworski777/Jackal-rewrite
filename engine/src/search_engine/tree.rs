@@ -7,10 +7,10 @@ mod tree_draw;
 mod tree_utils;
 mod pv_line;
 
-pub use node::{Node, GameState};
+pub use node::{Node, GameState, AtomicWDLScore, WDLScore};
 pub use pv_line::PvLine;
 
-use crate::{networks::WDLScore, search_engine::hash_table::HashTable};
+use crate::search_engine::hash_table::HashTable;
 
 #[derive(Debug)]
 pub struct Tree {

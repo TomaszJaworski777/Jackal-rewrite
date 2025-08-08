@@ -1,18 +1,21 @@
-use std::sync::{atomic::{AtomicU16, AtomicU32, AtomicU8, Ordering}, LockResult, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{atomic::{AtomicU16, AtomicU32, AtomicU64, AtomicU8, Ordering}, LockResult, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use chess::Move;
 
-use crate::{networks::{AtomicWDLScore, WDLScore}, search_engine::tree::node::game_state::AtomicGameState};
+use crate::search_engine::tree::node::{game_state::AtomicGameState, wdl_score::SCORE_SCALE};
 
 mod game_state;
+mod wdl_score;
 
 pub use game_state::GameState;
+pub use wdl_score::{WDLScore, AtomicWDLScore};
 
 #[derive(Debug)]
 pub struct Node {
     mv: AtomicU16,
     visit_count: AtomicU32,
     cumulative_score: AtomicWDLScore,
+    squared_score: AtomicU64,
     children_start_index: AtomicU32,
     children_count: AtomicU8,
     state: AtomicGameState,
@@ -27,6 +30,7 @@ impl Clone for Node {
             mv: AtomicU16::new(self.mv.load(Ordering::Relaxed)),
             visit_count: AtomicU32::new(self.visit_count.load(Ordering::Relaxed)),
             cumulative_score: self.cumulative_score.clone(),
+            squared_score: AtomicU64::new(self.squared_score.load(Ordering::Relaxed)),
             children_start_index: AtomicU32::new(self.children_start_index.load(Ordering::Relaxed)),
             children_count: AtomicU8::new(self.children_count.load(Ordering::Relaxed)),
             state: self.state.clone(),
@@ -43,6 +47,7 @@ impl Node {
             mv: AtomicU16::new(0),
             visit_count: AtomicU32::new(0),
             cumulative_score: AtomicWDLScore::default(),
+            squared_score: AtomicU64::new(0),
             children_start_index: AtomicU32::new(0),
             children_count: AtomicU8::new(0),
             state: AtomicGameState::new(GameState::Ongoing),
@@ -57,6 +62,7 @@ impl Node {
         self.mv.store(u16::from(mv), Ordering::Relaxed);
         self.visit_count.store(0, Ordering::Relaxed);
         self.cumulative_score.clear();
+        self.squared_score.store(0, Ordering::Relaxed);
         self.children_start_index.store(0, Ordering::Relaxed);
         self.children_count.store(0, Ordering::Relaxed);
         self.state.set(GameState::Ongoing);
@@ -72,6 +78,21 @@ impl Node {
     #[inline]
     pub fn visits(&self) -> u32 {
         self.visit_count.load(Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn score(&self) -> WDLScore {
+        self.cumulative_score.get_score_with_visits(self.visits())
+    }
+
+    #[inline]
+    pub fn squared_score(&self) -> f64 {
+        ((self.squared_score.load(Ordering::Relaxed) as f64) / f64::from(SCORE_SCALE)) / f64::from(self.visits())
+    }
+
+    #[inline]
+    pub fn children_count(&self) -> u8 {
+        self.children_count.load(Ordering::Relaxed)
     }
 
     #[inline]
@@ -98,6 +119,11 @@ impl Node {
     pub fn write_lock(&self) -> LockResult<RwLockWriteGuard<'_, bool>> {
         self.lock.write()
     }
+    
+    #[inline]
+    pub fn is_terminal(&self) -> bool {
+        self.state() != GameState::Ongoing
+    }
 
     #[inline]
     pub fn set_state(&self, state: GameState) {
@@ -120,30 +146,12 @@ impl Node {
     }
 
     #[inline]
-    pub fn score(&self) -> WDLScore {
-        self.cumulative_score.get_score_with_visits(self.visits())
-    }
-
-    #[inline]
-    pub fn is_terminal(&self) -> bool {
-        self.state() != GameState::Ongoing
-    }
-
-    #[inline]
-    pub fn children_count(&self) -> u8 {
-        self.children_count.load(Ordering::Relaxed)
-    }
-
-    #[inline]
     pub fn add_visit(&self, score: WDLScore) {
-        self.visit_count.fetch_add(1, Ordering::Relaxed);
+        self.visit_count.fetch_add(1, Ordering::Relaxed) as f64;
         self.cumulative_score.add(score);
-    }
-
-    #[inline]
-    pub fn add_visits(&self, count: u32, score: WDLScore) {
-        self.visit_count.fetch_add(count, Ordering::Relaxed);
-        self.cumulative_score.add(score * count);
+        
+        let score = score.single(0.5) as f64;
+        self.squared_score.fetch_add((score.powi(2) * f64::from(SCORE_SCALE)) as u64, Ordering::Relaxed);
     }
 
     #[inline]

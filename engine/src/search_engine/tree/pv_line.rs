@@ -1,6 +1,6 @@
 use chess::Move;
 
-use crate::{networks::WDLScore, search_engine::tree::node::Node};
+use crate::search_engine::tree::node::{Node, WDLScore};
 
 #[derive(Debug, Clone, Default)]
 pub struct PvLine(Vec<Node>);
