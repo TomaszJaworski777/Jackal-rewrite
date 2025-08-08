@@ -86,7 +86,9 @@ impl Node {
 
     #[inline]
     pub fn squared_score(&self) -> f64 {
-        self.squared_score.load(Ordering::Relaxed) as f64 / f64::from(SCORE_SCALE) / f64::from(self.visits().max(1))
+        let sum_sq_q = self.squared_score.load(Ordering::Relaxed);
+        let visits = self.visit_count.load(Ordering::Relaxed);
+        (sum_sq_q / u64::from(visits)) as f64 / f64::from(SCORE_SCALE).powi(2)
     }
 
     #[inline]
@@ -149,8 +151,8 @@ impl Node {
         self.visit_count.fetch_add(1, Ordering::Relaxed);
         self.cumulative_score.add(score);
         
-        let squared_score = score.single(0.5).powi(2) as f64 * f64::from(SCORE_SCALE);
-        self.squared_score.fetch_add(squared_score as u64, Ordering::Relaxed);
+        let q = (score.single(0.5) as f64 * f64::from(SCORE_SCALE)) as u64;
+        self.squared_score.fetch_add(q * q, Ordering::Relaxed);
     }
 
     #[inline]
