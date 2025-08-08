@@ -15,8 +15,7 @@ impl SearchEngine {
 
             node_idx = self.tree().select_child_by_key(node_idx, |child_node| {
                 let score = get_score(&parent_node.score(), child_node, child_node.visits()).single(0.5) as f64;
-                let exploration_factor = f64::from(parent_node.visits().max(1)).sqrt() / f64::from(child_node.visits() + 1);
-                score + cpuct * child_node.policy() * exploration_factor
+                score + child_node.policy() * (cpuct / f64::from(child_node.visits() + 1))
             }).expect("Failed to select a valid node.");
 
             position.make_move(self.tree().get_node(node_idx).mv(), castle_mask);
@@ -72,7 +71,8 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node) -> f64 {
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance_factor - 1.0);
     }
 
-    cpuct *= (options.gini_base() - options.gini_scale() * (parent_node.gini_impurity() as f64 + 0.001).ln()).min(options.gini_min());
+    let mut exploration_scale = (options.exploration_scale() * f64::from(parent_node.visits().max(1)).ln()).exp();
+    exploration_scale *= (options.gini_base() - options.gini_scale() * (parent_node.gini_impurity() as f64 + 0.001).ln()).min(options.gini_min());
 
-    cpuct
+    cpuct * exploration_scale
 }
