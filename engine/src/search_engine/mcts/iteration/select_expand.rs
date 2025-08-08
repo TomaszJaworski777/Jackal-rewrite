@@ -72,7 +72,7 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node, parent_visits: u32) ->
     let visit_scale = options.cpuct_visit_scale();
     cpuct *= 1.0 + ((f64::from(parent_visits) + visit_scale) / visit_scale).ln();
 
-    let variance = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).abs()) * options.cpuct_variance_scale();
+    let variance = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).powi(2)).abs() * options.cpuct_variance_scale();
     cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
 
     cpuct
