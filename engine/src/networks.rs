@@ -1,10 +1,7 @@
 mod value_network;
 mod policy_network;
-mod wdl_score;
 mod layers;
 mod inputs;
-
-pub use wdl_score::{WDLScore, AtomicWDLScore};
 
 use crate::networks::value_network::ValueNetwork;
 use crate::networks::policy_network::PolicyNetwork;

@@ -1,6 +1,6 @@
 use chess::ChessBoard;
 
-use crate::networks::{inputs::Threats3072, layers::{Accumulator, NetworkLayer, TransposedNetworkLayer}, WDLScore};
+use crate::{networks::{inputs::Threats3072, layers::{Accumulator, NetworkLayer, TransposedNetworkLayer}}, WDLScore};
 
 const INPUT_SIZE: usize = Threats3072::input_size();
 const L1_SIZE: usize = 3072;

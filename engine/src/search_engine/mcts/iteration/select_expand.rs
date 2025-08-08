@@ -42,7 +42,7 @@ impl SearchEngine {
         let policy = child_node.policy();
 
         let score = get_score(&parent_score, child_node, child_visits).single(0.5) as f64;
-        let cpuct = get_cpuct(&self.options(), parent_visits);
+        let cpuct = get_cpuct(&self.options(), parent_node, parent_visits);
 
         score + cpuct * policy * (f64::from(parent_visits.max(1)).sqrt() / f64::from(child_visits + 1))
     }
@@ -66,11 +66,14 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
     score
 }
 
-fn get_cpuct(options: &EngineOptions, parent_visits: u32) -> f64 {
+fn get_cpuct(options: &EngineOptions, parent_node: &Node, parent_visits: u32) -> f64 {
     let mut cpuct = options.cpuct();
 
     let visit_scale = options.cpuct_visit_scale();
     cpuct *= 1.0 + ((f64::from(parent_visits) + visit_scale) / visit_scale).ln();
+
+    let variance = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).abs()) * options.cpuct_variance_scale();
+    cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
 
     cpuct
 }

@@ -1,6 +1,6 @@
 use std::{ops::Mul, sync::atomic::{AtomicU64, Ordering}};
 
-const SCORE_SCALE: u32 = 1024 * 64;
+pub const SCORE_SCALE: u32 = 1024 * 64;
 
 #[derive(Debug, Default)]
 pub struct AtomicWDLScore(AtomicU64, AtomicU64);
