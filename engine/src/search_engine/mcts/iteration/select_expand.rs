@@ -72,5 +72,7 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node) -> f64 {
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
     }
 
+    cpuct *= (options.gini_base() - options.gini_scale() * (parent_node.gini_impurity() as f64 + 0.001).ln()).min(options.gini_min());
+
     cpuct
 }

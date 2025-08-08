@@ -21,6 +21,7 @@ pub struct Node {
     state: AtomicGameState,
     policy: AtomicU16,
     threads: AtomicU8,
+    gini_impurity: AtomicU32,
     lock: RwLock<bool>
 }
 
@@ -36,6 +37,7 @@ impl Clone for Node {
             state: self.state.clone(),
             policy: AtomicU16::new(self.policy.load(Ordering::Relaxed)),
             threads: AtomicU8::new(self.threads.load(Ordering::Relaxed)),
+            gini_impurity: AtomicU32::new(self.gini_impurity.load(Ordering::Relaxed)),
             lock: RwLock::new(false)
         }
     }
@@ -53,6 +55,7 @@ impl Node {
             state: AtomicGameState::new(GameState::Ongoing),
             policy: AtomicU16::new(0),
             threads: AtomicU8::new(0),
+            gini_impurity: AtomicU32::new(0),
             lock: RwLock::new(false),
         }
     }
@@ -68,6 +71,7 @@ impl Node {
         self.state.set(GameState::Ongoing);
         self.policy.store(0, Ordering::Relaxed);
         self.threads.store(0, Ordering::Relaxed);
+        self.set_gini_impurity(0.0);
     }
 
     #[inline]
@@ -111,6 +115,11 @@ impl Node {
     }
 
     #[inline]
+    pub fn gini_impurity(&self) -> f32 {
+        f32::from_bits(self.gini_impurity.load(Ordering::Relaxed))
+    }
+
+    #[inline]
     pub fn read_lock(&self) -> LockResult<RwLockReadGuard<'_, bool>> {
         self.lock.read()
     }
@@ -143,6 +152,12 @@ impl Node {
     #[inline]
     pub fn dec_threads(&self, value: u8) -> u8 {
         self.threads.fetch_sub(value, Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn set_gini_impurity(&self, gini_impurity: f32) {
+        self.gini_impurity
+            .store(f32::to_bits(gini_impurity), Ordering::Relaxed);
     }
 
     #[inline]

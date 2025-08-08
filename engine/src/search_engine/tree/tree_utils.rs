@@ -52,6 +52,8 @@ impl Tree {
 
         self.nodes[node_idx].add_children(start_index, moves.len());
 
+        let mut policy_squares = 0.0;
+
         for (idx, mv) in moves.into_iter().enumerate() {
             let p = if policy.len() == 1 {
                 1.0
@@ -61,7 +63,11 @@ impl Tree {
 
             self.nodes[start_index + idx].clear(mv);
             self.nodes[start_index + idx].set_policy(p as f64);
+            policy_squares += p * p;
         }
+
+        let gini_impurity = (1.0 - policy_squares).clamp(0.0, 1.0);
+        self.nodes[node_idx].set_gini_impurity(gini_impurity);
 
         true
     }
