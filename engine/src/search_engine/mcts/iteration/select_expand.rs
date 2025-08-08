@@ -67,9 +67,9 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node) -> f64 {
     cpuct *= 1.0 + ((f64::from(parent_node.visits()) + visit_scale) / visit_scale).ln();
 
     if parent_node.visits() > 1 {
-        let var = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).powi(2)).max(0.0);
-        let variance = var.sqrt() / options.cpuct_variance_scale();
-        cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
+        let variance = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).powi(2)).max(0.0);
+        let variance_factor = variance.sqrt() / options.cpuct_variance_scale();
+        cpuct *= 1.0 + options.cpuct_variance_weight() * (variance_factor - 1.0);
     }
 
     cpuct *= (options.gini_base() - options.gini_scale() * (parent_node.gini_impurity() as f64 + 0.001).ln()).min(options.gini_min());
