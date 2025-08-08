@@ -23,10 +23,10 @@ create_options! {
             common_pst: f64  =>  1.00,  0.1,  10.0,  0.1,  0.002;
 
             //Node Selection
-            cpuct:                 f64  =>  0.25,     0.1,    5.0,      0.025,  0.002;
+            cpuct:                 f64  =>  0.75,     0.1,    5.0,      0.075,  0.002;
             cpuct_visit_scale:     f64  =>  8000.00,  128.0,  65536.0,  800.0,  0.002;
             cpuct_variance_scale:  f64  =>  0.2,      0.1,    50.0,     0.02,    0.002;
-            cpuct_variance_weight: f64  =>  0.8,      0.0,    2.0,      0.08,   0.002;
+            cpuct_variance_weight: f64  =>  0.85,      0.0,    2.0,     0.085,   0.002;
 
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;
