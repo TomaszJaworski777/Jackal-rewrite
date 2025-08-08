@@ -154,12 +154,6 @@ impl Node {
     }
 
     #[inline]
-    pub fn add_visits(&self, count: u32, score: WDLScore) {
-        self.visit_count.fetch_add(count, Ordering::Relaxed);
-        self.cumulative_score.add(score * count);
-    }
-
-    #[inline]
     pub fn add_children(&self, start_index: usize, chilren_count: usize) {
         self.children_start_index
             .store(start_index as u32, Ordering::Relaxed);

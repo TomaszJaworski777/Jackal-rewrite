@@ -42,7 +42,7 @@ impl SearchEngine {
         let policy = child_node.policy();
 
         let score = get_score(&parent_score, child_node, child_visits).single(0.5) as f64;
-        let cpuct = get_cpuct(&self.options(), parent_node, parent_visits);
+        let cpuct = get_cpuct(&self.options(), child_node);
 
         score + cpuct * policy * (f64::from(parent_visits.max(1)).sqrt() / f64::from(child_visits + 1))
     }
@@ -55,9 +55,9 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
         child_node.score()
     };
 
-    let threads = child_node.threads() as f32;
+    let threads = f64::from(child_node.threads()) as f32;
     if threads > 0.0 {
-        let v: f32 = child_visits as f32;
+        let v = f64::from(child_visits) as f32;
         let w = (score.win_chance() * v) / (v + threads);
         let d = (score.draw_chance() * v) / (v + threads);
         score = WDLScore::new(w, d)
@@ -66,14 +66,15 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
     score
 }
 
-fn get_cpuct(options: &EngineOptions, parent_node: &Node, parent_visits: u32) -> f64 {
+fn get_cpuct(options: &EngineOptions, node: &Node) -> f64 {
     let mut cpuct = options.cpuct();
 
     let visit_scale = options.cpuct_visit_scale();
-    cpuct *= 1.0 + ((f64::from(parent_visits) + visit_scale) / visit_scale).ln();
+    cpuct *= 1.0 + ((f64::from(node.visits()) + visit_scale) / visit_scale).ln();
 
-    if parent_visits > 1 {
-        let variance = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).powi(2)).max(0.0).sqrt() * options.cpuct_variance_scale();
+    if node.visits() > 1 {
+        let v = (node.squared_score() - (node.score().single(0.5) as f64).powi(2)).max(0.0);
+        let variance = v.sqrt() / options.cpuct_variance_scale();
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
     }
 
