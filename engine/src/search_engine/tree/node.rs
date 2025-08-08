@@ -15,7 +15,7 @@ pub struct Node {
     mv: AtomicU16,
     visit_count: AtomicU32,
     cumulative_score: AtomicWDLScore,
-    squared_score: AtomicU32,
+    squared_score: AtomicU64,
     children_start_index: AtomicU32,
     children_count: AtomicU8,
     state: AtomicGameState,
@@ -30,7 +30,7 @@ impl Clone for Node {
             mv: AtomicU16::new(self.mv.load(Ordering::Relaxed)),
             visit_count: AtomicU32::new(self.visit_count.load(Ordering::Relaxed)),
             cumulative_score: self.cumulative_score.clone(),
-            squared_score: AtomicU32::new(self.squared_score.load(Ordering::Relaxed)),
+            squared_score: AtomicU64::new(self.squared_score.load(Ordering::Relaxed)),
             children_start_index: AtomicU32::new(self.children_start_index.load(Ordering::Relaxed)),
             children_count: AtomicU8::new(self.children_count.load(Ordering::Relaxed)),
             state: self.state.clone(),
@@ -47,7 +47,7 @@ impl Node {
             mv: AtomicU16::new(0),
             visit_count: AtomicU32::new(0),
             cumulative_score: AtomicWDLScore::default(),
-            squared_score: AtomicU32::new(0),
+            squared_score: AtomicU64::new(0),
             children_start_index: AtomicU32::new(0),
             children_count: AtomicU8::new(0),
             state: AtomicGameState::new(GameState::Ongoing),
@@ -62,6 +62,7 @@ impl Node {
         self.mv.store(u16::from(mv), Ordering::Relaxed);
         self.visit_count.store(0, Ordering::Relaxed);
         self.cumulative_score.clear();
+        self.squared_score.store(0, Ordering::Relaxed);
         self.children_start_index.store(0, Ordering::Relaxed);
         self.children_count.store(0, Ordering::Relaxed);
         self.state.set(GameState::Ongoing);
@@ -86,7 +87,7 @@ impl Node {
 
     #[inline]
     pub fn squared_score(&self) -> f64 {
-        f64::from(self.squared_score.load(Ordering::Relaxed)) / f64::from(u32::MAX)
+        ((self.squared_score.load(Ordering::Relaxed) as f64) / f64::from(SCORE_SCALE)) / f64::from(self.visits())
     }
 
     #[inline]
@@ -146,12 +147,11 @@ impl Node {
 
     #[inline]
     pub fn add_visit(&self, score: WDLScore) {
-        let pv = self.visit_count.fetch_add(1, Ordering::Relaxed) as f64;
+        self.visit_count.fetch_add(1, Ordering::Relaxed) as f64;
         self.cumulative_score.add(score);
         
         let score = score.single(0.5) as f64;
-        let new_squared_score = (self.squared_score() * pv + score.powi(2)) / (pv + 1.0);
-        self.squared_score.store((new_squared_score * f64::from(u32::MAX)) as u32, Ordering::Relaxed);
+        self.squared_score.fetch_add((score.powi(2) * f64::from(SCORE_SCALE)) as u64, Ordering::Relaxed);
     }
 
     #[inline]
