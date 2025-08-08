@@ -27,7 +27,7 @@ create_options! {
             cpuct_visit_scale:     f64  =>  8000.00,  128.0,  65536.0,  800.0,  0.002;
             cpuct_variance_scale:  f64  =>  0.2,      0.1,    50.0,     0.02,   0.002;
             cpuct_variance_weight: f64  =>  0.85,     0.0,    2.0,      0.085,  0.002;
-			exploration_scale:     f64  =>  0.60,     0.0,    1.0,      0.060,  0.002;
+			exploration_scale:     f64  =>  0.52,     0.0,    1.0,      0.052,  0.002;
             gini_base:             f64  =>  0.679,    0.0,    2.0,      0.085,  0.002;
             gini_scale:            f64  =>  1.634,    0.0,    2.0,      0.085,  0.002;
             gini_min:              f64  =>  2.1,      0.0,    2.0,      0.085,  0.002;
