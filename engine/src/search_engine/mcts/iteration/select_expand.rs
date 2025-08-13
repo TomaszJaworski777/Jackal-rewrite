@@ -5,19 +5,22 @@ use crate::{search_engine::engine_options::EngineOptions, Node, SearchEngine, WD
 impl SearchEngine {
     pub(super) fn select_and_expand(&self, position: &mut ChessPosition, selection_stack: &mut Vec<(usize, ZobristKey)>, castle_mask: &[u8; 64]) -> Option<usize> {
         let mut node_idx = self.tree().root_index();
+        let mut root = true;
 
         selection_stack.push((node_idx, position.board().hash()));
 
         loop {
             let parent_node = self.tree().get_node(node_idx);
 
-            let cpuct = get_cpuct(&self.options(), &parent_node);
+            let cpuct = get_cpuct(&self.options(), &parent_node, root);
 
             node_idx = self.tree().select_child_by_key(node_idx, |child_node| {
                 let score = get_score(&parent_node.score(), child_node, child_node.visits()).single(0.5) as f64;
                 let exploration_factor = f64::from(parent_node.visits().max(1)).sqrt() / f64::from(child_node.visits() + 1);
                 score + cpuct * child_node.policy() * exploration_factor
             }).expect("Failed to select a valid node.");
+
+            root = false;
 
             position.make_move(self.tree().get_node(node_idx).mv(), castle_mask);
 
@@ -60,8 +63,12 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
     score
 }
 
-fn get_cpuct(options: &EngineOptions, parent_node: &Node) -> f64 {
-    let mut cpuct = options.cpuct();
+fn get_cpuct(options: &EngineOptions, parent_node: &Node, root: bool) -> f64 {
+    let mut cpuct = if root {
+        options.root_cpuct()
+    } else {
+        options.cpuct()
+    };
 
     let visit_scale = options.cpuct_visit_scale();
     cpuct *= 1.0 + ((f64::from(parent_node.visits()) + visit_scale) / visit_scale).ln();
