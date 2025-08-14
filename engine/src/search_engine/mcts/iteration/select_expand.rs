@@ -52,9 +52,9 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
         child_node.score()
     };
 
-    let threads = f64::from(child_node.threads()) as f32;
+    let threads = f64::from(child_node.threads());
     if threads > 0.0 {
-        let v = f64::from(child_visits) as f32;
+        let v = f64::from(child_visits);
         let w = (score.win_chance() * v) / (v + threads);
         let d = (score.draw_chance() * v) / (v + threads);
         score = WDLScore::new(w, d)
