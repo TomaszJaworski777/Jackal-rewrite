@@ -208,7 +208,7 @@ impl Tree {
         };
 
         let cp = score.cp(0.5);
-        let score = heat_color(&format!("{:.2}", cp as f32 / 100.0).align_to_right(6), score.single(0.5), 0.0, 1.0);
+        let score = heat_color(&format!("{:.2}", cp as f32 / 100.0).align_to_right(6), score.single(0.5) as f32, 0.0, 1.0);
 
         let visits = format!("{}", node.visits()).align_to_right(9);
 
