@@ -19,8 +19,11 @@ create_options! {
         }
         Tunables {
             //PST
-            root_pst:   f64  =>  3.25,  0.1,  10.0,  0.4,  0.002;
-            common_pst: f64  =>  1.00,  0.1,  10.0,  0.1,  0.002;
+            base_pst:               f64  =>  0.1,   0.01,  1.0,   0.01,   0.002;
+            root_pst:               f64  =>  0.34,  0.01,  1.0,   0.034,  0.002;
+            depth_pst_adjustment:   f64  =>  1.8,   0.01,  10.0,  0.18,   0.002;
+            winning_pst_threshold:  f64  =>  0.6,   0.01,  1.0,   0.06,   0.002;
+            winning_pst_max:        f64  =>  1.6,   0.01,  10.0,  0.016,  0.002;
 
             //Node Selection
             cpuct:                 f64  =>  1.15,     0.1,    5.0,      0.075,  0.002;

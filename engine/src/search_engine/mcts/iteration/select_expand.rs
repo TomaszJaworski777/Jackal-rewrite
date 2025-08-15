@@ -33,7 +33,7 @@ impl SearchEngine {
             }
 
             if self.tree().get_node(node_idx).children_count() == 0 {
-                if !self.tree().expand_node(node_idx, position.board(), self.options()) {
+                if !self.tree().expand_node(node_idx, depth + 1.0, position.board(), self.options()) {
                     return None;
                 }
             }
