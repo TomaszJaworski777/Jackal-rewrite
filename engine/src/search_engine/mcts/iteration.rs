@@ -12,8 +12,9 @@ impl SearchEngine {
         position: &mut ChessPosition,
         depth: &mut u64,
         castle_mask: &[u8; 64],
+        avg_depth: usize,
     ) -> bool { 
-        let mut selection_stack: Vec<(usize, ZobristKey)> = Vec::new();
+        let mut selection_stack: Vec<(usize, ZobristKey)> = Vec::with_capacity(avg_depth);
 
         let selected_node = self.select_and_expand(position, &mut selection_stack, castle_mask);
 
