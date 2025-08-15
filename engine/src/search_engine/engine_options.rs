@@ -30,8 +30,7 @@ create_options! {
             cpuct_visit_scale:     f64  =>  8000.00,  128.0,  65536.0,  800.0,  0.002;
             cpuct_variance_scale:  f64  =>  0.2,      0.1,    50.0,     0.02,   0.002;
             cpuct_variance_weight: f64  =>  0.85,     0.0,    2.0,      0.085,  0.002;
-            cpuct_depth_log:       f64  =>  2.1523,   1.0,    5.0,      0.215,  0.002;
-            cpuct_depth_scale:     f64  =>  6.2415,   1.0,    10.0,     0.624,  0.002;
+            cpuct_depth_scale:     f64  =>  4.7845,   1.0,    10.0,     0.478,  0.002;
             cpuct_min_depth_mul:   f64  =>  0.3517,   0.0,    1.0,      0.035,  0.002;
 
             //Transposition Table
