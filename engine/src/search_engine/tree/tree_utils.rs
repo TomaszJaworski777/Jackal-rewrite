@@ -62,7 +62,7 @@ impl Tree {
             policy_squares += p * p;
         }
 
-        let gini_impurity = (1.0 - policy_squares).clamp(0.0, 1.0);
+        let gini_impurity = (1.0 - policy_squares).clamp(0.0, 1.0) as f32;
         self.nodes[node_idx].set_gini_impurity(gini_impurity);
 
         true
