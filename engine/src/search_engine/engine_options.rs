@@ -32,6 +32,7 @@ create_options! {
             cpuct_variance_weight: f64  =>  0.85,     0.0,    2.0,      0.085,  0.002;
             cpuct_depth_scale:     f64  =>  4.7845,   1.0,    10.0,     0.478,  0.002;
             cpuct_min_depth_mul:   f64  =>  0.3517,   0.0,    1.0,      0.035,  0.002;
+            exploration_scale:     f64  =>  0.55,     0.0,    1.0,      0.055,  0.002;
 
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;
