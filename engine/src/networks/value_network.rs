@@ -42,15 +42,15 @@ impl ValueNetwork {
             }
         }
 
-        let mut win_chance = (out.values()[2] as f32 / f32::from(QA)
-            + f32::from(self.l1.biases().values()[bucket_idx + 2]))
-            / f32::from(QA * QB);
-        let mut draw_chance = (out.values()[1] as f32 / f32::from(QA)
-            + f32::from(self.l1.biases().values()[bucket_idx + 1]))
-            / f32::from(QA * QB);
-        let mut loss_chance = (out.values()[0] as f32 / f32::from(QA)
-            + f32::from(self.l1.biases().values()[bucket_idx + 0]))
-            / f32::from(QA * QB);
+        let mut win_chance = (out.values()[2] as f64 / f64::from(QA)
+            + f64::from(self.l1.biases().values()[bucket_idx + 2]))
+            / f64::from(QA * QB);
+        let mut draw_chance = (out.values()[1] as f64 / f64::from(QA)
+            + f64::from(self.l1.biases().values()[bucket_idx + 1]))
+            / f64::from(QA * QB);
+        let mut loss_chance = (out.values()[0] as f64 / f64::from(QA)
+            + f64::from(self.l1.biases().values()[bucket_idx + 0]))
+            / f64::from(QA * QB);
 
         let max = win_chance.max(draw_chance).max(loss_chance);
 

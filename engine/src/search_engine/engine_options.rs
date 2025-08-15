@@ -19,15 +19,20 @@ create_options! {
         }
         Tunables {
             //PST
-            root_pst:   f64  =>  3.25,  0.1,  10.0,  0.4,  0.002;
-            common_pst: f64  =>  1.00,  0.1,  10.0,  0.1,  0.002;
+            base_pst:               f64  =>  0.1,   0.01,  1.0,   0.01,   0.002;
+            root_pst:               f64  =>  0.34,  0.01,  1.0,   0.034,  0.002;
+            depth_pst_adjustment:   f64  =>  1.8,   0.01,  10.0,  0.18,   0.002;
+            winning_pst_threshold:  f64  =>  0.6,   0.01,  1.0,   0.06,   0.002;
+            winning_pst_max:        f64  =>  1.6,   0.01,  10.0,  0.016,  0.002;
 
             //Node Selection
-            cpuct:                 f64  =>  0.75,     0.1,    5.0,      0.075,  0.002;
+            cpuct:                 f64  =>  1.15,     0.1,    5.0,      0.075,  0.002;
             cpuct_visit_scale:     f64  =>  8000.00,  128.0,  65536.0,  800.0,  0.002;
             cpuct_variance_scale:  f64  =>  0.2,      0.1,    50.0,     0.02,   0.002;
             cpuct_variance_weight: f64  =>  0.85,     0.0,    2.0,      0.085,  0.002;
-			exploration_scale:     f64  =>  0.56,     0.0,    1.0,      0.056,  0.002;
+            cpuct_depth_scale:     f64  =>  4.7845,   1.0,    10.0,     0.478,  0.002;
+            cpuct_min_depth_mul:   f64  =>  0.3517,   0.0,    1.0,      0.035,  0.002;
+			      exploration_scale:     f64  =>  0.56,     0.0,    1.0,      0.056,  0.002;
             gini_base:             f64  =>  0.679,    0.0,    2.0,      0.085,  0.002;
             gini_scale:            f64  =>  1.634,    0.0,    2.0,      0.085,  0.002;
             gini_min:              f64  =>  2.1,      0.0,    2.0,      0.085,  0.002;

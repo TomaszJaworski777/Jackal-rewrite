@@ -10,8 +10,9 @@ impl SearchEngine {
 
         loop {
             let parent_node = self.tree().get_node(node_idx);
+            let depth = selection_stack.len() as f64;
 
-            let cpuct = get_cpuct(&self.options(), &parent_node);
+            let cpuct = get_cpuct(&self.options(), &parent_node, depth);
 
             node_idx = self.tree().select_child_by_key(node_idx, |child_node| {
                 let score = get_score(&parent_node.score(), child_node, child_node.visits()).single(0.5) as f64;
@@ -31,7 +32,7 @@ impl SearchEngine {
             }
 
             if self.tree().get_node(node_idx).children_count() == 0 {
-                if !self.tree().expand_node(node_idx, position.board(), self.options()) {
+                if !self.tree().expand_node(node_idx, depth + 1.0, position.board(), self.options()) {
                     return None;
                 }
             }
@@ -48,9 +49,9 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
         child_node.score()
     };
 
-    let threads = f64::from(child_node.threads()) as f32;
+    let threads = f64::from(child_node.threads());
     if threads > 0.0 {
-        let v = f64::from(child_visits) as f32;
+        let v = f64::from(child_visits);
         let w = (score.win_chance() * v) / (v + threads);
         let d = (score.draw_chance() * v) / (v + threads);
         score = WDLScore::new(w, d)
@@ -59,7 +60,7 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
     score
 }
 
-fn get_cpuct(options: &EngineOptions, parent_node: &Node) -> f64 {
+fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
     let mut cpuct = options.cpuct();
 
     let visit_scale = options.cpuct_visit_scale();
@@ -70,6 +71,8 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node) -> f64 {
         let variance_factor = variance.sqrt() / options.cpuct_variance_scale();
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance_factor - 1.0);
     }
+
+    cpuct *= (1.0 - depth.ln() / options.cpuct_depth_scale()).max(options.cpuct_min_depth_mul());
 
     let mut exploration_scale = (options.exploration_scale() * f64::from(parent_node.visits().max(1)).ln()).exp();
     exploration_scale *= (options.gini_base() - options.gini_scale() * (parent_node.gini_impurity() as f64 + 0.001).ln()).min(options.gini_min());
