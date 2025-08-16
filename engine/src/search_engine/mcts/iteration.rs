@@ -1,35 +1,47 @@
-use chess::{ChessPosition, ZobristKey};
+use chess::ChessPosition;
 
-use crate::SearchEngine;
+use crate::{SearchEngine, WDLScore};
 
-mod select_expand;
+mod select;
 mod simulate;
 mod backpropagate;
 
 impl SearchEngine {
-    pub(super) fn perform_iteration(
+    pub(super) fn perform_iteration<const ROOT: bool>(
         &self,
+        node_idx: usize,
         position: &mut ChessPosition,
-        depth: &mut u64,
+        depth: &mut f64,
         castle_mask: &[u8; 64],
-        avg_depth: usize,
-    ) -> bool { 
-        let mut selection_stack: Vec<(usize, ZobristKey)> = Vec::with_capacity(avg_depth);
+    ) -> Option<WDLScore> { 
+        let hash = position.board().hash();
+        let node: crate::Node = self.tree().get_node(node_idx);
+        let score = if !ROOT && (node.is_terminal() || node.visits() == 0) {
+            self.simulate(node_idx, position)
+        } else {
+            *depth += 1.0;
 
-        let selected_node = self.select_and_expand(position, &mut selection_stack, castle_mask);
+            if node.children_count() == 0 {
+                if !self.tree().expand_node(node_idx, *depth, position.board(), self.options()) {
+                    return None;
+                }
+            }
 
-        *depth = (selection_stack.len() - 1).max(0) as u64;
+            let new_index = self.select(node_idx, *depth);
 
-        if selected_node.is_none() {
-            return false;
-        }
+            position.make_move(self.tree().get_node(new_index).mv(), castle_mask);
 
-        let node_idx = selected_node.unwrap();
+            self.tree().inc_threads(new_index, 1);
 
-        let score = self.simulate(node_idx, position).reversed();
+            let score = self.perform_iteration::<false>(new_index, position, depth, castle_mask);
 
-        self.backpropagate(&selection_stack, score);
+            self.tree().dec_threads(new_index, 1);
 
-        true
+            score?
+        }.reversed();
+
+        self.backpropagate(node_idx, score, hash);
+
+        Some(score)
     }
 }

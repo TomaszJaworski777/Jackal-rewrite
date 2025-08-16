@@ -70,10 +70,10 @@ impl SearchEngine {
         search_limits: &SearchLimits,
         castle_mask: &[u8; 64],
     ) -> bool {
-        let mut depth = 0;
+        let mut depth = 0.0;
         let mut position = *self.current_position();
 
-        if !self.perform_iteration(&mut position, &mut depth, castle_mask, search_stats.avg_depth() as usize) {
+        if self.perform_iteration::<true>(self.tree().root_index(), &mut position, &mut depth, castle_mask).is_none() {
             if search_limits.is_inifinite() {
                 while !self.is_search_interrupted() {}
             } else {
@@ -83,7 +83,7 @@ impl SearchEngine {
             return false;
         }
 
-        search_stats.add_iteration(depth);
+        search_stats.add_iteration(depth as u64);
 
         if search_limits.is_limit_reached(search_stats) {
             self.interrupt_search();
