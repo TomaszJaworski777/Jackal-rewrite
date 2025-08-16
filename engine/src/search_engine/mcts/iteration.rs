@@ -14,6 +14,7 @@ impl SearchEngine {
         depth: &mut f64,
         castle_mask: &[u8; 64],
     ) -> Option<WDLScore> { 
+        let hash = position.board().hash();
         let node: crate::Node = self.tree().get_node(node_idx);
         let score = if !ROOT && (node.is_terminal() || node.visits() == 0) {
             self.simulate(node_idx, position)
@@ -39,7 +40,7 @@ impl SearchEngine {
             score?
         }.reversed();
 
-        self.backpropagate(node_idx, score);
+        self.backpropagate(node_idx, score, hash);
 
         Some(score)
     }
