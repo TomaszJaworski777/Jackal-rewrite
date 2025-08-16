@@ -73,7 +73,7 @@ impl SearchEngine {
         let mut depth = 0;
         let mut position = *self.current_position();
 
-        if !self.perform_iteration(&mut position, &mut depth, castle_mask) {
+        if !self.perform_iteration(&mut position, &mut depth, castle_mask, search_stats.avg_depth() as usize) {
             if search_limits.is_inifinite() {
                 while !self.is_search_interrupted() {}
             } else {
