@@ -46,7 +46,8 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
     }
 
-    cpuct *= (1.0 - depth.ln() / options.cpuct_depth_scale()).max(options.cpuct_min_depth_mul());
+    let depth_scale = options.cpuct_depth_scale() / 100.0;
+    cpuct *= options.cpuct_depth_min() + (1.0 - options.cpuct_depth_min()) * (-depth_scale * depth).exp();
 
     cpuct
 }
