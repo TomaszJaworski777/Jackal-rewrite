@@ -26,12 +26,12 @@ create_options! {
             winning_pst_max:        f64  =>  1.6,   0.01,  10.0,  0.016,  0.002;
 
             //Node Selection
-            cpuct:                 f64  =>  1.1587,   0.1,    5.0,      0.115,  0.002;
+            start_cpuct:           f64  =>  1.2813,   0.1,    5.0,      0.128,  0.002;
+            end_cpuct:             f64  =>  0.3265,   0.0,    1.0,      0.032,  0.002;
+            cpuct_depth_decay:     f64  =>  26.4101,  0.0,    500.0,    2.641,  0.002;
             cpuct_visit_scale:     f64  =>  8000.00,  128.0,  65536.0,  800.0,  0.002;
             cpuct_variance_scale:  f64  =>  0.2,      0.1,    50.0,     0.02,   0.002;
             cpuct_variance_weight: f64  =>  0.85,     0.0,    2.0,      0.085,  0.002;
-            cpuct_depth_scale:     f64  =>  20.22,    0.0,    500.0,    2.022,  0.002;
-            cpuct_depth_min:       f64  =>  0.3626,   0.0,    1.0,      0.036,  0.002;
             exploration_tau:       f64  =>  0.51,     0.0,    1.0,      0.055,  0.002;
 
             //Transposition Table

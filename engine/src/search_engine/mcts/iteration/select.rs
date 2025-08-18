@@ -35,7 +35,8 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
 }
 
 fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
-    let mut cpuct = options.cpuct();
+    let depth_decay = options.cpuct_depth_decay() / 100.0;
+    let mut cpuct = options.end_cpuct() + (options.start_cpuct() - options.end_cpuct()) * (-depth_decay * (depth - 1.0)).exp();
 
     let visit_scale = options.cpuct_visit_scale();
     cpuct *= 1.0 + ((f64::from(parent_node.visits()) + visit_scale) / visit_scale).ln();
@@ -45,9 +46,6 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
         let variance = var.sqrt() / options.cpuct_variance_scale();
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
     }
-
-    let depth_scale = options.cpuct_depth_scale() / 100.0;
-    cpuct *= options.cpuct_depth_min() + (1.0 - options.cpuct_depth_min()) * (-depth_scale * depth).exp();
 
     cpuct
 }
