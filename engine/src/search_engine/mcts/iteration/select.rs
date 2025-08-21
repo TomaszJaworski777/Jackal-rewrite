@@ -35,8 +35,9 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
 }
 
 fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
-    let depth_decay = options.cpuct_depth_decay() / 100.0;
-    let mut cpuct = options.end_cpuct() + (options.start_cpuct() - options.end_cpuct()) * (-depth_decay * (depth - 1.0)).exp();
+    let depth_decay_factor = options.depth_decay_factor() / 100.0;
+    let decay_scale = (options.end_depth_decay() + (options.start_depth_decay() - options.end_depth_decay()) * (-depth_decay_factor * (depth - 1.0)).exp()) / 100.0;
+    let mut cpuct = options.end_cpuct() + (options.start_cpuct() - options.end_cpuct()) * (-decay_scale * (depth - 1.0)).exp();
 
     let visit_scale = options.cpuct_visit_scale();
     cpuct *= 1.0 + ((f64::from(parent_node.visits()) + visit_scale) / visit_scale).ln();
