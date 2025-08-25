@@ -4,11 +4,11 @@ use crate::{search_engine::{engine_options::EngineOptions, tree::{node::{Edge, N
 
 impl Tree {
     pub fn bytes_to_size(bytes: usize) -> usize {
-        bytes / (std::mem::size_of::<Node>() + 30 * std::mem::size_of::<Edge>())
+        bytes / (std::mem::size_of::<Node>() + 18 * std::mem::size_of::<Edge>())
     }
 
     pub fn size_to_bytes(size: usize) -> usize {
-        size * (std::mem::size_of::<Node>() + 30 * std::mem::size_of::<Edge>())
+        size * (std::mem::size_of::<Node>() + 18 * std::mem::size_of::<Edge>())
     }
 
     pub fn expand_node(&self, node_idx: usize, parent_edge: &Edge, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) {
@@ -139,28 +139,19 @@ impl Tree {
             return Some(0);
         }
 
-        let mut chilren_nodes = Vec::new();
-        let mut found_node = false;
+        let children_lock = self.get_node(start_node_idx).children();
+        let mut chilren = Vec::new();
 
-        for child_idx in 0..self.nodes[start_node_idx].children().len() {
-            if child_idx == target_node_idx {
-                found_node = true
-            }
-
-            let child = self.get_child_copy(start_node_idx, child_idx);
-            if child.node_index() == usize::MAX || self.get_node_copy(child.node_index()).children_count() == 0 {
+        for child in children_lock.iter() {
+            if child.node_index() == usize::MAX || self.get_node(child.node_index()).children_count() == 0 {
                 continue;
             }
 
-            chilren_nodes.push(child_idx)
+            chilren.push(child)
         }
 
-        if found_node {
-            return Some(1);
-        }
-
-        for child_idx in chilren_nodes {
-            let result = self.find_node_depth(child_idx, target_node_idx);
+        for child in chilren {
+            let result = self.find_node_depth(child.node_index(), target_node_idx);
             if result.is_none() {
                 continue;
             }

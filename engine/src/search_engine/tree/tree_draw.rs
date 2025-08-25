@@ -127,7 +127,7 @@ impl Tree {
             let edge = self.get_child_copy(node_idx, child_idx);
         
             if edge.visits() == 0 {
-                return;
+                continue;
             }
 
             children.push(edge);   
