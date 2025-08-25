@@ -15,6 +15,9 @@ impl SearchEngine {
         depth: &mut f64,
         castle_mask: &[u8; 64],
     ) -> Option<WDLScore> { 
+        let parent_hash = position.board().hash();
+        let mut child_hash = None;
+
         let node = self.tree().get_node_copy(node_idx);
         let score = if !ROOT && (node.is_terminal() || node.visits() == 0) { //TODO: Test condition where edge.visits() is 0
             self.simulate(node_idx, position)
@@ -28,6 +31,7 @@ impl SearchEngine {
             let mut edge = self.tree().get_child_copy(node_idx, child_idx);
 
             position.make_move(edge.mv(), castle_mask);
+            child_hash = Some(position.board().hash());
 
             if edge.node_index() == usize::MAX {
                 if !self.tree().create_node(node_idx, child_idx) {
@@ -47,11 +51,18 @@ impl SearchEngine {
 
             let score = score?;
 
-            self.backpropagate(node_idx, child_idx, score, position.board().hash());
+            self.backpropagate(node_idx, child_idx, score);
 
             score
-        }.reversed();
+        };
 
-        Some(score)
+        //Totally not a monty yoink
+        if let Some(hash) = child_hash {
+            self.tree().hash_table().push(hash, score.reversed());
+        } else {
+            self.tree().hash_table().push(parent_hash, score);
+        }
+
+        Some(score.reversed())
     }
 }

@@ -1,12 +1,9 @@
-use chess::ZobristKey;
-
 use crate::{search_engine::tree::Tree, GameState, SearchEngine, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn backpropagate(&self, node_idx: usize, child_idx: usize, score: WDLScore, key: ZobristKey) {
+    pub(super) fn backpropagate(&self, node_idx: usize, child_idx: usize, score: WDLScore) {
         self.tree().add_visit(node_idx, child_idx, score);
         backprop_state(self.tree(), node_idx, child_idx);
-        self.tree().hash_table().push(key, score.reversed());
     }
 }
 

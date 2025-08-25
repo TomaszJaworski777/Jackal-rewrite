@@ -19,7 +19,6 @@ impl SearchEngine {
             get_position_score(position, self.tree().get_node_copy(node_idx).state())
         }
     }
-
 }
 
 fn get_node_state(position: &ChessPosition, root_position: &ChessPosition) -> GameState {
