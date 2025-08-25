@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use engine::{Node, PvLine, SearchEngine, SearchLimits, SearchReport, SearchStats};
+use engine::{PvLine, SearchEngine, SearchLimits, SearchReport, SearchStats, Tree};
 use utils::{bytes_to_string, clear_terminal_screen, create_loading_bar, heat_color, number_to_string, time_to_string, AlignString, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 static mut SEARCH_HISTORY: Vec<(u128, PvLine)> = Vec::new();
@@ -25,9 +25,9 @@ impl SearchReport for PrettySearchReport {
     fn search_ended(search_limits: &SearchLimits, search_stats: &SearchStats, search_engine: &SearchEngine) {
         print_search_report::<true>(search_limits, search_stats, search_engine);
 
-        let best_node = search_engine
+        let best_child_idx = search_engine
                 .tree()
-                .select_child_by_key(0, |node| node.score().single(0.5) as f64);
+                .select_child_by_key(0, |child| child.score().single(0.5) as f64);
 
         if let Some((x,y)) = term_cursor::get_pos().ok() {
             let _ = term_cursor::set_pos(x, y - 2);
@@ -37,7 +37,7 @@ impl SearchReport for PrettySearchReport {
         println!( "\n{}",
             format!(" Best Move: {}", search_engine
                 .tree()
-                .get_node(best_node.unwrap())
+                .get_child_copy(search_engine.tree().root_index(), best_child_idx.unwrap())
                 .mv()
                 .to_string(search_engine.options().chess960()).secondary(1.0)).primary(1.0)
         );
@@ -80,7 +80,7 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
 
     if t_height >= 25 {
         let tree_size_nodes = search_engine.tree().tree_size();
-        let tree_bytes = bytes_to_string((tree_size_nodes * std::mem::size_of::<Node>()) as u128);
+        let tree_bytes = bytes_to_string(Tree::size_to_bytes(tree_size_nodes) as u128);
         let tree_size = number_to_string(tree_size_nodes as u128);
 
         let current_size = search_engine.tree().current_index().min(tree_size_nodes);
@@ -135,7 +135,7 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
 
     let pv = search_engine.tree().get_best_pv(0);
     let single = pv.score().single(0.5);
-    let score = match pv.first_node().state() {
+    let score = match pv.state() {
         engine::GameState::Loss(len) => format!("+M{}", (len + 1).div_ceil(2)),
         engine::GameState::Win(len) => format!("-M{}", (len + 1).div_ceil(2)),
         _ => format!("{}{:.2}", if single < 0.5 { "-" } else { "+" }, pv.score().cp(0.5).abs() as f32 / 100.0)

@@ -8,6 +8,12 @@ pub enum GameState {
     Loss(u8)
 }
 
+impl Default for GameState {
+    fn default() -> Self {
+        Self::Ongoing
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct AtomicGameState {
     state: AtomicU8,

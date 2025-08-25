@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::{search_engine::{engine_options::EngineOptions, tree::Tree}, search_report_trait::SearchReport};
+use crate::{search_engine::engine_options::EngineOptions, search_report_trait::SearchReport};
 
 mod bench;
 mod mcts;
@@ -14,7 +14,7 @@ mod hash_table;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
-pub use tree::{Node, GameState, AtomicWDLScore, WDLScore, PvLine};
+pub use tree::{Node, GameState, AtomicWDLScore, WDLScore, PvLine, Edge, Tree};
 
 #[derive(Debug)]
 pub struct SearchEngine {
@@ -100,7 +100,7 @@ impl SearchEngine {
         self.tree.clear();
 
         if self.tree.get_root_node().children_count() == 0 {  //TEMP: It should be replaced by tree reuse code
-            self.tree.expand_node(self.tree.root_index(), 1.0, self.current_position().board(), self.options());
+            self.tree.expand_node(self.tree.root_index(), self.tree.root_edge(), 1.0, self.current_position().board(), self.options());
         }
 
         Display::search_started(search_limits, self);

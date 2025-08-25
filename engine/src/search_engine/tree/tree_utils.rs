@@ -1,145 +1,136 @@
-use std::sync::atomic::Ordering;
+use chess::{ChessBoard, Move};
 
-use chess::ChessBoard;
-
-use crate::{search_engine::{engine_options::EngineOptions, tree::{node::Node, pv_line::PvLine, Tree}}, PolicyNetwork};
+use crate::{search_engine::{engine_options::EngineOptions, tree::{node::{Edge, Node}, pv_line::PvLine, Tree}}, PolicyNetwork};
 
 impl Tree {
-    pub fn expand_node(&self, node_idx: usize, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
-        let _lock = self.write_lock(node_idx);
+    pub fn bytes_to_size(bytes: usize) -> usize {
+        bytes / (std::mem::size_of::<Node>() + 30 * std::mem::size_of::<Edge>())
+    }
 
-        if self.nodes[node_idx].children_count() > 0 {
-            return true;
+    pub fn size_to_bytes(size: usize) -> usize {
+        size * (std::mem::size_of::<Node>() + 30 * std::mem::size_of::<Edge>())
+    }
+
+    pub fn expand_node(&self, node_idx: usize, parent_edge: &Edge, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) {
+        let mut children = self.nodes[node_idx].children_mut();
+        
+        if children.len() > 0 {
+            return;
         }
-
-        assert_eq!(
-            self.nodes[node_idx].children_count(),
-            0,
-            "Node {node_idx} already have children."
-        );
 
         let policy_inputs = PolicyNetwork.get_inputs(board);
         let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
 
-        let pst = calculate_pst(engine_options, self.get_node(node_idx).score().single(0.5), depth);
+        let pst = calculate_pst(engine_options, parent_edge.score().single(0.5), depth);
 
         let mut moves = Vec::new();
-        let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
         let mut max = f64::NEG_INFINITY;
         let mut total = 0f64;
 
         board.map_legal_moves(|mv| {
-            moves.push(mv);
             let p = PolicyNetwork.forward(board, &policy_inputs, mv, &mut policy_cache) as f64;
-            policy.push(p);
+            moves.push((mv, p));
             max = max.max(p);
         });
 
-        let start_index = self.reserve_nodes(moves.len());
+        *children = Vec::with_capacity(moves.len());
 
-        if start_index + moves.len() >= self.nodes.len() {
-            return false;
-        }
-
-        for p in policy.iter_mut() {
+        for (_, p) in moves.iter_mut() {
             *p = ((*p - max)/pst).exp();
             total += *p;
         }
 
-        self.nodes[node_idx].add_children(start_index, moves.len());
-
-        for (idx, mv) in moves.into_iter().enumerate() {
-            let p = if policy.len() == 1 {
+        for &(mv, policy) in moves.iter() {
+            let p = if moves.len() == 1 {
                 1.0
             } else {
-                policy[idx] / total
+                policy / total
             };
 
-            self.nodes[start_index + idx].clear(mv);
-            self.nodes[start_index + idx].set_policy(p as f64);
+            let edge = Edge::new(mv);
+            edge.set_policy(p as f64);
+            children.push(edge);
         }
-
-        true
     }
 
-    #[inline]
-    fn reserve_nodes(&self, count: usize) -> usize {
-        self.idx.fetch_add(count, Ordering::Relaxed)
-    }
-
-    pub fn select_child_by_key<F: FnMut(&Node) -> f64>(
+    pub fn select_child_by_key<F: FnMut(&Edge) -> f64>(
         &self,
-        parent_idx: usize,
+        node_idx: usize,
         mut key: F,
     ) -> Option<usize> {
         let mut best_idx = None;
         let mut best_score = f64::NEG_INFINITY;
 
-        let _lock = self.read_lock(parent_idx);
-
-        self.nodes[parent_idx].map_children(|child_idx| {
-            let node = self.get_node(child_idx);
-            let new_score = key(&node);
+        for (idx, child) in self.nodes[node_idx].children().iter().enumerate() {
+            let new_score = key(child);
             if new_score > best_score {
-                best_idx = Some(child_idx);
+                best_idx = Some(idx);
                 best_score = new_score;
             }
-        });
+        }
 
         best_idx
     }
 
-    pub fn select_best_child(&self, parent_idx: usize) -> Option<usize> {
-        self.select_child_by_key(parent_idx, |node| node.score().single(0.5) as f64)
+    pub fn select_best_child(&self, node_idx: usize) -> Option<usize> {
+        self.select_child_by_key(node_idx, |child| child.score().single(0.5) as f64)
     }
 
     pub fn get_pv(&self, node_idx: usize) -> PvLine {
-        let node = self.get_node(node_idx);
+        if node_idx == usize::MAX {
+            return PvLine::EMPTY;
+        }
+
+        let node = self.get_node_copy(node_idx);
 
         if node.children_count() == 0 {
-            return PvLine::new(&node);
+            return PvLine::EMPTY;
         }
 
         let best_child_idx = self.select_best_child(node_idx);
 
         if best_child_idx.is_none() {
-            return PvLine::new(&node);
+            return PvLine::EMPTY;
         }
 
         let best_child_idx = best_child_idx.unwrap();
 
-        let mut result = self.get_pv(best_child_idx);
-        result.add_node(&node);
+        let child = self.get_child_copy(node_idx, best_child_idx);
+
+        let mut result = self.get_pv(child.node_index());
+        result.add_mv(child.mv());
+        result.set_score(child.score());
+        result.set_state(node.state());
 
         result
     }
 
     pub fn get_best_pv(&self, index: usize) -> PvLine {
         let mut chilren_nodes = Vec::new();
-        let node = self.get_root_node();
 
-        let _lock = self.read_lock(self.root_index());
+        for child_idx in 0..self.nodes[self.root_index()].children().len() {
+            let edge = self.get_child_copy(self.root_index(), child_idx);
 
-        node.map_children(|child_idx| {
-            let _child_lock = self.read_lock(child_idx);
-
-            let node = self.get_node(child_idx);
-
-            if node.visits() == 0 {
-                return;
+            if edge.visits() == 0 {
+                continue;
             }
 
-            chilren_nodes.push((child_idx, node.score().single(0.5)))
-        });
+            chilren_nodes.push((child_idx, edge.score().single(0.5)))
+        }
 
         if chilren_nodes.is_empty() {
-            return PvLine::new(&Node::new());
+            return PvLine::new(Move::NULL);
         }
 
         chilren_nodes.sort_by(|(_, a), (_, b)| b.total_cmp(a));
 
-        let (pv_node_idx, _) = chilren_nodes[index.min(chilren_nodes.len() - 1)];
-        self.get_pv(pv_node_idx)
+        let (pv_child_idx, _) = chilren_nodes[index.min(chilren_nodes.len() - 1)];
+        let child = self.get_child_copy(self.root_index(), pv_child_idx);
+        let mut result = self.get_pv(pv_child_idx);
+        result.add_mv(child.mv());
+        result.set_score(child.score());
+
+        result
     }
 
     pub fn find_node_depth(&self, start_node_idx: usize, target_node_idx: usize) -> Option<u64> {
@@ -148,23 +139,21 @@ impl Tree {
             return Some(0);
         }
 
-        let node = self.get_node(start_node_idx);
-
         let mut chilren_nodes = Vec::new();
         let mut found_node = false;
 
-        node.map_children(|child_idx| {
+        for child_idx in 0..self.nodes[start_node_idx].children().len() {
             if child_idx == target_node_idx {
                 found_node = true
             }
 
-            if self.get_node(child_idx).children_count() == 0 {
-                return;
+            let child = self.get_child_copy(start_node_idx, child_idx);
+            if child.node_index() == usize::MAX || self.get_node_copy(child.node_index()).children_count() == 0 {
+                continue;
             }
 
             chilren_nodes.push(child_idx)
-        });
-
+        }
 
         if found_node {
             return Some(1);
@@ -183,7 +172,6 @@ impl Tree {
     }
 }
 
-//Formula taken from Monty
 fn calculate_pst(options: &EngineOptions, parent_score: f64, depth: f64) -> f64 {
     let scalar = parent_score - parent_score.min(options.winning_pst_threshold());
     let t = scalar / (1.0 - options.winning_pst_threshold());

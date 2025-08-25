@@ -1,31 +1,38 @@
-use crate::{search_engine::engine_options::EngineOptions, Node, SearchEngine, WDLScore};
+use crate::{search_engine::{engine_options::EngineOptions, Edge}, Node, SearchEngine, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn select(&self, node_idx: usize, depth: f64) -> usize {
-        let parent_node = self.tree().get_node(node_idx);
+    pub(super) fn select(&self, node_idx: usize, parent_edge: &Edge, depth: f64) -> usize {
+        let parent_node = self.tree().get_node_copy(node_idx);
 
-        let cpuct = get_cpuct(&self.options(), &parent_node, depth);
+        let cpuct = get_cpuct(&self.options(), &parent_edge, &parent_node, depth);
         let exploration_scale = get_exploration_scale(self.options(), &parent_node);
 
         let expl = cpuct * exploration_scale;
 
-        self.tree().select_child_by_key(node_idx, |child_node| {
-            let score = get_score(&parent_node.score(), child_node, child_node.visits()).single(0.5) as f64;
-            score + child_node.policy() * expl / f64::from(child_node.visits() + 1)
+        self.tree().select_child_by_key(node_idx, |child| {
+            let child_node_idx = child.node_index();
+            let threads = if child_node_idx == usize::MAX {
+                0
+            } else {
+                self.tree().get_node(child_node_idx).threads()
+            };
+
+            let score = get_score(&parent_edge.score(), child, threads).single(0.5) as f64;
+            score + child.policy() * expl / f64::from(child.visits() + 1)
         }).expect("Failed to select a valid node.")
     }
 }
 
-fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> WDLScore {
-    let mut score = if child_visits == 0 {
+fn get_score(parent_score: &WDLScore, child_edge: &Edge, threads: u16) -> WDLScore {
+    let mut score = if child_edge.visits() == 0 {
         parent_score.reversed()
     } else {
-        child_node.score()
+        child_edge.score()
     };
 
-    let threads = f64::from(child_node.threads());
+    let threads = f64::from(threads);
     if threads > 0.0 {
-        let v = f64::from(child_visits);
+        let v = f64::from(child_edge.visits());
         let w = (score.win_chance() * v) / (v + threads);
         let d = (score.draw_chance() * v) / (v + threads);
         score = WDLScore::new(w, d)
@@ -34,7 +41,7 @@ fn get_score(parent_score: &WDLScore, child_node: &Node, child_visits: u32) -> W
     score
 }
 
-fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
+fn get_cpuct(options: &EngineOptions, parent_edge: &Edge, parent_node: &Node, depth: f64) -> f64 {
     let depth_decay = options.cpuct_depth_decay() / 100.0;
     let mut cpuct = options.end_cpuct() + (options.start_cpuct() - options.end_cpuct()) * (-depth_decay * (depth - 1.0)).exp();
 
@@ -42,7 +49,7 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
     cpuct *= 1.0 + ((f64::from(parent_node.visits()) + visit_scale) / visit_scale).ln();
 
     if parent_node.visits() > 1 {
-        let var = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).powi(2)).max(0.0);
+        let var = (parent_edge.squared_score() - (parent_edge.score().single(0.5) as f64).powi(2)).max(0.0);
         let variance = var.sqrt() / options.cpuct_variance_scale();
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
     }

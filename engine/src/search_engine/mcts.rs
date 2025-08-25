@@ -73,7 +73,9 @@ impl SearchEngine {
         let mut depth = 0.0;
         let mut position = *self.current_position();
 
-        if self.perform_iteration::<true>(self.tree().root_index(), &mut position, &mut depth, castle_mask).is_none() {
+        if let Some(result_score) =  self.perform_iteration::<true>(self.tree().root_index(), self.tree().root_edge(), &mut position, &mut depth, castle_mask) {
+            self.tree().add_root_visit(result_score);
+        } else {
             if search_limits.is_inifinite() {
                 while !self.is_search_interrupted() {}
             } else {

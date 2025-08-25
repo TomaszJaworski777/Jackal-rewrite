@@ -10,12 +10,12 @@ impl SearchReport for UciSearchReport {
         let depth = search_stats.avg_depth();
         let max_depth = search_stats.max_depth();
 
-        let pv_count = search_engine.tree().get_root_node().children_count().min(search_engine.options().multi_pv() as u8);
+        let pv_count = search_engine.tree().get_root_node().children_count().min(search_engine.options().multi_pv() as usize);
 
         for pv_idx in 0..pv_count {
             let pv = search_engine.tree().get_best_pv(pv_idx as usize);
 
-            let state = pv.first_node().state();
+            let state = pv.state();
             let score = match state {
                 engine::GameState::Loss(len) => format!("mate {}", (len + 1).div_ceil(2)),
                 engine::GameState::Win(len) => format!("mate -{}", (len + 1).div_ceil(2)),
@@ -50,9 +50,9 @@ impl SearchReport for UciSearchReport {
     }
 
     fn search_ended(_: &SearchLimits, _: &SearchStats, search_engine: &SearchEngine) {
-        let best_node_idx = search_engine.tree().select_best_child(search_engine.tree().root_index());
+        let best_child_idx = search_engine.tree().select_best_child(search_engine.tree().root_index());
 
-        if best_node_idx.is_none() {
+        if best_child_idx.is_none() {
             return;
         }
 
@@ -60,7 +60,7 @@ impl SearchReport for UciSearchReport {
             "bestmove {}",
             search_engine
                 .tree()
-                .get_node(best_node_idx.unwrap())
+                .get_child_copy(search_engine.tree().root_index(), best_child_idx.unwrap())
                 .mv()
                 .to_string(search_engine.options().chess960())
         );

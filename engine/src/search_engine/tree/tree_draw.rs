@@ -1,6 +1,6 @@
 use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, Theme};
 
-use crate::search_engine::tree::{node::Node, GameState, Tree};
+use crate::search_engine::{tree::{node::Node, GameState, Tree}, Edge};
 
 impl Tree {
     pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<usize>) {
@@ -60,10 +60,9 @@ impl Tree {
             return;
         }
 
-        let policy = self.get_node(node_idx).policy() as f32;
-
         self.print_branch::<FLIP_SCORE>(
             node_idx,
+            None,
             0,
             depth,
             String::new(),
@@ -72,14 +71,15 @@ impl Tree {
             node_depth.unwrap() % 2 == 0,
             0,
             20,
-            policy,
-            policy
+            0.0,
+            0.10
         );
     }
 
     fn print_branch<const FLIP_SCORE: bool>(
         &self,
         node_idx: usize,
+        parent_edge: Option<&Edge>,
         depth: u8,
         max_depth: u8,
         mut prefix: String,
@@ -93,6 +93,7 @@ impl Tree {
     ) {
         self.print_node(
             node_idx,
+            parent_edge,
             &prefix,
             is_root,
             is_last,
@@ -111,6 +112,10 @@ impl Tree {
             return;
         }
 
+        if node_idx == usize::MAX {
+            return;
+        }
+
         if !is_root {
             let new_prefix = if is_last { "    " } else { "│   " };
             prefix = format!("{prefix}{new_prefix}")
@@ -118,28 +123,31 @@ impl Tree {
 
         let mut children = Vec::new();
 
-        self.get_node(node_idx).map_children(|child_idx| {
-            if self.get_node(child_idx).visits() == 0 {
+        for child_idx in 0..self.nodes[node_idx].children().len() {
+            let edge = self.get_child_copy(node_idx, child_idx);
+        
+            if edge.visits() == 0 {
                 return;
             }
 
-            children.push(child_idx);
-        });
+            children.push(edge);   
+        }
 
-        children.sort_by(|&a, &b| self.get_node(b).visits().cmp(&self.get_node(a).visits()));
+        children.sort_by(|a, b| b.visits().cmp(&a.visits()));
 
         min_policy = f32::INFINITY;
         max_policy = f32::NEG_INFINITY;
 
-        for &child_idx in &children {
-            let policy = self.get_node(child_idx).policy() as f32;
+        for child in &children {
+            let policy = child.policy() as f32;
             min_policy = min_policy.min(policy);
             max_policy = max_policy.max(policy);
         }
 
-        for (idx, &child_idx) in (&children).into_iter().enumerate() {
+        for (idx, child) in (&children).into_iter().enumerate() {
             self.print_branch::<FLIP_SCORE>(
-                child_idx,
+                child.node_index(),
+                Some(child),
                 depth + 1,
                 max_depth,
                 prefix.clone(),
@@ -157,6 +165,7 @@ impl Tree {
     fn print_node(
         &self,
         node_idx: usize,
+        edge: Option<&Edge>,
         prefix: &String,
         is_root: bool,
         is_last: bool,
@@ -166,7 +175,6 @@ impl Tree {
         min_policy: f32,
         max_policy: f32
     ) {
-        let node = self.get_node(node_idx);
         let color_gradient = (iter_idx + 5) as f32 / (iter_size + 10) as f32;
 
         let arrow = if is_root {
@@ -179,46 +187,60 @@ impl Tree {
             }
         };
 
-        let prefix = if is_root {
-            if node_idx == 0 {
-                String::from("root")
-            } else {
-                node.mv().to_string(false).align_to_left(5)
-            }
-            .primary(color_gradient)
+        if edge.is_none() {
+            println!(
+                "{}",
+                format!(
+                    "{}  {} visits",
+                    "root".primary(color_gradient),
+                    format!("{}", self.get_node_copy(node_idx).visits()).align_to_right(9).white(),
+                )
+                .secondary(color_gradient)
+            );
+
+            return;
+        }
+
+        let edge = edge.unwrap();
+
+        let node_index = if node_idx == usize::MAX {
+            "NULL".to_string()
         } else {
-            format!(
+            format!("{:#018x}", node_idx)
+        }.align_to_right(18).primary(color_gradient);
+
+        let prefix = format!(
                 "{prefix}{arrow}{}{} {}",
-                format!("{:#018x}", node_idx)
-                    .align_to_right(18)
-                    .primary(color_gradient),
+                node_index,
                 ">".secondary(color_gradient),
-                node.mv()
+                edge.mv()
                     .to_string(false)
                     .align_to_left(5)
                     .primary(color_gradient)
-            )
-        }
-        .white();
+            ).white();
 
         let score = if flip {
-            node.score().reversed()
+            edge.score().reversed()
         } else {
-            node.score()
+            edge.score()
         };
 
         let cp = score.cp(0.5);
         let score = heat_color(&format!("{:.2}", cp as f32 / 100.0).align_to_right(6), score.single(0.5) as f32, 0.0, 1.0);
 
-        let visits = format!("{}", node.visits()).align_to_right(9);
+        let visits = format!("{}", edge.visits()).align_to_right(9);
 
-        let policy = heat_color(&format!("{:.2}%", node.policy() * 100.0).align_to_right(6), node.policy() as f32, min_policy, max_policy);
+        let policy = heat_color(&format!("{:.2}%", edge.policy() * 100.0).align_to_right(6), edge.policy() as f32, min_policy, max_policy);
 
-        let state = match node.state() {
-            GameState::Draw => String::from("DRAW"),
-            GameState::Win(len) => format!("WIN IN {len}"),
-            GameState::Loss(len) => format!("LOSS IN {len}"),
-            _ => String::new(),
+        let state = if node_idx == usize::MAX {
+            String::new()
+        } else {
+            match self.get_node_copy(node_idx).state() {
+                GameState::Draw => String::from("DRAW"),
+                GameState::Win(len) => format!("WIN IN {len}"),
+                GameState::Loss(len) => format!("LOSS IN {len}"),
+                _ => String::new(),
+            }
         };
 
         println!(

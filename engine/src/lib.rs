@@ -3,6 +3,7 @@ mod search_report_trait;
 mod networks;
 
 pub use search_engine::SearchEngine;
+pub use search_engine::Tree;
 pub use search_engine::SearchLimits;
 pub use search_engine::SearchStats;
 pub use search_engine::Node;

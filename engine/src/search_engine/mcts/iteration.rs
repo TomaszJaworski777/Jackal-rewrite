@@ -1,6 +1,6 @@
 use chess::ChessPosition;
 
-use crate::{SearchEngine, WDLScore};
+use crate::{search_engine::Edge, SearchEngine, WDLScore};
 
 mod select;
 mod simulate;
@@ -10,37 +10,47 @@ impl SearchEngine {
     pub(super) fn perform_iteration<const ROOT: bool>(
         &self,
         node_idx: usize,
+        parent_edge: &Edge,
         position: &mut ChessPosition,
         depth: &mut f64,
         castle_mask: &[u8; 64],
     ) -> Option<WDLScore> { 
-        let hash = position.board().hash();
-        let node: crate::Node = self.tree().get_node(node_idx);
-        let score = if !ROOT && (node.is_terminal() || node.visits() == 0) {
+        let node = self.tree().get_node_copy(node_idx);
+        let score = if !ROOT && (node.is_terminal() || node.visits() == 0) { //TODO: Test condition where edge.visits() is 0
             self.simulate(node_idx, position)
         } else {
             *depth += 1.0;
 
-            if node.children_count() == 0 {
-                if !self.tree().expand_node(node_idx, *depth, position.board(), self.options()) {
+            self.tree().expand_node(node_idx, parent_edge, *depth, position.board(), self.options());
+
+            let child_idx = self.select(node_idx, parent_edge, *depth);
+
+            let mut edge = self.tree().get_child_copy(node_idx, child_idx);
+
+            position.make_move(edge.mv(), castle_mask);
+
+            if edge.node_index() == usize::MAX {
+                if !self.tree().create_node(node_idx, child_idx) {
                     return None;
                 }
+
+                edge = self.tree().get_child_copy(node_idx, child_idx);
             }
+            
+            let new_node = edge.node_index();
+            
+            self.tree().inc_threads(child_idx, 1);
+            
+            let score = self.perform_iteration::<false>(new_node, &edge, position, depth, castle_mask);
 
-            let new_index = self.select(node_idx, *depth);
+            self.tree().dec_threads(child_idx, 1);
 
-            position.make_move(self.tree().get_node(new_index).mv(), castle_mask);
+            let score = score?;
 
-            self.tree().inc_threads(new_index, 1);
+            self.backpropagate(node_idx, child_idx, score, position.board().hash());
 
-            let score = self.perform_iteration::<false>(new_index, position, depth, castle_mask);
-
-            self.tree().dec_threads(new_index, 1);
-
-            score?
+            score
         }.reversed();
-
-        self.backpropagate(node_idx, score, hash);
 
         Some(score)
     }
