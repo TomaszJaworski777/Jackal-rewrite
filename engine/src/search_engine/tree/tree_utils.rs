@@ -106,27 +106,26 @@ impl Tree {
     }
 
     pub fn get_best_pv(&self, index: usize) -> PvLine {
-        let mut chilren_nodes = Vec::new();
+        let children_lock = self.get_root_node().children();
+        let mut chilren = Vec::new();
 
-        for child_idx in 0..self.nodes[self.root_index()].children().len() {
-            let edge = self.get_child_copy(self.root_index(), child_idx);
+        for child in children_lock.iter() {
 
-            if edge.visits() == 0 {
+            if child.visits() == 0 || child.node_index() == usize::MAX {
                 continue;
             }
 
-            chilren_nodes.push((child_idx, edge.score().single(0.5)))
+            chilren.push(child)
         }
 
-        if chilren_nodes.is_empty() {
+        if chilren.is_empty() {
             return PvLine::new(Move::NULL);
         }
 
-        chilren_nodes.sort_by(|(_, a), (_, b)| b.total_cmp(a));
+        chilren.sort_by(|&a, &b| b.score().single(0.5).total_cmp(&a.score().single(0.5)));
 
-        let (pv_child_idx, _) = chilren_nodes[index.min(chilren_nodes.len() - 1)];
-        let child = self.get_child_copy(self.root_index(), pv_child_idx);
-        let mut result = self.get_pv(pv_child_idx);
+        let child = chilren[index.min(chilren.len() - 1)];
+        let mut result = self.get_pv(child.node_index());
         result.add_mv(child.mv());
         result.set_score(child.score());
 

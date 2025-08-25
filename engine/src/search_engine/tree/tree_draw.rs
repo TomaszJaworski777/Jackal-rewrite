@@ -1,6 +1,6 @@
 use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, Theme};
 
-use crate::search_engine::{tree::{node::Node, GameState, Tree}, Edge};
+use crate::search_engine::{tree::{GameState, Tree}, Edge};
 
 impl Tree {
     pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<usize>) {
@@ -15,12 +15,12 @@ impl Tree {
 
         let current_size_mem = format!(
             "{}B",
-            bytes_to_string((current_size * std::mem::size_of::<Node>()) as u128)
+            bytes_to_string(Tree::size_to_bytes(current_size) as u128)
         )
         .secondary(3.0 / 29.0);
         let tree_size_mem = format!(
             "{}B",
-            bytes_to_string((tree_size * std::mem::size_of::<Node>()) as u128)
+            bytes_to_string(Tree::size_to_bytes(tree_size) as u128)
         )
         .secondary(3.0 / 29.0);
 
