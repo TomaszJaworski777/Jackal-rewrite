@@ -106,7 +106,8 @@ impl Tree {
     }
 
     pub fn get_best_pv(&self, index: usize) -> PvLine {
-        let children_lock = self.get_root_node().children();
+        let node = self.get_node_copy(self.root_index());
+        let children_lock = node.children();
         let mut chilren = Vec::new();
 
         for child in children_lock.iter() {

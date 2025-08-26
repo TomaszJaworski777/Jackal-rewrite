@@ -25,7 +25,7 @@ impl SearchEngine {
             for _ in 0..(self.options().threads() - 1) {
                 s.spawn(|| {
                     while !self.is_search_interrupted() {
-                        let _ = self.search_loop(&search_stats, search_limits, &castle_mask);
+                        let _ = self.search_step(&search_stats, search_limits, &castle_mask);
                     }
                 });
             }
@@ -44,7 +44,7 @@ impl SearchEngine {
         let mut max_avg_depth = 0;
 
         while !self.is_search_interrupted() {
-            if !self.search_loop(search_stats, search_limits, castle_mask) {
+            if !self.search_step(search_stats, search_limits, castle_mask) {
                 break;
             }
 
@@ -64,7 +64,7 @@ impl SearchEngine {
         }
     }
 
-    fn search_loop(        
+    fn search_step(        
         &self,         
         search_stats: &SearchStats,
         search_limits: &SearchLimits,

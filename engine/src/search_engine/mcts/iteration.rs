@@ -44,7 +44,7 @@ impl SearchEngine {
             let new_node = edge.node_index();
             
             self.tree().inc_threads(child_idx, 1);
-            
+
             let score = self.perform_iteration::<false>(new_node, &edge, position, depth, castle_mask);
 
             self.tree().dec_threads(child_idx, 1);

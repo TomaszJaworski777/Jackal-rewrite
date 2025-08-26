@@ -4,7 +4,7 @@ use crate::{GameState, SearchEngine, ValueNetwork, WDLScore};
 
 impl SearchEngine {
     pub(super) fn simulate(&self, node_idx: usize, position: &ChessPosition) -> WDLScore {
-        if self.tree().get_node_copy(node_idx).visits() == 0 {
+        if self.tree().get_node(node_idx).visits() == 0 {
             let state = get_node_state(position, self.current_position());
             self.tree().set_state(node_idx, state);
         }
@@ -13,10 +13,10 @@ impl SearchEngine {
             if let Some(entry) = self.tree().hash_table().get(position.board().hash()) {
                 entry
             } else {
-                get_position_score(position, self.tree().get_node_copy(node_idx).state())
+                get_position_score(position, self.tree().get_node(node_idx).state())
             }
         } else {
-            get_position_score(position, self.tree().get_node_copy(node_idx).state())
+            get_position_score(position, self.tree().get_node(node_idx).state())
         }
     }
 }
