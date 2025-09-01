@@ -4,11 +4,6 @@ use crate::{GameState, SearchEngine, ValueNetwork, WDLScore};
 
 impl SearchEngine {
     pub(super) fn simulate(&self, node_idx: usize, position: &ChessPosition) -> WDLScore {
-        if self.tree().get_node(node_idx).visits() == 0 {
-            let state = get_node_state(position, self.current_position());
-            self.tree().set_state(node_idx, state);
-        }
-
         if self.tree.get_node(node_idx).state() == GameState::Ongoing {
             if let Some(entry) = self.tree().hash_table().get(position.board().hash()) {
                 entry
@@ -19,22 +14,22 @@ impl SearchEngine {
             get_position_score(position, self.tree().get_node(node_idx).state())
         }
     }
-}
 
-fn get_node_state(position: &ChessPosition, root_position: &ChessPosition) -> GameState {
-    let mut possible_moves = 0;
-    position.board().map_legal_moves(|_| possible_moves += 1);
+    pub(super) fn get_game_state(&self, position: &ChessPosition) -> GameState {
+        let mut possible_moves = 0;
+        position.board().map_legal_moves(|_| possible_moves += 1);
 
-    if possible_moves == 0 {
-        if position.board().is_in_check() {
-            GameState::Loss(0)
-        } else {
+        if possible_moves == 0 {
+            if position.board().is_in_check() {
+                GameState::Loss(0)
+            } else {
+                GameState::Draw
+            }
+        } else if is_draw(position, self.root_position()) {
             GameState::Draw
+        } else {
+            GameState::Ongoing
         }
-    } else if is_draw(position, root_position) {
-        GameState::Draw
-    } else {
-        GameState::Ongoing
     }
 }
 

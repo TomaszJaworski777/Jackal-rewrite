@@ -18,7 +18,7 @@ pub use tree::{Node, GameState, AtomicWDLScore, WDLScore, PvLine, Edge, Tree};
 
 #[derive(Debug)]
 pub struct SearchEngine {
-    position: ChessPosition,
+    root_position: ChessPosition,
     tree: Tree,
     options: EngineOptions,
     interruption_token: AtomicBool,
@@ -27,7 +27,7 @@ pub struct SearchEngine {
 impl Clone for SearchEngine {
     fn clone(&self) -> Self {
         Self {
-            position: self.position,
+            root_position: self.root_position,
             tree: self.tree.clone(),
             options: self.options.clone(),
             interruption_token: AtomicBool::new(self.interruption_token.load(Ordering::Relaxed)),
@@ -40,7 +40,7 @@ impl SearchEngine {
         let options = EngineOptions::new();
 
         Self {
-            position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
+            root_position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
             tree: Tree::from_bytes(options.hash() as usize, options.hash_size()),
             options,
             interruption_token: AtomicBool::new(false),
@@ -48,8 +48,8 @@ impl SearchEngine {
     }
 
     #[inline]
-    pub fn current_position(&self) -> &ChessPosition {
-        &self.position
+    pub fn root_position(&self) -> &ChessPosition {
+        &self.root_position
     }
 
     #[inline]
@@ -74,13 +74,13 @@ impl SearchEngine {
 
     #[inline]
     pub fn set_position(&mut self, position: &ChessPosition) {
-        self.position = *position;
+        self.root_position = *position;
         self.tree.clear();
     }
 
     #[inline]
     pub fn reset_position(&mut self) {
-        self.position = ChessPosition::from(ChessBoard::from(&FEN::start_position()));
+        self.root_position = ChessPosition::from(ChessBoard::from(&FEN::start_position()));
         self.tree.clear();
     }
 
@@ -100,7 +100,7 @@ impl SearchEngine {
         self.tree.clear();
 
         if self.tree.get_root_node().children_count() == 0 {  //TEMP: It should be replaced by tree reuse code
-            self.tree.expand_node(self.tree.root_index(), self.tree.root_edge(), 1.0, self.current_position().board(), self.options());
+            self.tree.expand_node(self.tree.root_index(), self.tree.root_edge(), 1.0, self.root_position().board(), self.options());
         }
 
         Display::search_started(search_limits, self);

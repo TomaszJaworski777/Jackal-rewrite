@@ -105,7 +105,7 @@ impl Tree {
 
     pub fn get_best_pv(&self, index: usize) -> PvLine {
         let children_lock = self.get_root_node().children();
-        let mut chilren = Vec::new();
+        let mut children = Vec::new();
 
         for child in children_lock.iter() {
 
@@ -113,16 +113,16 @@ impl Tree {
                 continue;
             }
 
-            chilren.push(child)
+            children.push(child.clone())
         }
 
-        if chilren.is_empty() {
+        if children.is_empty() {
             return PvLine::new(Move::NULL);
         }
 
-        chilren.sort_by(|&a, &b| b.score().single(0.5).total_cmp(&a.score().single(0.5)));
+        children.sort_by(|a, b| b.score().single(0.5).total_cmp(&a.score().single(0.5)));
 
-        let child = chilren[index.min(chilren.len() - 1)];
+        let child = &children[index.min(children.len() - 1)];
         let mut result = self.get_pv(child.node_index());
         result.add_mv(child.mv());
         result.set_score(child.score());

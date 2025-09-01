@@ -126,7 +126,7 @@ impl UciProcessor {
         input_wrapper: &mut InputWrapper,
         shutdown_token: &mut bool,
     ) {
-        let search_limits = create_search_limits(args, search_engine.current_position().board(), search_engine);
+        let search_limits = create_search_limits(args, search_engine.root_position().board(), search_engine);
 
         std::thread::scope(|s| {
             s.spawn(|| {

@@ -97,7 +97,8 @@ impl Tree {
     }
 
     #[inline]
-    pub fn create_node(&self, node_idx: usize, child_idx: usize) -> bool {
+    pub fn create_node(&self, node_idx: usize, child_idx: usize, state: GameState) -> bool {
+        let children = self.nodes[node_idx].children_mut();
         let idx = self.idx.fetch_add(1, Ordering::Relaxed);
 
         if idx + 1 >= self.tree_size() {
@@ -105,16 +106,18 @@ impl Tree {
         }
 
         self.nodes[idx].clear();
-        self.nodes[node_idx].children()[child_idx].set_node_index(idx);
+        self.nodes[idx].set_state(state);   
+        children[child_idx].set_node_index(idx);
 
         true
     }
 
     #[inline]
     pub fn add_visit(&self, node_idx: usize, child_idx: usize, score: WDLScore) {
-        let edge = &self.get_node(node_idx).children()[child_idx];
+        let children = self.get_node(node_idx).children();
+        let edge = &children[child_idx];
         self.nodes[edge.node_index()].add_visit();
-        self.nodes[node_idx].children()[child_idx].add_visit(score);
+        edge.add_visit(score);
     }
 
     #[inline]

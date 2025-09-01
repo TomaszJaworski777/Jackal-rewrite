@@ -10,7 +10,7 @@ mod iteration;
 impl SearchEngine {
     pub(super) fn mcts<Display: SearchReport>(&self, search_limits: &SearchLimits) -> SearchStats {
         let castle_mask = self
-            .current_position()
+            .root_position()
             .board()
             .castle_rights()
             .get_castle_mask();
@@ -71,7 +71,7 @@ impl SearchEngine {
         castle_mask: &[u8; 64],
     ) -> bool {
         let mut depth = 0.0;
-        let mut position = *self.current_position();
+        let mut position = *self.root_position();
 
         if let Some(result_score) =  self.perform_iteration::<true>(self.tree().root_index(), self.tree().root_edge(), &mut position, &mut depth, castle_mask) {
             self.tree().add_root_visit(result_score);

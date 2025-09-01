@@ -18,13 +18,12 @@ impl SearchEngine {
         let parent_hash = position.board().hash();
         let mut child_hash = None;
 
-        let node = self.tree().get_node(node_idx);
-        let score = if !ROOT && (node.is_terminal() || node.visits() == 0) { //TODO: Test condition where edge.visits() is 0
+        let score = if !ROOT && (self.tree().get_node(node_idx).is_terminal() || self.tree().get_node(node_idx).visits() == 0) { //TODO: Test condition where edge.visits() is 0
             self.simulate(node_idx, position)
         } else {
             *depth += 1.0;
 
-            if node.children().len() == 0 {
+            if self.tree().get_node(node_idx).children().len() == 0 {
                 self.tree().expand_node(node_idx, parent_edge, *depth, position.board(), self.options());
             }
 
@@ -34,22 +33,24 @@ impl SearchEngine {
 
             position.make_move(edge.mv(), castle_mask);
             child_hash = Some(position.board().hash());
-
+            
             if edge.node_index() == usize::MAX {
-                if !self.tree().create_node(node_idx, child_idx) {
+                let state = self.get_game_state(position);
+
+                if !self.tree().create_node(node_idx, child_idx, state) {
                     return None;
                 }
 
                 edge = self.tree().get_child_copy(node_idx, child_idx);
             }
-            
+
             let new_node = edge.node_index();
             
-            self.tree().inc_threads(child_idx, 1);
+            self.tree().inc_threads(new_node, 1);
 
             let score = self.perform_iteration::<false>(new_node, &edge, position, depth, castle_mask);
 
-            self.tree().dec_threads(child_idx, 1);
+            self.tree().dec_threads(new_node, 1);
 
             let score = score?;
 

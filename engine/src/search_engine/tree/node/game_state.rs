@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::{fmt::Display, sync::atomic::{AtomicU8, Ordering}};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GameState {
@@ -11,6 +11,18 @@ pub enum GameState {
 impl Default for GameState {
     fn default() -> Self {
         Self::Ongoing
+    }
+}
+
+impl Display for GameState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let result = match self {
+            Self::Ongoing => "Ongoing".to_string(),
+            Self::Draw => "Draw".to_string(),
+            Self::Win(x) => format!("Win in {x}"),
+            Self::Loss(x) => format!("Loss in {x}"),
+        };
+        write!(f, "{}", result)
     }
 }
 
