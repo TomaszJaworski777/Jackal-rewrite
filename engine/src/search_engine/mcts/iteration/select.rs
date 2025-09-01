@@ -2,7 +2,7 @@ use crate::{search_engine::{engine_options::EngineOptions, Edge}, Node, SearchEn
 
 impl SearchEngine {
     pub(super) fn select(&self, node_idx: usize, parent_edge: &Edge, depth: f64) -> usize {
-        let parent_node = self.tree().get_node_copy(node_idx);
+        let parent_node = self.tree().get_node(node_idx);
 
         let cpuct = get_cpuct(&self.options(), &parent_edge, &parent_node, depth);
         let exploration_scale = get_exploration_scale(self.options(), &parent_node);

@@ -12,7 +12,7 @@ impl Tree {
     }
 
     pub fn expand_node(&self, node_idx: usize, parent_edge: &Edge, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) {
-        let mut children = self.nodes[node_idx].children_mut();
+        let mut children = self.get_node(node_idx).children_mut();
         
         if children.len() > 0 {
             return;
@@ -32,8 +32,6 @@ impl Tree {
             moves.push((mv, p));
             max = max.max(p);
         });
-
-        *children = Vec::with_capacity(moves.len());
 
         for (_, p) in moves.iter_mut() {
             *p = ((*p - max)/pst).exp();
@@ -81,7 +79,7 @@ impl Tree {
             return PvLine::EMPTY;
         }
 
-        let node = self.get_node_copy(node_idx);
+        let node = self.get_node(node_idx);
 
         if node.children_count() == 0 {
             return PvLine::EMPTY;
@@ -106,8 +104,7 @@ impl Tree {
     }
 
     pub fn get_best_pv(&self, index: usize) -> PvLine {
-        let node = self.get_node_copy(self.root_index());
-        let children_lock = node.children();
+        let children_lock = self.get_root_node().children();
         let mut chilren = Vec::new();
 
         for child in children_lock.iter() {

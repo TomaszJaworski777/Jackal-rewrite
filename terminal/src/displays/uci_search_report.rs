@@ -10,8 +10,7 @@ impl SearchReport for UciSearchReport {
         let depth = search_stats.avg_depth();
         let max_depth = search_stats.max_depth();
 
-        let root_node = search_engine.tree().get_node_copy(search_engine.tree().root_index());
-        let pv_count = root_node.children_count().min(search_engine.options().multi_pv() as usize);
+        let pv_count = search_engine.tree().get_root_node().children_count().min(search_engine.options().multi_pv() as usize);
 
         for pv_idx in 0..pv_count {
             let pv = search_engine.tree().get_best_pv(pv_idx as usize);

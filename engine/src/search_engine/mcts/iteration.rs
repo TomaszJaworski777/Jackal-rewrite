@@ -18,13 +18,15 @@ impl SearchEngine {
         let parent_hash = position.board().hash();
         let mut child_hash = None;
 
-        let node = self.tree().get_node_copy(node_idx);
+        let node = self.tree().get_node(node_idx);
         let score = if !ROOT && (node.is_terminal() || node.visits() == 0) { //TODO: Test condition where edge.visits() is 0
             self.simulate(node_idx, position)
         } else {
             *depth += 1.0;
 
-            self.tree().expand_node(node_idx, parent_edge, *depth, position.board(), self.options());
+            if node.children().len() == 0 {
+                self.tree().expand_node(node_idx, parent_edge, *depth, position.board(), self.options());
+            }
 
             let child_idx = self.select(node_idx, parent_edge, *depth);
 

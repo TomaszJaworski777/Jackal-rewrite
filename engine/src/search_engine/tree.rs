@@ -92,11 +92,6 @@ impl Tree {
     }
 
     #[inline]
-    pub fn get_node_copy(&self, node_idx: usize) -> Node {
-        self.nodes[node_idx].clone()
-    }
-
-    #[inline]
     pub fn get_child_copy(&self, node_idx: usize, child_idx: usize) -> Edge {
         self.nodes[node_idx].children()[child_idx].clone()
     }

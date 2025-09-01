@@ -193,7 +193,7 @@ impl Tree {
                 format!(
                     "{}  {} visits",
                     "root".primary(color_gradient),
-                    format!("{}", self.get_node_copy(node_idx).visits()).align_to_right(9).white(),
+                    format!("{}", self.get_node(node_idx).visits()).align_to_right(9).white(),
                 )
                 .secondary(color_gradient)
             );
@@ -235,7 +235,7 @@ impl Tree {
         let state = if node_idx == usize::MAX {
             String::new()
         } else {
-            match self.get_node_copy(node_idx).state() {
+            match self.get_node(node_idx).state() {
                 GameState::Draw => String::from("DRAW"),
                 GameState::Win(len) => format!("WIN IN {len}"),
                 GameState::Loss(len) => format!("LOSS IN {len}"),

@@ -9,7 +9,7 @@ impl SearchEngine {
             self.tree().set_state(node_idx, state);
         }
 
-        if self.tree.get_node_copy(node_idx).state() == GameState::Ongoing {
+        if self.tree.get_node(node_idx).state() == GameState::Ongoing {
             if let Some(entry) = self.tree().hash_table().get(position.board().hash()) {
                 entry
             } else {
