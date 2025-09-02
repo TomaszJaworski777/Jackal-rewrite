@@ -98,7 +98,7 @@ impl Tree {
 
     #[inline]
     pub fn create_node(&self, node_idx: usize, child_idx: usize, state: GameState) -> bool {
-        let children = self.nodes[node_idx].children_mut();
+        let children = self.nodes[node_idx].children();
         let idx = self.idx.fetch_add(1, Ordering::Relaxed);
 
         if idx + 1 >= self.tree_size() {

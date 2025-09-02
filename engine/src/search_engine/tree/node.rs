@@ -1,4 +1,4 @@
-use std::sync::{atomic::{AtomicU16, AtomicU32, Ordering}, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::{sync::atomic::{AtomicU16, AtomicU32, Ordering}, time::{Duration, Instant}};
 
 use crate::search_engine::tree::node::game_state::AtomicGameState;
 
@@ -7,6 +7,7 @@ mod wdl_score;
 mod edge;
 
 pub use game_state::GameState;
+use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 pub use wdl_score::{WDLScore, AtomicWDLScore};
 pub use edge::Edge;
 
@@ -22,7 +23,7 @@ impl Clone for Node {
     fn clone(&self) -> Self {
         Self {
             visit_count: AtomicU32::new(self.visit_count.load(Ordering::Relaxed)),
-            children: RwLock::new(self.children.read().unwrap().clone()),
+            children: RwLock::new(self.children.read().clone()),
             state: self.state.clone(),
             threads: AtomicU16::new(self.threads.load(Ordering::Relaxed)),
         }
@@ -42,7 +43,7 @@ impl Node {
     #[inline]
     pub fn clear(&self) {
         self.visit_count.store(0, Ordering::Relaxed);
-        self.children.write().unwrap().clear();
+        self.children.write().clear();
         self.state.set(GameState::Ongoing);
         self.threads.store(0, Ordering::Relaxed);
     }
@@ -54,12 +55,24 @@ impl Node {
 
     #[inline]
     pub fn children(&self) -> RwLockReadGuard<Vec<Edge>> {
-        self.children.read().unwrap()
+        let timer = Instant::now();
+        let result = self.children.try_read_for(Duration::from_secs(2));
+        if result.is_none() {
+            panic!("Timeout read! Took: {}", timer.elapsed().as_millis())
+        }
+
+        result.unwrap()
     }
 
     #[inline]
     pub fn children_mut(&self) -> RwLockWriteGuard<Vec<Edge>> {
-        self.children.write().unwrap()
+        let timer = Instant::now();
+        let result = self.children.try_write_for(Duration::from_secs(2));
+        if result.is_none() {
+            panic!("Timeout write! {}", timer.elapsed().as_millis())
+        }
+
+        result.unwrap()
     }
 
     #[inline]
