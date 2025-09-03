@@ -29,28 +29,18 @@ impl SearchEngine {
 
             let child_idx = self.select(node_idx, parent_edge, *depth);
 
-            let mut edge = self.tree().get_child_copy(node_idx, child_idx);
+            let edge = self.tree().get_child_clone(node_idx, child_idx);
 
             position.make_move(edge.mv(), castle_mask);
             child_hash = Some(position.board().hash());
+
+            let new_node_idx = self.get_node_index(node_idx, child_idx, edge.node_index(), position)?;
             
-            if edge.node_index() == usize::MAX {
-                let state = self.get_game_state(position);
+            self.tree().inc_threads(new_node_idx, 1);
 
-                if !self.tree().create_node(node_idx, child_idx, state) {
-                    return None;
-                }
+            let score = self.perform_iteration::<false>(new_node_idx, &edge, position, depth, castle_mask);
 
-                edge = self.tree().get_child_copy(node_idx, child_idx);
-            }
-
-            let new_node = edge.node_index();
-            
-            self.tree().inc_threads(new_node, 1);
-
-            let score = self.perform_iteration::<false>(new_node, &edge, position, depth, castle_mask);
-
-            self.tree().dec_threads(new_node, 1);
+            self.tree().dec_threads(new_node_idx, 1);
 
             let score = score?;
 
@@ -67,5 +57,14 @@ impl SearchEngine {
         }
 
         Some(score.reversed())
+    }
+
+    fn get_node_index(&self, node_idx: usize, child_idx: usize, new_idx: usize, position: &ChessPosition) -> Option<usize> {
+        if new_idx == usize::MAX {
+            let state = self.get_game_state(position);
+            self.tree().create_node(node_idx, child_idx, state)
+        } else {
+            Some(new_idx)
+        }
     }
 }

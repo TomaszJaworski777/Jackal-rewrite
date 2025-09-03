@@ -92,24 +92,30 @@ impl Tree {
     }
 
     #[inline]
-    pub fn get_child_copy(&self, node_idx: usize, child_idx: usize) -> Edge {
+    pub fn get_child_clone(&self, node_idx: usize, child_idx: usize) -> Edge {
         self.nodes[node_idx].children()[child_idx].clone()
     }
 
     #[inline]
-    pub fn create_node(&self, node_idx: usize, child_idx: usize, state: GameState) -> bool {
-        let children = self.nodes[node_idx].children();
-        let idx = self.idx.fetch_add(1, Ordering::Relaxed);
+    pub fn create_node(&self, node_idx: usize, child_idx: usize, state: GameState) -> Option<usize> {
+        let children = self.nodes[node_idx].children_mut();
 
-        if idx + 1 >= self.tree_size() {
-            return false;
+        let node_idx = children[child_idx].node_index();
+        if node_idx != usize::MAX {
+            return Some(node_idx);
+        } 
+
+        let node_idx = self.idx.fetch_add(1, Ordering::Relaxed);
+
+        if node_idx + 1 >= self.tree_size() {
+            return None;
         }
 
-        self.nodes[idx].clear();
-        self.nodes[idx].set_state(state);   
-        children[child_idx].set_node_index(idx);
+        self.nodes[node_idx].clear();
+        self.nodes[node_idx].set_state(state);   
+        children[child_idx].set_node_index(node_idx);
 
-        true
+        Some(node_idx)
     }
 
     #[inline]

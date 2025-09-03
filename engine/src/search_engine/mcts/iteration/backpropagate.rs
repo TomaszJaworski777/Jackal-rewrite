@@ -8,7 +8,7 @@ impl SearchEngine {
 }
 
 fn backprop_state(tree: &Tree, node_idx: usize, child_idx: usize) {
-    let edge = &tree.get_node(node_idx).children()[child_idx];
+    let edge = &tree.get_child_clone(node_idx, child_idx);
 
     match tree.get_node(edge.node_index()).state() {
         GameState::Loss(len) => tree.set_state(node_idx, GameState::Win(len + 1)),

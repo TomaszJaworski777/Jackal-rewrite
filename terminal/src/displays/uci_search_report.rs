@@ -60,7 +60,7 @@ impl SearchReport for UciSearchReport {
             "bestmove {}",
             search_engine
                 .tree()
-                .get_child_copy(search_engine.tree().root_index(), best_child_idx.unwrap())
+                .get_child_clone(search_engine.tree().root_index(), best_child_idx.unwrap())
                 .mv()
                 .to_string(search_engine.options().chess960())
         );

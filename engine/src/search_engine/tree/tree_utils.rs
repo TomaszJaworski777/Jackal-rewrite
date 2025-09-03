@@ -93,7 +93,7 @@ impl Tree {
 
         let best_child_idx = best_child_idx.unwrap();
 
-        let child = self.get_child_copy(node_idx, best_child_idx);
+        let child = self.get_child_clone(node_idx, best_child_idx);
 
         let mut result = self.get_pv(child.node_index());
         result.add_mv(child.mv());

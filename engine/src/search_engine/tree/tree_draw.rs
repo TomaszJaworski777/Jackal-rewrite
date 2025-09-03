@@ -124,7 +124,7 @@ impl Tree {
         let mut children = Vec::new();
 
         for child_idx in 0..self.nodes[node_idx].children().len() {
-            let edge = self.get_child_copy(node_idx, child_idx);
+            let edge = self.get_child_clone(node_idx, child_idx);
         
             if edge.visits() == 0 {
                 continue;
