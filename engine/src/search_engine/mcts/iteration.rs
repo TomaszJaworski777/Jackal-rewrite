@@ -60,9 +60,10 @@ impl SearchEngine {
     }
 
     fn get_node_index(&self, node_idx: NodeIndex, child_idx: usize, new_idx: NodeIndex, position: &ChessPosition) -> Option<NodeIndex> {
-        if new_idx.is_null() {
+        let hash = position.history().hash();
+        if !self.tree().validate_index(new_idx, hash) {
             let state = self.get_game_state(position);
-            self.tree().create_node(node_idx, child_idx, state)
+            self.tree().create_node(node_idx, child_idx, state, position.history().hash())
         } else {
             Some(new_idx)
         }

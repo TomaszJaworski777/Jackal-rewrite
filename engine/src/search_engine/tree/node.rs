@@ -1,4 +1,4 @@
-use std::{sync::atomic::{AtomicU16, AtomicU32, Ordering}, time::{Duration, Instant}};
+use std::{sync::atomic::{AtomicU16, AtomicU32, AtomicU64, Ordering}, time::{Duration, Instant}};
 
 use crate::search_engine::tree::node::game_state::AtomicGameState;
 
@@ -19,6 +19,7 @@ pub struct Node {
     children: RwLock<Vec<Edge>>,
     state: AtomicGameState,
     threads: AtomicU16,
+    hash: AtomicU64,
 }
 
 impl Clone for Node {
@@ -28,6 +29,7 @@ impl Clone for Node {
             children: RwLock::new(self.children.read().clone()),
             state: self.state.clone(),
             threads: AtomicU16::new(self.threads.load(Ordering::Relaxed)),
+            hash: AtomicU64::new(self.hash.load(Ordering::Relaxed))
         }
     }
 }
@@ -39,6 +41,7 @@ impl Node {
             children: RwLock::new(Vec::new()),
             state: AtomicGameState::new(GameState::Ongoing),
             threads: AtomicU16::new(0),
+            hash: AtomicU64::new(u64::MAX)
         }
     }
 
@@ -48,6 +51,7 @@ impl Node {
         self.children.write().clear();
         self.state.set(GameState::Ongoing);
         self.threads.store(0, Ordering::Relaxed);
+        self.hash.store(u64::MAX, Ordering::Relaxed);
     }
 
     #[inline]
@@ -91,6 +95,11 @@ impl Node {
     pub fn threads(&self) -> u16 {
         self.threads.load(Ordering::Relaxed)
     }
+
+    #[inline]
+    pub fn hash(&self) -> u64 {
+        self.hash.load(Ordering::Relaxed)
+    }
     
     #[inline]
     pub fn is_terminal(&self) -> bool {
@@ -110,6 +119,11 @@ impl Node {
     #[inline]
     pub fn dec_threads(&self, value: u16) -> u16 {
         self.threads.fetch_sub(value, Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn set_hash(&self, hash: u64) {
+        self.hash.store(hash, Ordering::Relaxed);
     }
 
     #[inline]

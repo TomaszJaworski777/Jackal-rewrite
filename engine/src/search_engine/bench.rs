@@ -84,7 +84,7 @@ impl SearchEngine {
         let duration = timer.elapsed();
 
         self.reset_position();
-        self.tree().clear();
+        self.tree().clear(self.root_position().history().hash());
 
         (nodes, duration)
     }

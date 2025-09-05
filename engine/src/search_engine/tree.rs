@@ -30,29 +30,31 @@ impl Clone for Tree {
 }
 
 impl Tree {
-    pub fn from_bytes(megabytes: usize, hash_percentage: f64) -> Self {
+    pub fn from_bytes(megabytes: usize, hash_percentage: f64, hash: u64) -> Self {
         let bytes = megabytes * 1024 * 1024;
         let hash_bytes = (bytes as f64 * hash_percentage) as usize;
         let tree_size = Self::bytes_to_size(bytes - hash_bytes);
 
+        let content = TreeContent::with_capacity(tree_size);
+
         let root_edge = Edge::new(Move::NULL);
-        root_edge.set_node_index(NodeIndex::from(0));
+        root_edge.set_node_index(content.reserve_node(hash).unwrap());
 
         Self {
-            content: TreeContent::with_capacity(tree_size),
+            content,
             root_edge,
             hash_table: HashTable::new(hash_bytes),
         }
     }
 
     #[inline]
-    pub fn clear(&self) {
+    pub fn clear(&self, hash: u64) {
         self.content.clear();
         self.content[self.root_index()].clear();
         self.hash_table.clear();
 
         self.root_edge.clear(Move::NULL);
-        self.root_edge.set_node_index(NodeIndex::from(0));
+        self.root_edge.set_node_index(self.content.reserve_node(hash).unwrap());
     }
 
     #[inline]
@@ -96,7 +98,7 @@ impl Tree {
     }
 
     #[inline]
-    pub fn create_node(&self, node_idx: NodeIndex, child_idx: usize, state: GameState) -> Option<NodeIndex> {
+    pub fn create_node(&self, node_idx: NodeIndex, child_idx: usize, state: GameState, hash: u64) -> Option<NodeIndex> {
         let children = self.content[node_idx].children_mut();
 
         let node_idx = children[child_idx].node_index();
@@ -104,7 +106,7 @@ impl Tree {
             return Some(node_idx);
         } 
 
-        let node_idx = self.content.reserve_node()?;
+        let node_idx = self.content.reserve_node(hash)?;
 
         self.content[node_idx].clear();
         self.content[node_idx].set_state(state);   
@@ -140,5 +142,10 @@ impl Tree {
     #[inline]
     pub fn dec_threads(&self, node_idx: NodeIndex, value: u16) -> u16 {
         self.content[node_idx].dec_threads(value)
+    }
+
+    #[inline]
+    pub fn validate_index(&self, node_idx: NodeIndex, hash: u64) -> bool { 
+        self.content.validate_index(node_idx, hash)
     }
 }

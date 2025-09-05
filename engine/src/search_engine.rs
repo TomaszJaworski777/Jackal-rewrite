@@ -38,10 +38,11 @@ impl Clone for SearchEngine {
 impl SearchEngine {
     pub fn new() -> Self {
         let options = EngineOptions::new();
+        let start_position = ChessPosition::from(ChessBoard::from(&FEN::start_position()));
 
         Self {
-            root_position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
-            tree: Tree::from_bytes(options.hash() as usize, options.hash_size()),
+            root_position: start_position,
+            tree: Tree::from_bytes(options.hash() as usize, options.hash_size(), start_position.history().hash()),
             options,
             interruption_token: AtomicBool::new(false),
         }
@@ -59,7 +60,7 @@ impl SearchEngine {
 
     #[inline]
     pub fn resize_tree(&mut self) {
-        self.tree = Tree::from_bytes(self.options.hash() as usize, self.options().hash_size())
+        self.tree = Tree::from_bytes(self.options.hash() as usize, self.options().hash_size(), self.root_position().history().hash())
     }
 
     #[inline]
@@ -75,13 +76,13 @@ impl SearchEngine {
     #[inline]
     pub fn set_position(&mut self, position: &ChessPosition) {
         self.root_position = *position;
-        self.tree.clear();
+        self.tree.clear(position.history().hash());
     }
 
     #[inline]
     pub fn reset_position(&mut self) {
         self.root_position = ChessPosition::from(ChessBoard::from(&FEN::start_position()));
-        self.tree.clear();
+        self.tree.clear(self.root_position().history().hash());
     }
 
     #[inline]
@@ -97,7 +98,7 @@ impl SearchEngine {
     pub fn search<Display: SearchReport>(&self, search_limits: &SearchLimits) -> SearchStats {
         self.interruption_token.store(false, Ordering::Relaxed);
 
-        self.tree.clear();
+        self.tree.clear(self.root_position().history().hash());
 
         if self.tree.get_root_node().children_count() == 0 {  //TEMP: It should be replaced by tree reuse code
             self.tree.expand_node(self.tree.root_index(), self.tree.root_edge(), 1.0, self.root_position().board(), self.options());
