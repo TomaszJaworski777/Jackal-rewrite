@@ -1,7 +1,7 @@
-use crate::{search_engine::{engine_options::EngineOptions, Edge}, Node, SearchEngine, WDLScore};
+use crate::{search_engine::{engine_options::EngineOptions, Edge}, Node, NodeIndex, SearchEngine, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn select(&self, node_idx: usize, parent_edge: &Edge, depth: f64) -> usize {
+    pub(super) fn select(&self, node_idx: NodeIndex, parent_edge: &Edge, depth: f64) -> usize {
         let parent_node = self.tree().get_node(node_idx);
 
         let cpuct = get_cpuct(&self.options(), &parent_edge, &parent_node, depth);
@@ -11,7 +11,7 @@ impl SearchEngine {
 
         self.tree().select_child_by_key(node_idx, |child| {
             let child_node_idx = child.node_index();
-            let threads = if child_node_idx == usize::MAX {
+            let threads = if child_node_idx.is_null() {
                 0
             } else {
                 self.tree().get_node(child_node_idx).threads()

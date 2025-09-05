@@ -1,12 +1,12 @@
-use std::sync::atomic::{AtomicU16, AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU16, AtomicU32, AtomicU64, Ordering};
 
 use chess::Move;
 
-use crate::{search_engine::tree::node::wdl_score::SCORE_SCALE, AtomicWDLScore, WDLScore};
+use crate::{search_engine::tree::node::{node_index::{AtomicNodeIndex, NodeIndex}, wdl_score::SCORE_SCALE}, AtomicWDLScore, WDLScore};
 
 #[derive(Debug)]
 pub struct Edge {
-    node_idx: AtomicUsize,
+    node_idx: AtomicNodeIndex,
     mv: AtomicU16,
     visit_count: AtomicU32,
     cumulative_score: AtomicWDLScore,
@@ -17,7 +17,7 @@ pub struct Edge {
 impl Clone for Edge {
     fn clone(&self) -> Self {
         Self {
-            node_idx: AtomicUsize::new(self.node_idx.load(Ordering::Relaxed)),
+            node_idx: self.node_idx.clone(),
             mv: AtomicU16::new(self.mv.load(Ordering::Relaxed)),
             visit_count: AtomicU32::new(self.visit_count.load(Ordering::Relaxed)),
             cumulative_score: self.cumulative_score.clone(),
@@ -30,7 +30,7 @@ impl Clone for Edge {
 impl Edge {
     pub fn new(mv: Move) -> Self {
         Self {
-            node_idx: AtomicUsize::new(usize::MAX),
+            node_idx: AtomicNodeIndex::new(NodeIndex::NULL),
             mv: AtomicU16::new(u16::from(mv)),
             visit_count: AtomicU32::new(0),
             cumulative_score: AtomicWDLScore::default(),
@@ -41,6 +41,7 @@ impl Edge {
 
     #[inline]
     pub fn clear(&self, mv: Move) {
+        self.node_idx.store(NodeIndex::NULL);
         self.mv.store(u16::from(mv), Ordering::Relaxed);
         self.visit_count.store(0, Ordering::Relaxed);
         self.cumulative_score.clear();
@@ -49,8 +50,8 @@ impl Edge {
     }
 
     #[inline]
-    pub fn node_index(&self) -> usize {
-        self.node_idx.load(Ordering::Relaxed)
+    pub fn node_index(&self) -> NodeIndex {
+        NodeIndex::from(&self.node_idx)
     }
 
     #[inline]
@@ -79,8 +80,8 @@ impl Edge {
     }
 
     #[inline]
-    pub fn set_node_index(&self, node_idx: usize) {
-        self.node_idx.store(node_idx, Ordering::Relaxed)
+    pub fn set_node_index(&self, node_idx: NodeIndex) {
+        self.node_idx.store(node_idx)
     }
 
     #[inline]

@@ -32,7 +32,7 @@ impl SearchReport for PrettySearchReport {
 
         let best_child_idx = search_engine
                 .tree()
-                .select_child_by_key(0, |child| child.score().single(0.5) as f64);
+                .select_child_by_key(search_engine.tree().root_index(), |child| child.score().single(0.5) as f64);
 
         if let Some((x,y)) = term_cursor::get_pos().ok() {
             let _ = term_cursor::set_pos(x, y - 2);

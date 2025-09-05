@@ -1,31 +1,29 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
-
 use chess::Move;
 
 mod node;
 mod tree_draw;
 mod tree_utils;
 mod pv_line;
+mod tree_content;
 
-pub use node::{Node, GameState, AtomicWDLScore, WDLScore, Edge};
+pub use node::{Node, GameState, AtomicWDLScore, WDLScore, Edge, NodeIndex};
 pub use pv_line::PvLine;
+pub use tree_content::TreeContent;
 
 use crate::search_engine::{hash_table::HashTable};
 
 #[derive(Debug)]
 pub struct Tree {
-    nodes: Vec<Node>,
+    content: TreeContent,
     root_edge: Edge,
-    idx: AtomicUsize,
     hash_table: HashTable,
 }
 
 impl Clone for Tree {
     fn clone(&self) -> Self {
         Self {
-            nodes: self.nodes.clone(),
+            content: self.content.clone(),
             root_edge: self.root_edge.clone(),
-            idx: AtomicUsize::new(self.idx.load(Ordering::Relaxed)),
             hash_table: self.hash_table.clone()
         }
     }
@@ -38,32 +36,33 @@ impl Tree {
         let tree_size = Self::bytes_to_size(bytes - hash_bytes);
 
         let root_edge = Edge::new(Move::NULL);
-        root_edge.set_node_index(0);
+        root_edge.set_node_index(NodeIndex::from(0));
 
         Self {
-            nodes: vec![Node::new(); tree_size],
+            content: TreeContent::with_capacity(tree_size),
             root_edge,
-            idx: AtomicUsize::new(1),
             hash_table: HashTable::new(hash_bytes),
         }
     }
 
     #[inline]
     pub fn clear(&self) {
-        self.idx.store(1, Ordering::Relaxed);
-        self.root_edge.clear(Move::NULL);
-        self.nodes[self.root_index()].clear();
+        self.content.clear();
+        self.content[self.root_index()].clear();
         self.hash_table.clear();
+
+        self.root_edge.clear(Move::NULL);
+        self.root_edge.set_node_index(NodeIndex::from(0));
     }
 
     #[inline]
     pub fn current_index(&self) -> usize {
-        self.idx.load(Ordering::Relaxed)
+        self.content.current_size()
     }
 
     #[inline]
     pub fn tree_size(&self) -> usize {
-        self.nodes.len()
+        self.content.max_size()
     }
 
     #[inline]
@@ -77,73 +76,69 @@ impl Tree {
     }
 
     #[inline]
-    pub fn root_index(&self) -> usize {
+    pub fn root_index(&self) -> NodeIndex {
         self.root_edge().node_index()
     }
 
     #[inline]
     pub fn get_root_node(&self) -> &Node {
-        &self.nodes[self.root_index()]
+        &self.content[self.root_index()]
     }
 
     #[inline]
-    pub fn get_node(&self, node_idx: usize) -> &Node {
-        &self.nodes[node_idx]
+    pub fn get_node(&self, node_idx: NodeIndex) -> &Node {
+        &self.content[node_idx]
     }
 
     #[inline]
-    pub fn get_child_clone(&self, node_idx: usize, child_idx: usize) -> Edge {
-        self.nodes[node_idx].children()[child_idx].clone()
+    pub fn get_child_clone(&self, node_idx: NodeIndex, child_idx: usize) -> Edge {
+        self.content[node_idx].children()[child_idx].clone()
     }
 
     #[inline]
-    pub fn create_node(&self, node_idx: usize, child_idx: usize, state: GameState) -> Option<usize> {
-        let children = self.nodes[node_idx].children_mut();
+    pub fn create_node(&self, node_idx: NodeIndex, child_idx: usize, state: GameState) -> Option<NodeIndex> {
+        let children = self.content[node_idx].children_mut();
 
         let node_idx = children[child_idx].node_index();
-        if node_idx != usize::MAX {
+        if !node_idx.is_null() {
             return Some(node_idx);
         } 
 
-        let node_idx = self.idx.fetch_add(1, Ordering::Relaxed);
+        let node_idx = self.content.reserve_node()?;
 
-        if node_idx + 1 >= self.tree_size() {
-            return None;
-        }
-
-        self.nodes[node_idx].clear();
-        self.nodes[node_idx].set_state(state);   
+        self.content[node_idx].clear();
+        self.content[node_idx].set_state(state);   
         children[child_idx].set_node_index(node_idx);
 
         Some(node_idx)
     }
 
     #[inline]
-    pub fn add_visit(&self, node_idx: usize, child_idx: usize, score: WDLScore) {
+    pub fn add_visit(&self, node_idx: NodeIndex, child_idx: usize, score: WDLScore) {
         let children = self.get_node(node_idx).children();
         let edge = &children[child_idx];
-        self.nodes[edge.node_index()].add_visit();
+        self.content[edge.node_index()].add_visit();
         edge.add_visit(score);
     }
 
     #[inline]
     pub fn add_root_visit(&self, score: WDLScore) {
-        self.nodes[self.root_index()].add_visit();
+        self.content[self.root_index()].add_visit();
         self.root_edge.add_visit(score);
     }
 
     #[inline]
-    pub fn set_state(&self, node_idx: usize, state: GameState) {
-        self.nodes[node_idx].set_state(state)
+    pub fn set_state(&self, node_idx: NodeIndex, state: GameState) {
+        self.content[node_idx].set_state(state)
     }
 
     #[inline]
-    pub fn inc_threads(&self, node_idx: usize, value: u16) -> u16 {
-        self.nodes[node_idx].inc_threads(value)
+    pub fn inc_threads(&self, node_idx: NodeIndex, value: u16) -> u16 {
+        self.content[node_idx].inc_threads(value)
     }
 
     #[inline]
-    pub fn dec_threads(&self, node_idx: usize, value: u16) -> u16 {
-        self.nodes[node_idx].dec_threads(value)
+    pub fn dec_threads(&self, node_idx: NodeIndex, value: u16) -> u16 {
+        self.content[node_idx].dec_threads(value)
     }
 }

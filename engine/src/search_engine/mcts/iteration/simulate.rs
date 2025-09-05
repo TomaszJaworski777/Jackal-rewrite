@@ -1,9 +1,9 @@
 use chess::ChessPosition;
 
-use crate::{GameState, SearchEngine, ValueNetwork, WDLScore};
+use crate::{GameState, NodeIndex, SearchEngine, ValueNetwork, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn simulate(&self, node_idx: usize, position: &ChessPosition) -> WDLScore {
+    pub(super) fn simulate(&self, node_idx: NodeIndex, position: &ChessPosition) -> WDLScore {
         if self.tree.get_node(node_idx).state() == GameState::Ongoing {
             if let Some(entry) = self.tree().hash_table().get(position.board().hash()) {
                 entry

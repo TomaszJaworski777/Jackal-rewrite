@@ -1,6 +1,6 @@
 use chess::{ChessBoard, Move};
 
-use crate::{search_engine::{engine_options::EngineOptions, tree::{node::{Edge, Node}, pv_line::PvLine, Tree}}, PolicyNetwork};
+use crate::{search_engine::{engine_options::EngineOptions, tree::{node::{Edge, Node}, pv_line::PvLine, Tree}}, NodeIndex, PolicyNetwork};
 
 impl Tree {
     pub fn bytes_to_size(bytes: usize) -> usize {
@@ -11,7 +11,7 @@ impl Tree {
         size * (std::mem::size_of::<Node>() + 18 * std::mem::size_of::<Edge>())
     }
 
-    pub fn expand_node(&self, node_idx: usize, parent_edge: &Edge, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) {
+    pub fn expand_node(&self, node_idx: NodeIndex, parent_edge: &Edge, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) {
         let mut children = self.get_node(node_idx).children_mut();
         
         if children.len() > 0 {
@@ -53,13 +53,13 @@ impl Tree {
 
     pub fn select_child_by_key<F: FnMut(&Edge) -> f64>(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         mut key: F,
     ) -> Option<usize> {
         let mut best_idx = None;
         let mut best_score = f64::NEG_INFINITY;
 
-        for (idx, child) in self.nodes[node_idx].children().iter().enumerate() {
+        for (idx, child) in self.content[node_idx].children().iter().enumerate() {
             let new_score = key(child);
             if new_score > best_score {
                 best_idx = Some(idx);
@@ -70,12 +70,12 @@ impl Tree {
         best_idx
     }
 
-    pub fn select_best_child(&self, node_idx: usize) -> Option<usize> {
+    pub fn select_best_child(&self, node_idx: NodeIndex) -> Option<usize> {
         self.select_child_by_key(node_idx, |child| child.score().single(0.5) as f64)
     }
 
-    pub fn get_pv(&self, node_idx: usize) -> PvLine {
-        if node_idx == usize::MAX {
+    pub fn get_pv(&self, node_idx: NodeIndex) -> PvLine {
+        if node_idx.is_null() {
             return PvLine::EMPTY;
         }
 
@@ -109,7 +109,7 @@ impl Tree {
 
         for child in children_lock.iter() {
 
-            if child.visits() == 0 || child.node_index() == usize::MAX {
+            if child.visits() == 0 || child.node_index().is_null() {
                 continue;
             }
 
@@ -130,7 +130,7 @@ impl Tree {
         result
     }
 
-    pub fn find_node_depth(&self, start_node_idx: usize, target_node_idx: usize) -> Option<u64> {
+    pub fn find_node_depth(&self, start_node_idx: NodeIndex, target_node_idx: NodeIndex) -> Option<u64> {
 
         if start_node_idx == target_node_idx {
             return Some(0);
@@ -140,7 +140,7 @@ impl Tree {
         let mut chilren = Vec::new();
 
         for child in children_lock.iter() {
-            if child.node_index() == usize::MAX || self.get_node(child.node_index()).children_count() == 0 {
+            if child.node_index().is_null() || self.get_node(child.node_index()).children_count() == 0 {
                 continue;
             }
 

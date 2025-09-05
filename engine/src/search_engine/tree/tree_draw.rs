@@ -1,11 +1,15 @@
 use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, Theme};
 
-use crate::search_engine::{tree::{GameState, Tree}, Edge};
+use crate::{search_engine::{tree::{GameState, Tree}, Edge}, NodeIndex};
 
 impl Tree {
     pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<usize>) {
         let depth = depth.unwrap_or(1);
-        let node_idx = node_idx.unwrap_or(self.root_index());
+        let node_idx = if node_idx.is_none() {
+            self.root_index()
+        } else {
+            NodeIndex::from(node_idx.unwrap())
+        };
 
         let tree_size = self.tree_size();
         let current_size = self.current_index().min(tree_size);
@@ -78,7 +82,7 @@ impl Tree {
 
     fn print_branch<const FLIP_SCORE: bool>(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         parent_edge: Option<&Edge>,
         depth: u8,
         max_depth: u8,
@@ -112,7 +116,7 @@ impl Tree {
             return;
         }
 
-        if node_idx == usize::MAX {
+        if node_idx.is_null() {
             return;
         }
 
@@ -123,7 +127,7 @@ impl Tree {
 
         let mut children = Vec::new();
 
-        for child_idx in 0..self.nodes[node_idx].children().len() {
+        for child_idx in 0..self.content[node_idx].children().len() {
             let edge = self.get_child_clone(node_idx, child_idx);
         
             if edge.visits() == 0 {
@@ -164,7 +168,7 @@ impl Tree {
 
     fn print_node(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         edge: Option<&Edge>,
         prefix: &String,
         is_root: bool,
@@ -203,10 +207,10 @@ impl Tree {
 
         let edge = edge.unwrap();
 
-        let node_index = if node_idx == usize::MAX {
+        let node_index = if node_idx.is_null() {
             "NULL".to_string()
         } else {
-            format!("{:#018x}", node_idx)
+            format!("{}", node_idx)
         }.align_to_right(18).primary(color_gradient);
 
         let prefix = format!(
@@ -232,7 +236,7 @@ impl Tree {
 
         let policy = heat_color(&format!("{:.2}%", edge.policy() * 100.0).align_to_right(6), edge.policy() as f32, min_policy, max_policy);
 
-        let state = if node_idx == usize::MAX {
+        let state = if node_idx.is_null() {
             String::new()
         } else {
             match self.get_node(node_idx).state() {

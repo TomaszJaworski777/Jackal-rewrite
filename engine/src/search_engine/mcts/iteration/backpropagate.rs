@@ -1,13 +1,13 @@
-use crate::{search_engine::tree::Tree, GameState, SearchEngine, WDLScore};
+use crate::{search_engine::tree::Tree, GameState, NodeIndex, SearchEngine, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn backpropagate(&self, node_idx: usize, child_idx: usize, score: WDLScore) {
+    pub(super) fn backpropagate(&self, node_idx: NodeIndex, child_idx: usize, score: WDLScore) {
         self.tree().add_visit(node_idx, child_idx, score);
         backprop_state(self.tree(), node_idx, child_idx);
     }
 }
 
-fn backprop_state(tree: &Tree, node_idx: usize, child_idx: usize) {
+fn backprop_state(tree: &Tree, node_idx: NodeIndex, child_idx: usize) {
     let edge = &tree.get_child_clone(node_idx, child_idx);
 
     match tree.get_node(edge.node_index()).state() {
@@ -18,7 +18,7 @@ fn backprop_state(tree: &Tree, node_idx: usize, child_idx: usize) {
 
             for child in tree.get_node(node_idx).children().iter() {
                 let node_index = child.node_index();
-                if node_index == usize::MAX {
+                if node_index.is_null() {
                     proven_loss = false;
                     break;
                 } else if let GameState::Win(len) = tree.get_node(node_index).state() {

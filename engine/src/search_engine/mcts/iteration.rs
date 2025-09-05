@@ -1,6 +1,6 @@
 use chess::ChessPosition;
 
-use crate::{search_engine::Edge, SearchEngine, WDLScore};
+use crate::{search_engine::Edge, NodeIndex, SearchEngine, WDLScore};
 
 mod select;
 mod simulate;
@@ -9,7 +9,7 @@ mod backpropagate;
 impl SearchEngine {
     pub(super) fn perform_iteration<const ROOT: bool>(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         parent_edge: &Edge,
         position: &mut ChessPosition,
         depth: &mut f64,
@@ -59,8 +59,8 @@ impl SearchEngine {
         Some(score.reversed())
     }
 
-    fn get_node_index(&self, node_idx: usize, child_idx: usize, new_idx: usize, position: &ChessPosition) -> Option<usize> {
-        if new_idx == usize::MAX {
+    fn get_node_index(&self, node_idx: NodeIndex, child_idx: usize, new_idx: NodeIndex, position: &ChessPosition) -> Option<NodeIndex> {
+        if new_idx.is_null() {
             let state = self.get_game_state(position);
             self.tree().create_node(node_idx, child_idx, state)
         } else {

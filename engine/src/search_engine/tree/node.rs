@@ -5,11 +5,13 @@ use crate::search_engine::tree::node::game_state::AtomicGameState;
 mod game_state;
 mod wdl_score;
 mod edge;
+mod node_index;
 
 pub use game_state::GameState;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 pub use wdl_score::{WDLScore, AtomicWDLScore};
 pub use edge::Edge;
+pub use node_index::NodeIndex;
 
 #[derive(Debug)]
 pub struct Node {
