@@ -1,6 +1,6 @@
 use chess::ChessPosition;
 
-use crate::{SearchEngine, WDLScore};
+use crate::{search_engine::tree::NodeIndex, SearchEngine, WDLScore};
 
 mod select;
 mod simulate;
@@ -9,7 +9,7 @@ mod backpropagate;
 impl SearchEngine {
     pub(super) fn perform_iteration<const ROOT: bool>(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         position: &mut ChessPosition,
         depth: &mut f64,
         castle_mask: &[u8; 64],

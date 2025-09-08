@@ -27,7 +27,7 @@ impl SearchReport for PrettySearchReport {
 
         let best_node = search_engine
                 .tree()
-                .select_child_by_key(0, |node| node.score().single(0.5) as f64);
+                .select_child_by_key(search_engine.tree().root_index(), |node| node.score().single(0.5) as f64);
 
         if let Some((x,y)) = term_cursor::get_pos().ok() {
             let _ = term_cursor::set_pos(x, y - 2);
@@ -79,11 +79,11 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
     }
 
     if t_height >= 25 {
-        let tree_size_nodes = search_engine.tree().tree_size();
+        let tree_size_nodes = search_engine.tree().max_size();
         let tree_bytes = bytes_to_string((tree_size_nodes * std::mem::size_of::<Node>()) as u128);
         let tree_size = number_to_string(tree_size_nodes as u128);
 
-        let current_size = search_engine.tree().current_index().min(tree_size_nodes);
+        let current_size = search_engine.tree().current_index().idx().min(tree_size_nodes as u32);
         let usage = current_size as f32 / tree_size_nodes as f32;
 
         print!("{}\r", " ".repeat(t_width));

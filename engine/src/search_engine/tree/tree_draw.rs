@@ -1,21 +1,25 @@
 use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, Theme};
 
-use crate::search_engine::tree::{node::Node, GameState, Tree};
+use crate::search_engine::tree::{node::Node, GameState, NodeIndex, Tree};
 
 impl Tree {
     pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<usize>) {
         let depth = depth.unwrap_or(1);
-        let node_idx = node_idx.unwrap_or(self.root_index());
+        let node_idx = if let Some(idx) = node_idx {
+            NodeIndex::new(0, idx as u32)
+        } else {
+            self.root_index()
+        };
 
-        let tree_size = self.tree_size();
-        let current_size = self.current_index().min(tree_size);
+        let tree_size = self.max_size();
+        let current_size = self.current_index().idx().min(tree_size as u32);
 
         let current_size_nodes = number_to_string(current_size as u128).secondary(0.0);
         let tree_size_nodes = number_to_string(tree_size as u128).secondary(0.0);
 
         let current_size_mem = format!(
             "{}B",
-            bytes_to_string((current_size * std::mem::size_of::<Node>()) as u128)
+            bytes_to_string((current_size as usize * std::mem::size_of::<Node>()) as u128)
         )
         .secondary(3.0 / 29.0);
         let tree_size_mem = format!(
@@ -79,7 +83,7 @@ impl Tree {
 
     fn print_branch<const FLIP_SCORE: bool>(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         depth: u8,
         max_depth: u8,
         mut prefix: String,
@@ -156,7 +160,7 @@ impl Tree {
 
     fn print_node(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         prefix: &String,
         is_root: bool,
         is_last: bool,
@@ -180,7 +184,7 @@ impl Tree {
         };
 
         let prefix = if is_root {
-            if node_idx == 0 {
+            if node_idx == self.root_index() {
                 String::from("root")
             } else {
                 node.mv().to_string(false).align_to_left(5)
@@ -189,7 +193,7 @@ impl Tree {
         } else {
             format!(
                 "{prefix}{arrow}{}{} {}",
-                format!("{:#018x}", node_idx)
+                format!("{}", node_idx)
                     .align_to_right(18)
                     .primary(color_gradient),
                 ">".secondary(color_gradient),

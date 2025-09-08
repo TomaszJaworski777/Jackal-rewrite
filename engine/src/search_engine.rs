@@ -14,7 +14,7 @@ mod hash_table;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
-pub use tree::{Node, GameState, AtomicWDLScore, WDLScore, PvLine};
+pub use tree::{Node, GameState, AtomicWDLScore, WDLScore, PvLine, NodeIndex};
 
 #[derive(Debug)]
 pub struct SearchEngine {

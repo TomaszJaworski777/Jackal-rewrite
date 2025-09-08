@@ -1,19 +1,17 @@
-use std::sync::atomic::Ordering;
-
 use chess::ChessBoard;
 
-use crate::{search_engine::{engine_options::EngineOptions, tree::{node::Node, pv_line::PvLine, Tree}}, PolicyNetwork};
+use crate::{search_engine::{engine_options::EngineOptions, tree::{node::Node, pv_line::PvLine, NodeIndex, Tree}}, PolicyNetwork};
 
 impl Tree {
-    pub fn expand_node(&self, node_idx: usize, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
+    pub fn expand_node(&self, node_idx: NodeIndex, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
         let _lock = self.write_lock(node_idx);
 
-        if self.nodes[node_idx].children_count() > 0 {
+        if self[node_idx].children_count() > 0 {
             return true;
         }
 
         assert_eq!(
-            self.nodes[node_idx].children_count(),
+            self[node_idx].children_count(),
             0,
             "Node {node_idx} already have children."
         );
@@ -35,9 +33,9 @@ impl Tree {
             max = max.max(p);
         });
 
-        let start_index = self.reserve_nodes(moves.len());
+        let start_index = self.reserve_nodes(moves.len() as u32);
 
-        if start_index + moves.len() >= self.nodes.len() {
+        if (start_index + moves.len() as u8).idx() as usize >= self.nodes.len() {
             return false;
         }
 
@@ -46,7 +44,7 @@ impl Tree {
             total += *p;
         }
 
-        self.nodes[node_idx].add_children(start_index, moves.len());
+        self[node_idx].add_children(start_index, moves.len() as u8);
 
         for (idx, mv) in moves.into_iter().enumerate() {
             let p = if policy.len() == 1 {
@@ -55,29 +53,29 @@ impl Tree {
                 policy[idx] / total
             };
 
-            self.nodes[start_index + idx].clear(mv);
-            self.nodes[start_index + idx].set_policy(p as f64);
+            self[start_index + (idx as u8)].clear(mv);
+            self[start_index + (idx as u8)].set_policy(p as f64);
         }
 
         true
     }
 
     #[inline]
-    fn reserve_nodes(&self, count: usize) -> usize {
-        self.idx.fetch_add(count, Ordering::Relaxed)
+    fn reserve_nodes(&self, count: u32) -> NodeIndex {
+        NodeIndex::new(0, self.idx.add(count))
     }
 
     pub fn select_child_by_key<F: FnMut(&Node) -> f64>(
         &self,
-        parent_idx: usize,
+        parent_idx: NodeIndex,
         mut key: F,
-    ) -> Option<usize> {
+    ) -> Option<NodeIndex> {
         let mut best_idx = None;
         let mut best_score = f64::NEG_INFINITY;
 
         let _lock = self.read_lock(parent_idx);
 
-        self.nodes[parent_idx].map_children(|child_idx| {
+        self[parent_idx].map_children(|child_idx| {
             let node = self.get_node(child_idx);
             let new_score = key(&node);
             if new_score > best_score {
@@ -89,11 +87,11 @@ impl Tree {
         best_idx
     }
 
-    pub fn select_best_child(&self, parent_idx: usize) -> Option<usize> {
+    pub fn select_best_child(&self, parent_idx: NodeIndex) -> Option<NodeIndex> {
         self.select_child_by_key(parent_idx, |node| node.score().single(0.5) as f64)
     }
 
-    pub fn get_pv(&self, node_idx: usize) -> PvLine {
+    pub fn get_pv(&self, node_idx: NodeIndex) -> PvLine {
         let node = self.get_node(node_idx);
 
         if node.children_count() == 0 {
@@ -142,7 +140,7 @@ impl Tree {
         self.get_pv(pv_node_idx)
     }
 
-    pub fn find_node_depth(&self, start_node_idx: usize, target_node_idx: usize) -> Option<u64> {
+    pub fn find_node_depth(&self, start_node_idx: NodeIndex, target_node_idx: NodeIndex) -> Option<u64> {
 
         if start_node_idx == target_node_idx {
             return Some(0);

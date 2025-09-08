@@ -41,7 +41,7 @@ impl SearchReport for UciSearchReport {
 
             let nps = (nodes as u128 * 1000) / time.max(1);
 
-            let hashfull = search_engine.tree().current_index() * 1000 / search_engine.tree().tree_size();
+            let hashfull = search_engine.tree().current_index().idx() as usize * 1000 / search_engine.tree().max_size();
 
             let pv = pv.to_string(search_engine.options().chess960());
 

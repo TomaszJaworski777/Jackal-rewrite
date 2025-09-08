@@ -1,4 +1,4 @@
-use engine::{GameState, Node};
+use engine::{GameState, Node, NodeIndex};
 
 #[test]
 fn terminal_state() {  
@@ -10,7 +10,7 @@ fn terminal_state() {
 
     assert!(node.is_terminal());
 
-    node.add_children(1, 12);
+    node.add_children(NodeIndex::new(0, 1), 12);
 
     assert!(node.is_terminal());
 }
@@ -19,13 +19,13 @@ fn terminal_state() {
 fn map_children() {  
     let node = Node::new();
 
-    node.add_children(1, 12);
+    node.add_children(NodeIndex::new(0, 1), 12);
 
     assert!(!node.is_terminal());
 
     assert_eq!(node.children_count(), 12);
 
     node.map_children(|child_idx| {
-        assert!(child_idx >= 1 && child_idx <= 12)
+        assert!(child_idx.idx() >= 1 && child_idx.idx() <= 12)
     });
 }

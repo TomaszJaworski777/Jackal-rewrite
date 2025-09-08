@@ -6,9 +6,11 @@ use crate::search_engine::tree::node::{game_state::AtomicGameState, wdl_score::S
 
 mod game_state;
 mod wdl_score;
+mod node_index;
 
 pub use game_state::GameState;
 pub use wdl_score::{WDLScore, AtomicWDLScore};
+pub use node_index::{NodeIndex, AtomicNodeIndex};
 
 #[derive(Debug)]
 pub struct Node {
@@ -16,10 +18,10 @@ pub struct Node {
     visit_count: AtomicU32,
     cumulative_score: AtomicWDLScore,
     squared_score: AtomicU64,
-    children_start_index: AtomicU32,
+    children_start_index: AtomicNodeIndex,
     children_count: AtomicU8,
-    state: AtomicGameState,
     policy: AtomicU16,
+    state: AtomicGameState,
     threads: AtomicU8,
     lock: RwLock<bool>
 }
@@ -31,7 +33,7 @@ impl Clone for Node {
             visit_count: AtomicU32::new(self.visit_count.load(Ordering::Relaxed)),
             cumulative_score: self.cumulative_score.clone(),
             squared_score: AtomicU64::new(self.squared_score.load(Ordering::Relaxed)),
-            children_start_index: AtomicU32::new(self.children_start_index.load(Ordering::Relaxed)),
+            children_start_index: self.children_start_index.clone(),
             children_count: AtomicU8::new(self.children_count.load(Ordering::Relaxed)),
             state: self.state.clone(),
             policy: AtomicU16::new(self.policy.load(Ordering::Relaxed)),
@@ -48,7 +50,7 @@ impl Node {
             visit_count: AtomicU32::new(0),
             cumulative_score: AtomicWDLScore::default(),
             squared_score: AtomicU64::new(0),
-            children_start_index: AtomicU32::new(0),
+            children_start_index: AtomicNodeIndex::new(NodeIndex::NULL),
             children_count: AtomicU8::new(0),
             state: AtomicGameState::new(GameState::Ongoing),
             policy: AtomicU16::new(0),
@@ -63,7 +65,7 @@ impl Node {
         self.visit_count.store(0, Ordering::Relaxed);
         self.cumulative_score.clear();
         self.squared_score.store(0, Ordering::Relaxed);
-        self.children_start_index.store(0, Ordering::Relaxed);
+        self.children_start_index.store(NodeIndex::NULL);
         self.children_count.store(0, Ordering::Relaxed);
         self.state.set(GameState::Ongoing);
         self.policy.store(0, Ordering::Relaxed);
@@ -155,16 +157,15 @@ impl Node {
     }
 
     #[inline]
-    pub fn add_children(&self, start_index: usize, chilren_count: usize) {
-        self.children_start_index
-            .store(start_index as u32, Ordering::Relaxed);
+    pub fn add_children(&self, start_index: NodeIndex, chilren_count: u8) {
+        self.children_start_index.store(start_index);
         self.children_count
             .store(chilren_count as u8, Ordering::Relaxed);
     }
 
-    pub fn map_children<F: FnMut(usize)>(&self, mut func: F) {
+    pub fn map_children<F: FnMut(NodeIndex)>(&self, mut func: F) {
         for child_idx in 0..self.children_count() {
-            func(self.children_start_index.load(Ordering::Relaxed) as usize + child_idx as usize)
+            func(self.children_start_index.load() + child_idx)
         }
     }
 }

@@ -10,6 +10,7 @@ pub use search_engine::GameState;
 pub use search_engine::AtomicWDLScore;
 pub use search_engine::WDLScore;
 pub use search_engine::PvLine;
+pub use search_engine::NodeIndex;
 pub use search_report_trait::SearchReport;
 pub use search_report_trait::NoReport;
 pub use networks::ValueNetwork;
