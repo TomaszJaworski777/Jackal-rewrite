@@ -15,13 +15,13 @@ impl SearchEngine {
         castle_mask: &[u8; 64],
     ) -> Option<WDLScore> { 
         let hash = position.board().hash();
-        let node = self.tree()[node_idx].clone();
+        let node = &self.tree()[node_idx];
         let score = if !ROOT && (node.is_terminal() || node.visits() == 0) {
             self.simulate(node_idx, position)
         } else {
             *depth += 1.0;
 
-            if self.tree()[node_idx].children_count() == 0 {
+            if node.children_count() == 0 {
                 if !self.tree().expand_node(node_idx, *depth, position.board(), self.options()) {
                     return None;
                 }
@@ -33,7 +33,15 @@ impl SearchEngine {
 
             self.tree().inc_threads(new_idx, 1);
 
+            let lock = if self.tree()[new_idx].visits() == 0 {
+                Some(node.children_start_index_mut())
+            } else {
+                None
+            };
+
             let score = self.perform_iteration::<false>(new_idx, position, depth, castle_mask);
+
+            drop(lock);
 
             self.tree().dec_threads(new_idx, 1);
 

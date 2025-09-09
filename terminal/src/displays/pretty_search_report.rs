@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use engine::{Node, PvLine, SearchEngine, SearchLimits, SearchReport, SearchStats};
+use engine::{PvLine, SearchEngine, SearchLimits, SearchReport, SearchStats, Tree};
 use utils::{bytes_to_string, clear_terminal_screen, create_loading_bar, heat_color, number_to_string, time_to_string, AlignString, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 static mut SEARCH_HISTORY: Vec<(u128, PvLine)> = Vec::new();
@@ -79,7 +79,7 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
 
     if t_height >= 25 {
         let tree_size_nodes = search_engine.tree().max_size();
-        let tree_bytes = bytes_to_string((tree_size_nodes * std::mem::size_of::<Node>()) as u128);
+        let tree_bytes = bytes_to_string(Tree::size_to_bytes(tree_size_nodes) as u128);
         let tree_size = number_to_string(tree_size_nodes as u128);
 
         let current_size = search_engine.tree().current_index().idx().min(tree_size_nodes as u32);

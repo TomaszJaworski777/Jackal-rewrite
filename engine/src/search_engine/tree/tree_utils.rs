@@ -3,6 +3,14 @@ use chess::ChessBoard;
 use crate::{search_engine::{engine_options::EngineOptions, tree::{node::Node, pv_line::PvLine, NodeIndex, Tree}}, PolicyNetwork};
 
 impl Tree {
+    pub fn bytes_to_size(bytes: usize) -> usize {
+        bytes / std::mem::size_of::<Node>()
+    }
+
+    pub fn size_to_bytes(size: usize) -> usize {
+        size * std::mem::size_of::<Node>()
+    }
+
     pub fn expand_node(&self, node_idx: NodeIndex, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
         let mut children_start_index = self[node_idx].children_start_index_mut();
 

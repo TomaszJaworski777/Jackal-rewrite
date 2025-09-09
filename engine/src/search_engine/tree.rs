@@ -47,7 +47,7 @@ impl Tree {
     pub fn from_bytes(megabytes: usize, hash_percentage: f64) -> Self {
         let bytes = megabytes * 1024 * 1024;
         let hash_bytes = (bytes as f64 * hash_percentage) as usize;
-        let tree_size = (bytes - hash_bytes) / std::mem::size_of::<Node>();
+        let tree_size = Self::bytes_to_size(bytes - hash_bytes);
 
         Self {
             nodes: vec![Node::new(); tree_size],
