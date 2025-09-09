@@ -10,7 +10,8 @@ fn terminal_state() {
 
     assert!(node.is_terminal());
 
-    node.add_children(NodeIndex::new(0, 1), 12);
+    *node.children_start_index_mut() = NodeIndex::new(0, 1);
+    node.set_children_count(12);
 
     assert!(node.is_terminal());
 }
@@ -19,7 +20,8 @@ fn terminal_state() {
 fn map_children() {  
     let node = Node::new();
 
-    node.add_children(NodeIndex::new(0, 1), 12);
+    *node.children_start_index_mut() = NodeIndex::new(0, 1);
+    node.set_children_count(12);
 
     assert!(!node.is_terminal());
 

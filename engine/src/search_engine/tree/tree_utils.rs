@@ -4,7 +4,7 @@ use crate::{search_engine::{engine_options::EngineOptions, tree::{node::Node, pv
 
 impl Tree {
     pub fn expand_node(&self, node_idx: NodeIndex, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
-        let _lock = self.write_lock(node_idx);
+        let mut children_start_index = self[node_idx].children_start_index_mut();
 
         if self[node_idx].children_count() > 0 {
             return true;
@@ -19,7 +19,7 @@ impl Tree {
         let policy_inputs = PolicyNetwork.get_inputs(board);
         let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
 
-        let pst = calculate_pst(engine_options, self.get_node(node_idx).score().single(0.5), depth);
+        let pst = calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
 
         let mut moves = Vec::new();
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
@@ -44,7 +44,8 @@ impl Tree {
             total += *p;
         }
 
-        self[node_idx].add_children(start_index, moves.len() as u8);
+        *children_start_index = start_index;
+        self[node_idx].set_children_count(moves.len() as u8);
 
         for (idx, mv) in moves.into_iter().enumerate() {
             let p = if policy.len() == 1 {
@@ -73,11 +74,8 @@ impl Tree {
         let mut best_idx = None;
         let mut best_score = f64::NEG_INFINITY;
 
-        let _lock = self.read_lock(parent_idx);
-
         self[parent_idx].map_children(|child_idx| {
-            let node = self.get_node(child_idx);
-            let new_score = key(&node);
+            let new_score = key(&self[child_idx]);
             if new_score > best_score {
                 best_idx = Some(child_idx);
                 best_score = new_score;
@@ -92,22 +90,22 @@ impl Tree {
     }
 
     pub fn get_pv(&self, node_idx: NodeIndex) -> PvLine {
-        let node = self.get_node(node_idx);
+        let node = &self[node_idx];
 
         if node.children_count() == 0 {
-            return PvLine::new(&node);
+            return PvLine::new(node);
         }
 
         let best_child_idx = self.select_best_child(node_idx);
 
         if best_child_idx.is_none() {
-            return PvLine::new(&node);
+            return PvLine::new(node);
         }
 
         let best_child_idx = best_child_idx.unwrap();
 
         let mut result = self.get_pv(best_child_idx);
-        result.add_node(&node);
+        result.add_node(node);
 
         result
     }
@@ -116,12 +114,8 @@ impl Tree {
         let mut chilren_nodes = Vec::new();
         let node = self.get_root_node();
 
-        let _lock = self.read_lock(self.root_index());
-
         node.map_children(|child_idx| {
-            let _child_lock = self.read_lock(child_idx);
-
-            let node = self.get_node(child_idx);
+            let node = &self[child_idx];
 
             if node.visits() == 0 {
                 return;
@@ -146,7 +140,7 @@ impl Tree {
             return Some(0);
         }
 
-        let node = self.get_node(start_node_idx);
+        let node = &self[start_node_idx];
 
         let mut chilren_nodes = Vec::new();
         let mut found_node = false;
@@ -156,7 +150,7 @@ impl Tree {
                 found_node = true
             }
 
-            if self.get_node(child_idx).children_count() == 0 {
+            if self[child_idx].children_count() == 0 {
                 return;
             }
 

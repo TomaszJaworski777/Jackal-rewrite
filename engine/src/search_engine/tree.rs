@@ -1,4 +1,4 @@
-use std::{ops::{Index, IndexMut}, sync::{LockResult, RwLockReadGuard, RwLockWriteGuard}};
+use std::ops::{Index, IndexMut};
 
 use chess::Move;
 
@@ -83,15 +83,10 @@ impl Tree {
     pub fn root_index(&self) -> NodeIndex {
         NodeIndex::new(0, 0)
     }
-
+    
     #[inline]
-    pub fn get_node(&self, node_idx: NodeIndex) -> Node {
-        self[node_idx].clone()
-    }
-
-    #[inline]
-    pub fn get_root_node(&self) -> Node {
-        self[self.root_index()].clone()
+    pub fn get_root_node(&self) -> &Node {
+        &self[self.root_index()]
     }
 
     #[inline]
@@ -112,15 +107,5 @@ impl Tree {
     #[inline]
     pub fn dec_threads(&self, node_idx: NodeIndex, value: u8) -> u8 {
         self[node_idx].dec_threads(value)
-    }
-
-    #[inline]
-    pub fn read_lock(&self, node_idx: NodeIndex) -> LockResult<RwLockReadGuard<'_, bool>> {
-        self[node_idx].read_lock()
-    }
-
-    #[inline]
-    pub fn write_lock(&self, node_idx: NodeIndex) -> LockResult<RwLockWriteGuard<'_, bool>> {
-        self[node_idx].write_lock()
     }
 }

@@ -36,8 +36,7 @@ impl SearchReport for PrettySearchReport {
         print!("{}\r", " ".repeat(50));
         println!( "\n{}",
             format!(" Best Move: {}", search_engine
-                .tree()
-                .get_node(best_node.unwrap())
+                .tree()[best_node.unwrap()]
                 .mv()
                 .to_string(search_engine.options().chess960()).secondary(1.0)).primary(1.0)
         );

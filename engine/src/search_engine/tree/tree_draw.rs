@@ -64,7 +64,7 @@ impl Tree {
             return;
         }
 
-        let policy = self.get_node(node_idx).policy() as f32;
+        let policy = self[node_idx].policy() as f32;
 
         self.print_branch::<FLIP_SCORE>(
             node_idx,
@@ -122,21 +122,21 @@ impl Tree {
 
         let mut children = Vec::new();
 
-        self.get_node(node_idx).map_children(|child_idx| {
-            if self.get_node(child_idx).visits() == 0 {
+        self[node_idx].map_children(|child_idx| {
+            if self[child_idx].visits() == 0 {
                 return;
             }
 
             children.push(child_idx);
         });
 
-        children.sort_by(|&a, &b| self.get_node(b).visits().cmp(&self.get_node(a).visits()));
+        children.sort_by(|&a, &b| self[b].visits().cmp(&self[a].visits()));
 
         min_policy = f32::INFINITY;
         max_policy = f32::NEG_INFINITY;
 
         for &child_idx in &children {
-            let policy = self.get_node(child_idx).policy() as f32;
+            let policy = self[child_idx].policy() as f32;
             min_policy = min_policy.min(policy);
             max_policy = max_policy.max(policy);
         }
@@ -170,7 +170,7 @@ impl Tree {
         min_policy: f32,
         max_policy: f32
     ) {
-        let node = self.get_node(node_idx);
+        let node = &self[node_idx];
         let color_gradient = (iter_idx + 5) as f32 / (iter_size + 10) as f32;
 
         let arrow = if is_root {

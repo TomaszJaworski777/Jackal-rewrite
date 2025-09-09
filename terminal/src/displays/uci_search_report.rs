@@ -59,8 +59,7 @@ impl SearchReport for UciSearchReport {
         println!(
             "bestmove {}",
             search_engine
-                .tree()
-                .get_node(best_node_idx.unwrap())
+                .tree()[best_node_idx.unwrap()]
                 .mv()
                 .to_string(search_engine.options().chess960())
         );
