@@ -67,14 +67,14 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
     let _ = term_cursor::set_pos(0, 0);
 
     if t_height >= 36 {
-        for _ in 0..11  {
+        for _ in 0..12  {
             println!("{}", " ".repeat(t_width));
         }
 
         let _ = term_cursor::set_pos(0, 0);
 
         search_engine.current_position().board().draw_board();
-        height_used += 11;
+        height_used += 12;
     }
 
     if t_height >= 25 {

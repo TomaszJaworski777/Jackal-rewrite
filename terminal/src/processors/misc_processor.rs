@@ -203,7 +203,7 @@ fn eval(search_engine: &SearchEngine) {
             format!("{:.2}%", wdl_score.draw_chance() * 100.0).custom_color(DRAW_COLOR),
             format!("{:.2}%", wdl_score.lose_chance() * 100.0).custom_color(LOSE_COLOR),
             heat_color(if current_eval > 0 { "+" } else { "-" }, current_eval as f32 / 100.0, -20.0, 20.0),
-            heat_color(format!("{:.2}", current_eval as f32 / 100.0).as_str(), current_eval as f32 / 100.0, -20.0, 20.0),
+            heat_color(format!("{:.2}", current_eval.abs() as f32 / 100.0).as_str(), current_eval as f32 / 100.0, -20.0, 20.0),
         ).secondary(1.0/32.0)
     ).primary(1.0/32.0);
 
@@ -319,7 +319,21 @@ fn draw_eval_board(board: &ChessBoard, info: &[String; 33], current_eval: i32, b
             let side = board.color_on_square(square);
 
             match row_idx {
-                0 => String::new().align_to_center(7),
+                0 => {
+                    let file_char = if rank == if board.side() == Side::WHITE { 0 } else { 7 } {
+                        (b'A' + square.get_file()) as char
+                    } else {
+                        ' '
+                    };
+
+                    let rank_str = if file == if board.side() == Side::WHITE { 0 } else { 7 } {
+                        (square.get_rank() + 1).to_string()
+                    } else {
+                        String::from(" ")
+                    };
+
+                    format!("{}{}{}", rank_str, " ".repeat(5), file_char).align_to_center(7).gray()
+                },
                 1 => {
                     if board.en_passant_square() == square {
                         return "x".align_to_center(7);
@@ -357,7 +371,7 @@ fn draw_eval_board(board: &ChessBoard, info: &[String; 33], current_eval: i32, b
         for row_idx in 0..3 {
             for temp_file in 0..8 {
                 let square_rank = if board.side() == Side::WHITE { 7 - rank } else { rank };
-                let square_file = if board.side() == Side::WHITE { temp_file} else { 7 - temp_file };
+                let square_file = if board.side() == Side::WHITE { temp_file } else { 7 - temp_file };
                 print!("{}{}", "|".primary((rank * 4 + row_idx + 1) as f32 / 32.0), square_data(row_idx, square_rank, square_file));
                 if temp_file == 7 {
                     println!("{}   {}", 
