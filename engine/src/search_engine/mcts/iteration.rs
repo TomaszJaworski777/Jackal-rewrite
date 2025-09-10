@@ -22,7 +22,7 @@ impl SearchEngine {
             *depth += 1.0;
 
             if node.children_count() == 0 {
-                if !self.tree().expand_node(node_idx, *depth, position.board(), self.options()) {
+                if self.tree().expand_node(node_idx, *depth, position.board(), self.options()).is_none() {
                     return None;
                 }
             }

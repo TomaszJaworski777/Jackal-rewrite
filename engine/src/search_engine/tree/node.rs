@@ -10,7 +10,7 @@ mod node_index;
 
 pub use game_state::GameState;
 pub use wdl_score::{WDLScore, AtomicWDLScore};
-pub use node_index::{NodeIndex, AtomicNodeIndex};
+pub use node_index::NodeIndex;
 
 #[derive(Debug)]
 pub struct Node {
@@ -57,16 +57,31 @@ impl Node {
     }
 
     #[inline]
+    pub fn set_to(&self, node: &Node) {
+        self.mv.store(u16::from(node.mv()), Ordering::Relaxed);
+        self.visit_count.store(node.visits(), Ordering::Relaxed);
+        self.cumulative_score.store(node.cumulative_score.get_score());
+        self.squared_score.store(node.squared_score.load(Ordering::Relaxed), Ordering::Relaxed);
+        self.state.set(node.state());
+        self.policy.store(node.policy.load(Ordering::Relaxed), Ordering::Relaxed);
+        self.threads.store(node.threads(), Ordering::Relaxed);
+    }
+
+    #[inline]
     pub fn clear(&self, mv: Move) {
         self.mv.store(u16::from(mv), Ordering::Relaxed);
         self.visit_count.store(0, Ordering::Relaxed);
         self.cumulative_score.clear();
         self.squared_score.store(0, Ordering::Relaxed);
-        *self.children_start_index_mut() = NodeIndex::NULL;
-        self.children_count.store(0, Ordering::Relaxed);
         self.state.set(GameState::Ongoing);
         self.policy.store(0, Ordering::Relaxed);
         self.threads.store(0, Ordering::Relaxed);
+        self.clear_children();
+    }
+
+    pub fn clear_children(&self) { 
+        *self.children_start_index_mut() = NodeIndex::NULL;
+        self.children_count.store(0, Ordering::Relaxed);
     }
 
     #[inline]

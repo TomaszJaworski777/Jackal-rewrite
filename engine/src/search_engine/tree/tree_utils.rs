@@ -11,11 +11,11 @@ impl Tree {
         size * std::mem::size_of::<Node>()
     }
 
-    pub fn expand_node(&self, node_idx: NodeIndex, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
+    pub fn expand_node(&self, node_idx: NodeIndex, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> Option<()> {
         let mut children_start_index = self[node_idx].children_start_index_mut();
 
         if self[node_idx].children_count() > 0 {
-            return true;
+            return Some(());
         }
 
         assert_eq!(
@@ -41,11 +41,7 @@ impl Tree {
             max = max.max(p);
         });
 
-        let start_index = self.reserve_nodes(moves.len() as u32);
-
-        if (start_index + moves.len() as u8).idx() as usize >= self.nodes.len() {
-            return false;
-        }
+        let start_index = self.reserve_nodes(moves.len())?;
 
         for p in policy.iter_mut() {
             *p = ((*p - max)/pst).exp();
@@ -66,12 +62,7 @@ impl Tree {
             self[start_index + (idx as u8)].set_policy(p as f64);
         }
 
-        true
-    }
-
-    #[inline]
-    fn reserve_nodes(&self, count: u32) -> NodeIndex {
-        NodeIndex::new(0, self.idx.add(count))
+        Some(())
     }
 
     pub fn select_child_by_key<F: FnMut(&Node) -> f64>(

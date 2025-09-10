@@ -12,7 +12,7 @@ impl Tree {
         };
 
         let tree_size = self.max_size();
-        let current_size = self.current_index().idx().min(tree_size as u32);
+        let current_size = self.current_size().min(tree_size);
 
         let current_size_nodes = number_to_string(current_size as u128).secondary(0.0);
         let tree_size_nodes = number_to_string(tree_size as u128).secondary(0.0);

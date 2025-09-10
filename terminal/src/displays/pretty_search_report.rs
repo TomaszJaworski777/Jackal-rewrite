@@ -82,7 +82,7 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
         let tree_bytes = bytes_to_string(Tree::size_to_bytes(tree_size_nodes) as u128);
         let tree_size = number_to_string(tree_size_nodes as u128);
 
-        let current_size = search_engine.tree().current_index().idx().min(tree_size_nodes as u32);
+        let current_size = search_engine.tree().current_size().min(tree_size_nodes);
         let usage = current_size as f32 / tree_size_nodes as f32;
 
         print!("{}\r", " ".repeat(t_width));
