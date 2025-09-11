@@ -85,7 +85,7 @@ impl TreeHalf {
     #[inline]
     pub fn clear_references(&self) {
         for node in &self.nodes {
-            if node.children_start_index().half() == self.half_index {
+            if node.children_index().half() == self.half_index {
                 continue;
             }
 

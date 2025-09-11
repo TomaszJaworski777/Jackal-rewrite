@@ -68,6 +68,8 @@ impl Tree {
         self.halves[1].clear();
         self.hash_table.clear();
 
+        self.current_half.store(0, Ordering::Relaxed);
+
         self.halves[0].reserve_nodes(1);
         self[self.root_index()].clear(Move::NULL);
     }
@@ -125,10 +127,5 @@ impl Tree {
     #[inline]
     pub fn dec_threads(&self, node_idx: NodeIndex, value: u8) -> u8 {
         self[node_idx].dec_threads(value)
-    }
-
-    #[inline]
-    fn reserve_nodes(&self, count: usize) -> Option<NodeIndex> {
-        self.current_half().reserve_nodes(count)
     }
 }

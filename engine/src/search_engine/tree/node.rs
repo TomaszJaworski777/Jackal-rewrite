@@ -32,7 +32,7 @@ impl Clone for Node {
             visit_count: AtomicU32::new(self.visit_count.load(Ordering::Relaxed)),
             cumulative_score: self.cumulative_score.clone(),
             squared_score: AtomicU64::new(self.squared_score.load(Ordering::Relaxed)),
-            children_start_index: RwLock::new(*self.children_start_index()),
+            children_start_index: RwLock::new(*self.children_index()),
             children_count: AtomicU8::new(self.children_count.load(Ordering::Relaxed)),
             state: self.state.clone(),
             policy: AtomicU16::new(self.policy.load(Ordering::Relaxed)),
@@ -80,7 +80,7 @@ impl Node {
     }
 
     pub fn clear_children(&self) { 
-        *self.children_start_index_mut() = NodeIndex::NULL;
+        *self.children_index_mut() = NodeIndex::NULL;
         self.children_count.store(0, Ordering::Relaxed);
     }
 
@@ -105,12 +105,12 @@ impl Node {
     }
 
     #[inline]
-    pub fn children_start_index(&self) -> RwLockReadGuard<NodeIndex> {
+    pub fn children_index(&self) -> RwLockReadGuard<NodeIndex> {
         self.children_start_index.read().unwrap()
     }
 
     #[inline]
-    pub fn children_start_index_mut(&self) -> RwLockWriteGuard<NodeIndex> {
+    pub fn children_index_mut(&self) -> RwLockWriteGuard<NodeIndex> {
         self.children_start_index.write().unwrap()
     }
 
@@ -174,10 +174,10 @@ impl Node {
     }
 
     pub fn map_children<F: FnMut(NodeIndex)>(&self, mut func: F) {
-        let start_idx = self.children_start_index();
+        let children_idx = self.children_index();
 
         for child_idx in 0..self.children_count() {
-            func(*start_idx + child_idx)
+            func(*children_idx + child_idx)
         }
     }
 }

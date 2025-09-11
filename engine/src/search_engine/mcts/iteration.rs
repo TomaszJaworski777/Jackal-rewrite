@@ -22,10 +22,10 @@ impl SearchEngine {
             *depth += 1.0;
 
             if node.children_count() == 0 {
-                if self.tree().expand_node(node_idx, *depth, position.board(), self.options()).is_none() {
-                    return None;
-                }
+                self.tree().expand_node(node_idx, *depth, position.board(), self.options())?
             }
+
+            self.tree().update_node(node_idx)?;
 
             let new_idx = self.select(node_idx, *depth);
 
@@ -34,7 +34,7 @@ impl SearchEngine {
             self.tree().inc_threads(new_idx, 1);
 
             let lock = if self.tree()[new_idx].visits() == 0 {
-                Some(node.children_start_index_mut())
+                Some(node.children_index_mut())
             } else {
                 None
             };
