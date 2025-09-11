@@ -34,21 +34,23 @@ impl SearchLimits {
         time_remaining: Option<u128>,
         increment: Option<u128>,
         moves_to_go: Option<u128>,
-        move_overhead: u128
+        move_overhead: u128,
+        threads: i64
     ) {
-        if time_remaining.is_none() {
+        let time_remaining = if let Some(time_remaining) = time_remaining {
+            time_remaining.saturating_sub(threads as u128 * 10)
+        } else {
             return;
-        }
-
-        let time_remaining = time_remaining.unwrap_or(0) - move_overhead;
+        };
 
         if let Some(moves_to_go) = moves_to_go {
             self.time = Some(time_remaining / moves_to_go);
             return;
         }
 
+        let max_time = (time_remaining * 3 / 5).saturating_sub(move_overhead).max(1);
         let time = time_remaining / 40 + increment.unwrap_or(0) / 2;
-        self.time = Some(time)
+        self.time = Some(time.min(max_time))
     }
 
     pub fn is_limit_reached(&self, search_stats: &SearchStats) -> bool {
