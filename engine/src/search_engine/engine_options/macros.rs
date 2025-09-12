@@ -47,58 +47,53 @@ macro_rules! create_options {
             )+
 
             pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
-                match name {
-                    $(
-                    $option_key => {
-                        match value.parse::<$option_ty>() {
-                            Ok(new_value) => {
-                                $(
-                                if new_value < $option_min || new_value > $option_max {
-                                    return Err(format!("Value out of range for {}", name));
-                                }
-                                )?
-
-                                if self.$option == new_value {
-                                    return Err(format!("Value of {} is already {}", name, new_value));
-                                }
-
-                                self.$option = new_value;
-                                Ok(())
+                $(
+                if name.eq_ignore_ascii_case($option_key) {
+                    match value.parse::<$option_ty>() {
+                        Ok(new_value) => {
+                            $(
+                            if new_value < $option_min || new_value > $option_max {
+                                return Err(format!("Value out of range for {}", name));
                             }
-                            Err(_) => {
-                                return Err(format!("Incorrect param type for {}", name));
+                            )?
+
+                            if self.$option == new_value {
+                                return Err(format!("Value of {} is already {}", name, new_value));
                             }
+
+                            self.$option = new_value;
+                            return Ok(());
                         }
+                        Err(_) => return Err(format!("Incorrect param type for {}", name)),
                     }
-                    )+
+                } else
+                )+
 
-                    $(
-                    stringify!($tunable) => {
-                        match value.parse::<$tunable_ty>() {
-                            Ok(new_value) => {
-                                if new_value < $tunable_min || new_value > $tunable_max {
-                                    return Err(format!("Value out of range for {}", name));
-                                }
-
-                                if self.$tunable == new_value {
-                                    return Err(format!("Value of {} is already {}", name, new_value));
-                                }
-
-                                self.$tunable = new_value;
-                                Ok(())
+                $(
+                if name.eq_ignore_ascii_case(stringify!($tunable)) {
+                    match value.parse::<$tunable_ty>() {
+                        Ok(new_value) => {
+                            if new_value < $tunable_min || new_value > $tunable_max {
+                                return Err(format!("Value out of range for {}", name));
                             }
-                            Err(_) => {
-                                return Err(format!("Incorrect param type for {}", name));
+
+                            if self.$tunable == new_value {
+                                return Err(format!("Value of {} is already {}", name, new_value));
                             }
+
+                            self.$tunable = new_value;
+                            return Ok(());
                         }
+                        Err(_) => return Err(format!("Incorrect param type for {}", name)),
                     }
-                    )+
+                } else
+                )+
 
-                    _ => {
-                        return Err(format!("Unknown option '{}'", name));
-                    }
+                {
+                    Err(format!("Unknown option '{}'", name))
                 }
             }
+
 
             pub fn print_options(&self) {
                 $(

@@ -109,7 +109,7 @@ impl UciProcessor {
         let mut chess_position = ChessPosition::from(ChessBoard::from(&FEN::from(fen)));
         for mv in moves {
             chess_position.board().clone().map_legal_moves(|legal_mv| {
-                if *mv == legal_mv.to_string(false) {
+                if *mv == legal_mv.to_string(search_engine.options().chess960()) {
                     chess_position.make_move_no_mask(legal_mv);
                 }
             });

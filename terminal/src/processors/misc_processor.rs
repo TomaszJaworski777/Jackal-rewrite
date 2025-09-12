@@ -35,7 +35,7 @@ impl MiscProcessor {
                     None
                 };
                 
-                search_engine.tree().draw_tree::<true>(depth, node_idx);
+                search_engine.tree().draw_tree::<true>(depth, node_idx, search_engine.options().chess960());
             },
             "rawtree" => {
                 let depth = if args.len() >= 1 {
@@ -56,7 +56,7 @@ impl MiscProcessor {
                     None
                 };
 
-                search_engine.tree().draw_tree::<false>(depth, node_idx);
+                search_engine.tree().draw_tree::<false>(depth, node_idx, search_engine.options().chess960());
             },
             "perft" => {
                 let depth = if args.len() >= 1 {
@@ -191,7 +191,7 @@ fn draw_policy(search_engine: &SearchEngine) {
 
     for (idx, &(mv, p)) in moves.iter().enumerate() {
         println!(" {} {}", 
-            format!("{}:", mv.to_string(false)).align_to_left(6).primary((idx as f32 + 10.0)/(moves.len() as f32 + 18.0)), 
+            format!("{}:", mv.to_string(search_engine.options().chess960())).align_to_left(6).primary((idx as f32 + 10.0)/(moves.len() as f32 + 18.0)), 
             heat_color(&format!("{:.2}%", p * 100.0), p, min_policy, max_policy)
         )
     }

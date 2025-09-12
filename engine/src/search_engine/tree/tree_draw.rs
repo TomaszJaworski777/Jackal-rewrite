@@ -3,7 +3,7 @@ use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, 
 use crate::search_engine::tree::{node::Node, GameState, NodeIndex, Tree};
 
 impl Tree {
-    pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<NodeIndex>) {
+    pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<NodeIndex>, chess_960: bool) {
         let depth = depth.unwrap_or(1);
         let node_idx = node_idx.unwrap_or(self.root_index());
 
@@ -73,7 +73,8 @@ impl Tree {
             0,
             20,
             policy,
-            policy
+            policy,
+            chess_960
         );
     }
 
@@ -89,7 +90,8 @@ impl Tree {
         iter_idx: usize,
         iter_size: usize,
         mut min_policy: f32,
-        mut max_policy: f32
+        mut max_policy: f32,
+        chess_960: bool,
     ) {
         self.print_node(
             node_idx,
@@ -100,7 +102,8 @@ impl Tree {
             iter_idx,
             iter_size,
             min_policy,
-            max_policy
+            max_policy,
+            chess_960
         );
 
         if FLIP_SCORE {
@@ -149,7 +152,8 @@ impl Tree {
                 idx,
                 children.len(),
                 min_policy,
-                max_policy
+                max_policy,
+                chess_960
             );
         }
     }
@@ -164,7 +168,8 @@ impl Tree {
         iter_idx: usize,
         iter_size: usize,
         min_policy: f32,
-        max_policy: f32
+        max_policy: f32,
+        chess_960: bool
     ) {
         let node = &self[node_idx];
         let color_gradient = (iter_idx + 5) as f32 / (iter_size + 10) as f32;
@@ -183,7 +188,7 @@ impl Tree {
             if node_idx == self.root_index() {
                 String::from("root")
             } else {
-                node.mv().to_string(false).align_to_left(5)
+                node.mv().to_string(chess_960).align_to_left(5)
             }
             .primary(color_gradient)
         } else {
@@ -194,7 +199,7 @@ impl Tree {
                     .primary(color_gradient),
                 ">".secondary(color_gradient),
                 node.mv()
-                    .to_string(false)
+                    .to_string(chess_960)
                     .align_to_left(5)
                     .primary(color_gradient)
             )
