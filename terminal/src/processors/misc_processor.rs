@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use chess::{ChessBoard, ChessPosition, Piece, Side, Square, DEFAULT_PERFT_DEPTH, FEN};
-use engine::{NoReport, PolicyNetwork, SearchEngine, SearchLimits, ValueNetwork};
+use engine::{NoReport, NodeIndex, PolicyNetwork, SearchEngine, SearchLimits, ValueNetwork};
 use utils::{clear_terminal_screen, create_loading_bar, heat_color, time_to_string, number_to_string, AlignString, Colors, CustomColor, PieceColors, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 pub struct MiscProcessor;
@@ -22,16 +22,19 @@ impl MiscProcessor {
                 } else {
                     None
                 };
-                let node_idx = if args.len() >= 2 {
-                    usize::from_str_radix(
-                        args[1].strip_prefix("0x").unwrap_or(args[1].as_str()),
-                        16,
-                    )
-                    .ok()
+                let node_idx = if args.len() >= 3 {
+                    let half = args[1].replace("(", "").replace(",", "").parse::<u32>().ok();
+                    let idx = args[2].replace(")", "").parse::<u32>().ok();
+
+                    if half.is_none() || idx.is_none() {
+                        None
+                    } else {
+                        Some(NodeIndex::new(half.unwrap(), idx.unwrap()))
+                    }
                 } else {
                     None
                 };
-
+                
                 search_engine.tree().draw_tree::<true>(depth, node_idx);
             },
             "rawtree" => {
@@ -40,15 +43,19 @@ impl MiscProcessor {
                 } else {
                     None
                 };
-                let node_idx = if args.len() >= 2 {
-                    usize::from_str_radix(
-                        args[1].strip_prefix("0x").unwrap_or(args[1].as_str()),
-                        16,
-                    )
-                    .ok()
+                let node_idx = if args.len() >= 3 {
+                    let half = args[1].replace("(", "").replace(",", "").parse::<u32>().ok();
+                    let idx = args[2].replace(")", "").parse::<u32>().ok();
+
+                    if half.is_none() || idx.is_none() {
+                        None
+                    } else {
+                        Some(NodeIndex::new(half.unwrap(), idx.unwrap()))
+                    }
                 } else {
                     None
                 };
+
                 search_engine.tree().draw_tree::<false>(depth, node_idx);
             },
             "perft" => {

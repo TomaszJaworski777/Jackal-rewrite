@@ -1,31 +1,4 @@
-use std::{fmt::Display, ops::Add, sync::atomic::{AtomicU32, Ordering}};
-
-#[derive(Debug)]
-pub struct AtomicNodeIndex(AtomicU32);
-
-impl Clone for AtomicNodeIndex {
-    fn clone(&self) -> Self {
-        Self(AtomicU32::new(self.0.load(Ordering::Relaxed)))
-    }
-}
-
-impl AtomicNodeIndex {
-    pub fn new(value: NodeIndex) -> Self {
-        Self(AtomicU32::new(u32::from(value)))
-    }
-
-    pub fn load(&self) -> NodeIndex {
-        NodeIndex::from(self.0.load(Ordering::Relaxed))
-    }
-
-    pub fn store(&self, value: NodeIndex) {
-        self.0.store(u32::from(value), Ordering::Relaxed);
-    }
-
-    pub fn add(&self, value: u32) -> u32 {
-        self.0.fetch_add(value, Ordering::Relaxed) as u32
-    }
-}
+use std::{fmt::Display, ops::Add};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NodeIndex(u32);

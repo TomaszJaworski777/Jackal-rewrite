@@ -3,13 +3,9 @@ use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, 
 use crate::search_engine::tree::{node::Node, GameState, NodeIndex, Tree};
 
 impl Tree {
-    pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<usize>) {
+    pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<NodeIndex>) {
         let depth = depth.unwrap_or(1);
-        let node_idx = if let Some(idx) = node_idx {
-            NodeIndex::new(0, idx as u32)
-        } else {
-            self.root_index()
-        };
+        let node_idx = node_idx.unwrap_or(self.root_index());
 
         let tree_size = self.max_size();
         let current_size = self.current_size().min(tree_size);
