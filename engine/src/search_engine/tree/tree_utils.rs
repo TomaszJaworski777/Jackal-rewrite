@@ -226,7 +226,6 @@ impl Tree {
     }
 }
 
-//Formula taken from Monty
 fn calculate_pst(options: &EngineOptions, parent_score: f64, depth: f64) -> f64 {
     let scalar = parent_score - parent_score.min(options.winning_pst_threshold());
     let t = scalar / (1.0 - options.winning_pst_threshold());
