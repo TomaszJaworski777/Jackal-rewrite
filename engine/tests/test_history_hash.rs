@@ -11,7 +11,7 @@ fn validate_hash() {
 
     let hash = position.history().hash();
 
-    assert_eq!((hash >> 64) as u64, u64::from(position.board().hash()));
+    assert_eq!(hash >> 64, u64::from(position.board().hash()) as u128);
     assert_eq!(hash & 0b1111111, position.history().len() as u128);
 }
 

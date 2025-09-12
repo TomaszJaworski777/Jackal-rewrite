@@ -41,7 +41,7 @@ impl SearchReport for UciSearchReport {
 
             let nps = (nodes as u128 * 1000) / time.max(1);
 
-            let hashfull = search_engine.tree().current_index() * 1000 / search_engine.tree().tree_size();
+            let hashfull = search_engine.tree().current_size() * 1000 / search_engine.tree().max_size();
 
             let pv = pv.to_string(search_engine.options().chess960());
 
@@ -59,8 +59,7 @@ impl SearchReport for UciSearchReport {
         println!(
             "bestmove {}",
             search_engine
-                .tree()
-                .get_node(best_node_idx.unwrap())
+                .tree()[best_node_idx.unwrap()]
                 .mv()
                 .to_string(search_engine.options().chess960())
         );

@@ -1,19 +1,77 @@
-use std::sync::atomic::Ordering;
+use chess::{ChessBoard, Move};
 
-use chess::ChessBoard;
-
-use crate::{search_engine::{engine_options::EngineOptions, tree::{node::Node, pv_line::PvLine, Tree}}, PolicyNetwork};
+use crate::{search_engine::{engine_options::EngineOptions, tree::{node::Node, pv_line::PvLine, NodeIndex, Tree}}, PolicyNetwork};
 
 impl Tree {
-    pub fn expand_node(&self, node_idx: usize, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> bool {
-        let _lock = self.write_lock(node_idx);
+    pub fn bytes_to_size(bytes: usize) -> usize {
+        bytes / std::mem::size_of::<Node>()
+    }
 
-        if self.nodes[node_idx].children_count() > 0 {
-            return true;
+    pub fn size_to_bytes(size: usize) -> usize {
+        size * std::mem::size_of::<Node>()
+    }
+
+    pub fn swap_half(&self) {
+        let old_root = self.root_index();
+        let old_half = self.current_half.fetch_xor(1, std::sync::atomic::Ordering::Relaxed) as usize;
+
+        self.halves[old_half].clear_references();
+        self.halves[old_half ^ 1].clear();
+
+        let new_root = self.halves[old_half ^ 1].reserve_nodes(1).unwrap();
+        self[new_root].clear(Move::NULL);
+
+        self.copy_across(old_root, 1, new_root);
+    }
+
+    pub fn update_node(&self, node_idx: NodeIndex) -> Option<()> {
+        if self[node_idx].children_index().half() == self.current_half_index() {
+            return Some(());
+        }
+
+        let mut children_idx = self[node_idx].children_index_mut();
+
+        if children_idx.half() == self.current_half_index() {
+            return Some(());
+        }
+
+        let children_count = self[node_idx].children_count() as usize;
+        let new_idx = self.current_half().reserve_nodes(children_count)?;
+
+        self.copy_across(*children_idx, children_count, new_idx);
+
+        *children_idx = new_idx;
+
+        Some(())
+    }
+
+    pub fn copy_across(&self, from_idx: NodeIndex, count: usize, to_idx: NodeIndex) {
+        if from_idx == to_idx {
+            return;
+        }
+
+        for child_idx in 0..(count as u8) {
+            let from = &self[from_idx + child_idx];
+            let to = &self[to_idx + child_idx];
+
+            let from_children = from.children_index_mut();
+            let mut to_children = to.children_index_mut();
+
+            to.set_to(&from);
+            to.set_children_count(from.children_count());
+            *to_children = *from_children;
+        }
+    }
+
+    pub fn expand_node(&self, node_idx: NodeIndex, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> Option<()> {
+        let mut children_idx = self[node_idx].children_index_mut();
+
+        if self[node_idx].children_count() > 0 {
+            return Some(());
         }
 
         assert_eq!(
-            self.nodes[node_idx].children_count(),
+            self[node_idx].children_count(),
             0,
             "Node {node_idx} already have children."
         );
@@ -21,7 +79,7 @@ impl Tree {
         let policy_inputs = PolicyNetwork.get_inputs(board);
         let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
 
-        let pst = calculate_pst(engine_options, self.get_node(node_idx).score().single(0.5), depth);
+        let pst = calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
 
         let mut moves = Vec::new();
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
@@ -35,18 +93,15 @@ impl Tree {
             max = max.max(p);
         });
 
-        let start_index = self.reserve_nodes(moves.len());
-
-        if start_index + moves.len() >= self.nodes.len() {
-            return false;
-        }
+        let start_index = self.current_half().reserve_nodes(moves.len())?;
 
         for p in policy.iter_mut() {
             *p = ((*p - max)/pst).exp();
             total += *p;
         }
 
-        self.nodes[node_idx].add_children(start_index, moves.len());
+        *children_idx = start_index;
+        self[node_idx].set_children_count(moves.len() as u8);
 
         for (idx, mv) in moves.into_iter().enumerate() {
             let p = if policy.len() == 1 {
@@ -55,31 +110,23 @@ impl Tree {
                 policy[idx] / total
             };
 
-            self.nodes[start_index + idx].clear(mv);
-            self.nodes[start_index + idx].set_policy(p as f64);
+            self[start_index + (idx as u8)].clear(mv);
+            self[start_index + (idx as u8)].set_policy(p as f64);
         }
 
-        true
-    }
-
-    #[inline]
-    fn reserve_nodes(&self, count: usize) -> usize {
-        self.idx.fetch_add(count, Ordering::Relaxed)
+        Some(())
     }
 
     pub fn select_child_by_key<F: FnMut(&Node) -> f64>(
         &self,
-        parent_idx: usize,
+        parent_idx: NodeIndex,
         mut key: F,
-    ) -> Option<usize> {
+    ) -> Option<NodeIndex> {
         let mut best_idx = None;
         let mut best_score = f64::NEG_INFINITY;
 
-        let _lock = self.read_lock(parent_idx);
-
-        self.nodes[parent_idx].map_children(|child_idx| {
-            let node = self.get_node(child_idx);
-            let new_score = key(&node);
+        self[parent_idx].map_children(|child_idx| {
+            let new_score = key(&self[child_idx]);
             if new_score > best_score {
                 best_idx = Some(child_idx);
                 best_score = new_score;
@@ -89,27 +136,27 @@ impl Tree {
         best_idx
     }
 
-    pub fn select_best_child(&self, parent_idx: usize) -> Option<usize> {
+    pub fn select_best_child(&self, parent_idx: NodeIndex) -> Option<NodeIndex> {
         self.select_child_by_key(parent_idx, |node| node.score().single(0.5) as f64)
     }
 
-    pub fn get_pv(&self, node_idx: usize) -> PvLine {
-        let node = self.get_node(node_idx);
+    pub fn get_pv(&self, node_idx: NodeIndex) -> PvLine {
+        let node = &self[node_idx];
 
         if node.children_count() == 0 {
-            return PvLine::new(&node);
+            return PvLine::new(node);
         }
 
         let best_child_idx = self.select_best_child(node_idx);
 
         if best_child_idx.is_none() {
-            return PvLine::new(&node);
+            return PvLine::new(node);
         }
 
         let best_child_idx = best_child_idx.unwrap();
 
         let mut result = self.get_pv(best_child_idx);
-        result.add_node(&node);
+        result.add_node(node);
 
         result
     }
@@ -118,12 +165,8 @@ impl Tree {
         let mut chilren_nodes = Vec::new();
         let node = self.get_root_node();
 
-        let _lock = self.read_lock(self.root_index());
-
         node.map_children(|child_idx| {
-            let _child_lock = self.read_lock(child_idx);
-
-            let node = self.get_node(child_idx);
+            let node = &self[child_idx];
 
             if node.visits() == 0 {
                 return;
@@ -142,13 +185,13 @@ impl Tree {
         self.get_pv(pv_node_idx)
     }
 
-    pub fn find_node_depth(&self, start_node_idx: usize, target_node_idx: usize) -> Option<u64> {
+    pub fn find_node_depth(&self, start_node_idx: NodeIndex, target_node_idx: NodeIndex) -> Option<u64> {
 
         if start_node_idx == target_node_idx {
             return Some(0);
         }
 
-        let node = self.get_node(start_node_idx);
+        let node = &self[start_node_idx];
 
         let mut chilren_nodes = Vec::new();
         let mut found_node = false;
@@ -158,7 +201,7 @@ impl Tree {
                 found_node = true
             }
 
-            if self.get_node(child_idx).children_count() == 0 {
+            if self[child_idx].children_count() == 0 {
                 return;
             }
 

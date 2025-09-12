@@ -56,10 +56,9 @@ impl ChessBoard {
         );
         info.push(phase.as_str());
 
-        let mut result = " -----------------\n".to_string().primary(0.15);
+        let mut result = "   -----------------\n".to_string().primary(0.15);
         for rank in 0..8 {
-            result += "|"
-                .to_string()
+            result += format!("{} |", if self.side() == Side::WHITE { 7 - rank } else { rank } + 1)
                 .primary((rank + 1) as f32 / 18.0 + 0.15)
                 .as_str();
             for file in 0..8 {
@@ -92,7 +91,14 @@ impl ChessBoard {
                 .as_str();
             result += "\n".to_string().as_str();
         }
-        result += " -----------------\n".to_string().primary(0.75).as_str();
+        result += "   -----------------\n".to_string().primary(0.75).as_str();
+
+        let mut files: Vec<&str> = vec!["A", "B", "C", "D", "E", "F", "G", "H"];
+        if self.side() == Side::BLACK {
+            files.reverse();
+        };
+        result += format!("    {}\n", files.join(" ")).primary(0.77).as_str();
+
         println!("{}", result);
     }
 }

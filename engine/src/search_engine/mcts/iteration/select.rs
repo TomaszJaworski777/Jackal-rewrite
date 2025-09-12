@@ -1,8 +1,8 @@
-use crate::{search_engine::engine_options::EngineOptions, Node, SearchEngine, WDLScore};
+use crate::{search_engine::{engine_options::EngineOptions, tree::NodeIndex}, Node, SearchEngine, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn select(&self, node_idx: usize, depth: f64) -> usize {
-        let parent_node = self.tree().get_node(node_idx);
+    pub(super) fn select(&self, node_idx: NodeIndex, depth: f64) -> NodeIndex {
+        let parent_node = &self.tree()[node_idx];
 
         let cpuct = get_cpuct(&self.options(), &parent_node, depth);
         let exploration_scale = get_exploration_scale(self.options(), &parent_node);

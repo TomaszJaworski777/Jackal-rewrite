@@ -1,4 +1,5 @@
 use engine::SearchEngine;
+use utils::clear_terminal_screen;
 
 use crate::{
     displays::welcome_message,
@@ -20,6 +21,7 @@ fn main() {
         return;
     }
 
+    clear_terminal_screen();
     println!("{}", welcome_message());
 
     let mut input_wrapper = InputWrapper::new();

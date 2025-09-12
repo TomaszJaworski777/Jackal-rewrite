@@ -1,21 +1,21 @@
 use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, Theme};
 
-use crate::search_engine::tree::{node::Node, GameState, Tree};
+use crate::search_engine::tree::{node::Node, GameState, NodeIndex, Tree};
 
 impl Tree {
-    pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<usize>) {
+    pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<NodeIndex>) {
         let depth = depth.unwrap_or(1);
         let node_idx = node_idx.unwrap_or(self.root_index());
 
-        let tree_size = self.tree_size();
-        let current_size = self.current_index().min(tree_size);
+        let tree_size = self.max_size();
+        let current_size = self.current_size().min(tree_size);
 
         let current_size_nodes = number_to_string(current_size as u128).secondary(0.0);
         let tree_size_nodes = number_to_string(tree_size as u128).secondary(0.0);
 
         let current_size_mem = format!(
             "{}B",
-            bytes_to_string((current_size * std::mem::size_of::<Node>()) as u128)
+            bytes_to_string((current_size as usize * std::mem::size_of::<Node>()) as u128)
         )
         .secondary(3.0 / 29.0);
         let tree_size_mem = format!(
@@ -60,7 +60,7 @@ impl Tree {
             return;
         }
 
-        let policy = self.get_node(node_idx).policy() as f32;
+        let policy = self[node_idx].policy() as f32;
 
         self.print_branch::<FLIP_SCORE>(
             node_idx,
@@ -79,7 +79,7 @@ impl Tree {
 
     fn print_branch<const FLIP_SCORE: bool>(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         depth: u8,
         max_depth: u8,
         mut prefix: String,
@@ -118,21 +118,21 @@ impl Tree {
 
         let mut children = Vec::new();
 
-        self.get_node(node_idx).map_children(|child_idx| {
-            if self.get_node(child_idx).visits() == 0 {
+        self[node_idx].map_children(|child_idx| {
+            if self[child_idx].visits() == 0 {
                 return;
             }
 
             children.push(child_idx);
         });
 
-        children.sort_by(|&a, &b| self.get_node(b).visits().cmp(&self.get_node(a).visits()));
+        children.sort_by(|&a, &b| self[b].visits().cmp(&self[a].visits()));
 
         min_policy = f32::INFINITY;
         max_policy = f32::NEG_INFINITY;
 
         for &child_idx in &children {
-            let policy = self.get_node(child_idx).policy() as f32;
+            let policy = self[child_idx].policy() as f32;
             min_policy = min_policy.min(policy);
             max_policy = max_policy.max(policy);
         }
@@ -156,7 +156,7 @@ impl Tree {
 
     fn print_node(
         &self,
-        node_idx: usize,
+        node_idx: NodeIndex,
         prefix: &String,
         is_root: bool,
         is_last: bool,
@@ -166,7 +166,7 @@ impl Tree {
         min_policy: f32,
         max_policy: f32
     ) {
-        let node = self.get_node(node_idx);
+        let node = &self[node_idx];
         let color_gradient = (iter_idx + 5) as f32 / (iter_size + 10) as f32;
 
         let arrow = if is_root {
@@ -180,7 +180,7 @@ impl Tree {
         };
 
         let prefix = if is_root {
-            if node_idx == 0 {
+            if node_idx == self.root_index() {
                 String::from("root")
             } else {
                 node.mv().to_string(false).align_to_left(5)
@@ -189,7 +189,7 @@ impl Tree {
         } else {
             format!(
                 "{prefix}{arrow}{}{} {}",
-                format!("{:#018x}", node_idx)
+                format!("{}", node_idx)
                     .align_to_right(18)
                     .primary(color_gradient),
                 ">".secondary(color_gradient),

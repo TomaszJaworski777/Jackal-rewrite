@@ -1,4 +1,4 @@
-use std::sync::{atomic::{AtomicUsize, Ordering}, LockResult, RwLockReadGuard, RwLockWriteGuard};
+use std::{ops::{Index, IndexMut}, sync::atomic::{AtomicU32, Ordering}};
 
 use chess::Move;
 
@@ -6,26 +6,43 @@ mod node;
 mod tree_draw;
 mod tree_utils;
 mod pv_line;
+mod half;
 
-pub use node::{Node, GameState, AtomicWDLScore, WDLScore};
+use half::TreeHalf;
+
+pub use node::{Node, GameState, AtomicWDLScore, WDLScore, NodeIndex};
 pub use pv_line::PvLine;
 
 use crate::search_engine::hash_table::HashTable;
 
 #[derive(Debug)]
 pub struct Tree {
-    nodes: Vec<Node>,
-    idx: AtomicUsize,
+    halves: [TreeHalf; 2],
+    current_half: AtomicU32,
     hash_table: HashTable,
 }
 
 impl Clone for Tree {
     fn clone(&self) -> Self {
         Self {
-            nodes: self.nodes.clone(),
-            idx: AtomicUsize::new(self.idx.load(Ordering::Relaxed)),
+            halves: self.halves.clone(),
+            current_half: AtomicU32::from(self.current_half.load(Ordering::Relaxed)),
             hash_table: self.hash_table.clone()
         }
+    }
+}
+
+impl Index<NodeIndex> for Tree {
+    type Output = Node;
+
+    fn index(&self, index: NodeIndex) -> &Self::Output {
+        &self.halves[index.half() as usize][index]
+    }
+}
+
+impl IndexMut<NodeIndex> for Tree {
+    fn index_mut(&mut self, index: NodeIndex) -> &mut Self::Output {
+        &mut self.halves[index.half() as usize][index]
     }
 }
 
@@ -33,80 +50,82 @@ impl Tree {
     pub fn from_bytes(megabytes: usize, hash_percentage: f64) -> Self {
         let bytes = megabytes * 1024 * 1024;
         let hash_bytes = (bytes as f64 * hash_percentage) as usize;
-        let tree_size = (bytes - hash_bytes) / std::mem::size_of::<Node>();
+        let tree_size = Self::bytes_to_size(bytes - hash_bytes);
+
+        let halves = [TreeHalf::new(0, tree_size / 2), TreeHalf::new(1, tree_size / 2)];
+        halves[0].reserve_nodes(1);
 
         Self {
-            nodes: vec![Node::new(); tree_size],
-            idx: AtomicUsize::new(1),
+            halves,
+            current_half: AtomicU32::new(0),
             hash_table: HashTable::new(hash_bytes),
         }
     }
 
     #[inline]
     pub fn clear(&self) {
-        self.idx.store(1, Ordering::Relaxed);
-        self.nodes[self.root_index()].clear(Move::NULL);
+        self.halves[0].clear();
+        self.halves[1].clear();
         self.hash_table.clear();
+
+        self.current_half.store(0, Ordering::Relaxed);
+
+        self.halves[0].reserve_nodes(1);
+        self[self.root_index()].clear(Move::NULL);
     }
 
     #[inline]
-    pub fn current_index(&self) -> usize {
-        self.idx.load(Ordering::Relaxed)
+    pub fn current_half_index(&self) -> u32 {
+        self.current_half.load(Ordering::Relaxed)
     }
 
     #[inline]
-    pub fn tree_size(&self) -> usize {
-        self.nodes.len()
+    pub fn current_half(&self) -> &TreeHalf {
+        &self.halves[self.current_half_index() as usize]
+    }
+
+    #[inline]
+    pub fn root_index(&self) -> NodeIndex {
+        NodeIndex::new(self.current_half_index(), 0)
+    }
+
+    #[inline]
+    pub fn max_size(&self) -> usize {
+        self.halves[0].max_size() + self.halves[1].max_size()
+    }
+
+    #[inline]
+    pub fn current_size(&self) -> usize {
+        self.halves[0].current_size() + self.halves[1].current_size()
     }
 
     #[inline]
     pub fn hash_table(&self) -> &HashTable {
         &self.hash_table
     }
-
-
+    
     #[inline]
-    pub fn root_index(&self) -> usize {
-        0
+    pub fn get_root_node(&self) -> &Node {
+        &self[self.root_index()]
     }
 
     #[inline]
-    pub fn get_node(&self, node_idx: usize) -> Node {
-        self.nodes[node_idx].clone()
+    pub fn add_visit(&self, node_idx: NodeIndex, score: WDLScore) {
+        self[node_idx].add_visit(score)
     }
 
     #[inline]
-    pub fn get_root_node(&self) -> Node {
-        self.nodes[self.root_index()].clone()
+    pub fn set_state(&self, node_idx: NodeIndex, state: GameState) {
+        self[node_idx].set_state(state)
     }
 
     #[inline]
-    pub fn add_visit(&self, node_idx: usize, score: WDLScore) {
-        self.nodes[node_idx].add_visit(score)
+    pub fn inc_threads(&self, node_idx: NodeIndex, value: u8) -> u8 {
+        self[node_idx].inc_threads(value)
     }
 
     #[inline]
-    pub fn set_state(&self, node_idx: usize, state: GameState) {
-        self.nodes[node_idx].set_state(state)
-    }
-
-    #[inline]
-    pub fn inc_threads(&self, node_idx: usize, value: u8) -> u8 {
-        self.nodes[node_idx].inc_threads(value)
-    }
-
-    #[inline]
-    pub fn dec_threads(&self, node_idx: usize, value: u8) -> u8 {
-        self.nodes[node_idx].dec_threads(value)
-    }
-
-    #[inline]
-    pub fn read_lock(&self, node_idx: usize) -> LockResult<RwLockReadGuard<'_, bool>> {
-        self.nodes[node_idx].read_lock()
-    }
-
-    #[inline]
-    pub fn write_lock(&self, node_idx: usize) -> LockResult<RwLockWriteGuard<'_, bool>> {
-        self.nodes[node_idx].write_lock()
+    pub fn dec_threads(&self, node_idx: NodeIndex, value: u8) -> u8 {
+        self[node_idx].dec_threads(value)
     }
 }

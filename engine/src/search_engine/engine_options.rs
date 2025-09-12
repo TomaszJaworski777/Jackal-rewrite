@@ -6,10 +6,10 @@ create_options! {
     EngineOptions {
         Options {
             //====== General ======
-            ["Hash"]         hash:          i64   =>  256,    1,  524288;
-            ["Threads"]      threads:       i64   =>  1,      1,  1024;
-            ["MoveOverhead"] move_overhead: i64   =>  100,    0,  2000;
-            ["MultiPV"]      multi_pv:      i64   =>  1,      1,  218;
+            ["Hash"]         hash:          i64   =>  32,  1,  524288;
+            ["Threads"]      threads:       i64   =>  1,   1,  1024;
+            ["MoveOverhead"] move_overhead: i64   =>  25,  0,  2000;
+            ["MultiPV"]      multi_pv:      i64   =>  1,   1,  218;
             ["UCI_Chess960"] chess960:      bool  =>  false;
             ["UCI_ShowWDL"]  show_wdl:      bool  =>  false;
             ["Report_iters"] report_iters:  bool  =>  false;

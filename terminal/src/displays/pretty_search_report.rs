@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use engine::{Node, PvLine, SearchEngine, SearchLimits, SearchReport, SearchStats};
+use engine::{PvLine, SearchEngine, SearchLimits, SearchReport, SearchStats, Tree};
 use utils::{bytes_to_string, clear_terminal_screen, create_loading_bar, heat_color, number_to_string, time_to_string, AlignString, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 static mut SEARCH_HISTORY: Vec<(u128, PvLine)> = Vec::new();
@@ -23,11 +23,13 @@ impl SearchReport for PrettySearchReport {
     }
 
     fn search_ended(search_limits: &SearchLimits, search_stats: &SearchStats, search_engine: &SearchEngine) {
+        clear_terminal_screen();
+
         print_search_report::<true>(search_limits, search_stats, search_engine);
 
         let best_node = search_engine
                 .tree()
-                .select_child_by_key(0, |node| node.score().single(0.5) as f64);
+                .select_child_by_key(search_engine.tree().root_index(), |node| node.score().single(0.5) as f64);
 
         if let Some((x,y)) = term_cursor::get_pos().ok() {
             let _ = term_cursor::set_pos(x, y - 2);
@@ -36,8 +38,7 @@ impl SearchReport for PrettySearchReport {
         print!("{}\r", " ".repeat(50));
         println!( "\n{}",
             format!(" Best Move: {}", search_engine
-                .tree()
-                .get_node(best_node.unwrap())
+                .tree()[best_node.unwrap()]
                 .mv()
                 .to_string(search_engine.options().chess960()).secondary(1.0)).primary(1.0)
         );
@@ -68,28 +69,27 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
     let _ = term_cursor::set_pos(0, 0);
 
     if t_height >= 36 {
-        for _ in 0..11  {
+        for _ in 0..13  {
             println!("{}", " ".repeat(t_width));
         }
 
         let _ = term_cursor::set_pos(0, 0);
 
         search_engine.current_position().board().draw_board();
-        height_used += 11;
+        height_used += 13;
     }
 
     if t_height >= 25 {
-        let tree_size_nodes = search_engine.tree().tree_size();
-        let tree_bytes = bytes_to_string((tree_size_nodes * std::mem::size_of::<Node>()) as u128);
-        let tree_size = number_to_string(tree_size_nodes as u128);
+        let tree_size = search_engine.tree().max_size();
+        let tree_bytes = bytes_to_string(Tree::size_to_bytes(tree_size) as u128);
 
-        let current_size = search_engine.tree().current_index().min(tree_size_nodes);
-        let usage = current_size as f32 / tree_size_nodes as f32;
+        let current_size = search_engine.tree().current_size().min(tree_size);
+        let usage = current_size as f32 / tree_size as f32;
 
         print!("{}\r", " ".repeat(t_width));
         println!("{}", format!(" Threads:    {}", search_engine.options().threads().to_string().secondary(grad(11))).primary(grad(11)));
         print!("{}\r", " ".repeat(t_width));
-        println!("{}", format!(" Tree Size:  {} | {}", format!("{}n", tree_size).secondary(grad(12)), format!("{}B", tree_bytes).secondary(grad(12))).primary(grad(12)));
+        println!("{}", format!(" Tree Size:  {} | {}", format!("{}n", number_to_string(tree_size as u128)).secondary(grad(12)), format!("{}B", tree_bytes).secondary(grad(12))).primary(grad(12)));
         print!("{}\r", " ".repeat(t_width));
         println!("{}", format!(" Tree Usage: {}", create_loading_bar(50, usage, WIN_COLOR, LOSE_COLOR).secondary(grad(13))).primary(grad(13)));
 

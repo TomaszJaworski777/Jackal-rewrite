@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::{search_engine::{engine_options::EngineOptions, tree::Tree}, search_report_trait::SearchReport};
+use crate::{search_engine::engine_options::EngineOptions, search_report_trait::SearchReport};
 
 mod bench;
 mod mcts;
@@ -14,7 +14,7 @@ mod hash_table;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
-pub use tree::{Node, GameState, AtomicWDLScore, WDLScore, PvLine};
+pub use tree::{Tree, Node, GameState, AtomicWDLScore, WDLScore, PvLine, NodeIndex};
 
 #[derive(Debug)]
 pub struct SearchEngine {

@@ -17,19 +17,26 @@ impl SearchEngine {
 
         let search_stats = SearchStats::new(0);
 
-        thread::scope(|s| {
-            s.spawn(|| {
-                self.main_loop::<Display>(&search_stats, &search_limits, &castle_mask);
+        loop 
+        {
+            thread::scope(|s| {
+                s.spawn(|| {
+                    self.main_loop::<Display>(&search_stats, &search_limits, &castle_mask);
+                });
+
+                for _ in 0..(self.options().threads() - 1) {
+                    s.spawn(|| {
+                        self.worker_loop(&search_stats, &search_limits, &castle_mask)
+                    });
+                }
             });
 
-            for _ in 0..(self.options().threads() - 1) {
-                s.spawn(|| {
-                    while !self.is_search_interrupted() {
-                        let _ = self.search_loop(&search_stats, search_limits, &castle_mask);
-                    }
-                });
+            if self.is_search_interrupted() {
+                break;
             }
-        });
+
+            self.tree().swap_half();
+        }
 
         search_stats
     }
@@ -39,14 +46,12 @@ impl SearchEngine {
         search_stats: &SearchStats,
         search_limits: &SearchLimits,
         castle_mask: &[u8; 64],
-    ) {
+    ) -> Option<()> {
         let mut search_report_timer = Instant::now();
         let mut max_avg_depth = 0;
 
         while !self.is_search_interrupted() {
-            if !self.search_loop(search_stats, search_limits, castle_mask) {
-                break;
-            }
+            self.search_loop(search_stats, search_limits, castle_mask)?;
 
             if search_stats.avg_depth() > max_avg_depth || search_report_timer.elapsed().as_secs_f64() > 1.0 / Display::refresh_rate_per_second() {
                 Display::search_report(search_limits, search_stats, self);
@@ -62,6 +67,21 @@ impl SearchEngine {
                 self.interrupt_search();
             }
         }
+
+        Some(())
+    }
+
+    fn worker_loop(
+        &self,
+        search_stats: &SearchStats,
+        search_limits: &SearchLimits,
+        castle_mask: &[u8; 64],
+    ) -> Option<()> {
+        while !self.is_search_interrupted() {
+            self.search_loop(search_stats, search_limits, castle_mask)?;
+        }
+
+        Some(())
     }
 
     fn search_loop(        
@@ -69,19 +89,11 @@ impl SearchEngine {
         search_stats: &SearchStats,
         search_limits: &SearchLimits,
         castle_mask: &[u8; 64],
-    ) -> bool {
+    ) -> Option<()> {
         let mut depth = 0.0;
         let mut position = *self.current_position();
 
-        if self.perform_iteration::<true>(self.tree().root_index(), &mut position, &mut depth, castle_mask).is_none() {
-            if search_limits.is_inifinite() {
-                while !self.is_search_interrupted() {}
-            } else {
-                self.interrupt_search();
-            }
-
-            return false;
-        }
+        self.perform_iteration::<true>(self.tree().root_index(), &mut position, &mut depth, castle_mask)?;
 
         search_stats.add_iteration(depth as u64);
 
@@ -89,6 +101,6 @@ impl SearchEngine {
             self.interrupt_search();
         }
 
-        true
+        Some(())
     }
 }

@@ -1,25 +1,24 @@
 use chess::ChessPosition;
 
-use crate::{GameState, SearchEngine, ValueNetwork, WDLScore};
+use crate::{search_engine::tree::NodeIndex, GameState, SearchEngine, ValueNetwork, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn simulate(&self, node_idx: usize, position: &ChessPosition) -> WDLScore {
-        if self.tree().get_node(node_idx).visits() == 0 {
+    pub(super) fn simulate(&self, node_idx: NodeIndex, position: &ChessPosition) -> WDLScore {
+        if self.tree()[node_idx].visits() == 0 {
             let state = get_node_state(position, self.current_position());
             self.tree().set_state(node_idx, state);
         }
 
-        if self.tree.get_node(node_idx).state() == GameState::Ongoing {
+        if self.tree[node_idx].state() == GameState::Ongoing {
             if let Some(entry) = self.tree().hash_table().get(position.board().hash()) {
                 entry
             } else {
-                get_position_score(position, self.tree().get_node(node_idx).state())
+                get_position_score(position, self.tree()[node_idx].state())
             }
         } else {
-            get_position_score(position, self.tree().get_node(node_idx).state())
+            get_position_score(position, self.tree()[node_idx].state())
         }
     }
-
 }
 
 fn get_node_state(position: &ChessPosition, root_position: &ChessPosition) -> GameState {
