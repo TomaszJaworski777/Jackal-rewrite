@@ -5,7 +5,7 @@ use crate::{search_engine::tree::NodeIndex, GameState, SearchEngine, ValueNetwor
 impl SearchEngine {
     pub(super) fn simulate(&self, node_idx: NodeIndex, position: &ChessPosition) -> WDLScore {
         if self.tree()[node_idx].visits() == 0 {
-            let state = get_node_state(position, self.current_position());
+            let state = get_node_state(position, self.root_position());
             self.tree().set_state(node_idx, state);
         }
 

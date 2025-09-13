@@ -55,7 +55,7 @@ impl Tree {
 
     pub fn get_best_pv(&self, index: usize) -> PvLine {
         let mut chilren_nodes = Vec::new();
-        let node = self.get_root_node();
+        let node = self.root_node();
 
         node.map_children(|child_idx| {
             let node = &self[child_idx];
