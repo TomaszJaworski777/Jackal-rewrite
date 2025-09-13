@@ -4,6 +4,10 @@ use crate::{NodeIndex, Tree};
 
 impl Tree {
     pub fn try_reuse(&self, position: &ChessPosition, target: &ChessPosition) -> Option<()> {
+        if position.board().hash() == target.board().hash() {
+            return Some(())
+        }
+       
         let result = self.find_node(self.root_index(), position, target, 2);
         if result.is_none() {
             self.clear();
@@ -14,7 +18,7 @@ impl Tree {
 
         let new_root = &self[result];
         let children_idx = *new_root.children_index();
-        let count = new_root.children_count() as usize;
+        let count = new_root.children_count();
 
         if children_idx.is_null() {
             self.clear();
@@ -24,8 +28,9 @@ impl Tree {
         let old_root_children_idx = *self.root_node().children_index();
 
         self[self.root_index()].set_to(new_root);
+        self[self.root_index()].set_children_count(count);
 
-        self.copy_across(children_idx, count, old_root_children_idx);        
+        self.copy_across(children_idx, count, old_root_children_idx);
 
         Some(())
     }

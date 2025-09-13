@@ -34,10 +34,10 @@ impl From<NodeIndex> for u32 {
     }
 }
 
-impl Add<u8> for NodeIndex {
+impl Add<usize> for NodeIndex {
     type Output = NodeIndex;
 
-    fn add(self, rhs: u8) -> Self::Output {
+    fn add(self, rhs: usize) -> Self::Output {
         NodeIndex::new(self.half(), self.idx() + rhs as u32)
     }
 }

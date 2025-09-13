@@ -41,7 +41,7 @@ impl Tree {
         }
 
         *children_idx = start_index;
-        self[node_idx].set_children_count(moves.len() as u8);
+        self[node_idx].set_children_count(moves.len());
 
         for (idx, mv) in moves.into_iter().enumerate() {
             let p = if policy.len() == 1 {
@@ -50,8 +50,8 @@ impl Tree {
                 policy[idx] / total
             };
 
-            self[start_index + (idx as u8)].clear(mv);
-            self[start_index + (idx as u8)].set_policy(p as f64);
+            self[start_index + idx].clear(mv);
+            self[start_index + idx].set_policy(p as f64);
         }
 
         Some(())

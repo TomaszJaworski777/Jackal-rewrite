@@ -27,7 +27,7 @@ impl Tree {
             return Some(());
         }
 
-        let children_count = self[node_idx].children_count() as usize;
+        let children_count = self[node_idx].children_count();
         let new_idx = self.current_half().reserve_nodes(children_count)?;
 
         self.copy_across(*children_idx, children_count, new_idx);
@@ -42,7 +42,7 @@ impl Tree {
             return;
         }
 
-        for child_idx in 0..(count as u8) {
+        for child_idx in 0..count {
             let from = &self[from_idx + child_idx];
             let to = &self[to_idx + child_idx];
 
