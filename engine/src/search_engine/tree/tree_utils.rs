@@ -1,6 +1,4 @@
-use chess::{ChessBoard, Move};
-
-use crate::{search_engine::{engine_options::EngineOptions, tree::{node::Node, pv_line::PvLine, NodeIndex, Tree}}, PolicyNetwork};
+use crate::search_engine::{tree::{node::Node, pv_line::PvLine, NodeIndex, Tree}};
 
 impl Tree {
     pub fn bytes_to_size(bytes: usize) -> usize {
@@ -9,112 +7,6 @@ impl Tree {
 
     pub fn size_to_bytes(size: usize) -> usize {
         size * std::mem::size_of::<Node>()
-    }
-
-    pub fn swap_half(&self) {
-        let old_root = self.root_index();
-        let old_half = self.current_half.fetch_xor(1, std::sync::atomic::Ordering::Relaxed) as usize;
-
-        self.halves[old_half].clear_references();
-        self.halves[old_half ^ 1].clear();
-
-        let new_root = self.halves[old_half ^ 1].reserve_nodes(1).unwrap();
-        self[new_root].clear(Move::NULL);
-
-        self.copy_across(old_root, 1, new_root);
-    }
-
-    pub fn update_node(&self, node_idx: NodeIndex) -> Option<()> {
-        if self[node_idx].children_index().half() == self.current_half_index() {
-            return Some(());
-        }
-
-        let mut children_idx = self[node_idx].children_index_mut();
-
-        if children_idx.half() == self.current_half_index() {
-            return Some(());
-        }
-
-        let children_count = self[node_idx].children_count() as usize;
-        let new_idx = self.current_half().reserve_nodes(children_count)?;
-
-        self.copy_across(*children_idx, children_count, new_idx);
-
-        *children_idx = new_idx;
-
-        Some(())
-    }
-
-    pub fn copy_across(&self, from_idx: NodeIndex, count: usize, to_idx: NodeIndex) {
-        if from_idx == to_idx {
-            return;
-        }
-
-        for child_idx in 0..(count as u8) {
-            let from = &self[from_idx + child_idx];
-            let to = &self[to_idx + child_idx];
-
-            let from_children = from.children_index_mut();
-            let mut to_children = to.children_index_mut();
-
-            to.set_to(&from);
-            to.set_children_count(from.children_count());
-            *to_children = *from_children;
-        }
-    }
-
-    pub fn expand_node(&self, node_idx: NodeIndex, depth: f64, board: &ChessBoard, engine_options: &EngineOptions) -> Option<()> {
-        let mut children_idx = self[node_idx].children_index_mut();
-
-        if self[node_idx].children_count() > 0 {
-            return Some(());
-        }
-
-        assert_eq!(
-            self[node_idx].children_count(),
-            0,
-            "Node {node_idx} already have children."
-        );
-
-        let policy_inputs = PolicyNetwork.get_inputs(board);
-        let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
-
-        let pst = calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
-
-        let mut moves = Vec::new();
-        let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
-        let mut max = f64::NEG_INFINITY;
-        let mut total = 0f64;
-
-        board.map_legal_moves(|mv| {
-            moves.push(mv);
-            let p = PolicyNetwork.forward(board, &policy_inputs, mv, &mut policy_cache) as f64;
-            policy.push(p);
-            max = max.max(p);
-        });
-
-        let start_index = self.current_half().reserve_nodes(moves.len())?;
-
-        for p in policy.iter_mut() {
-            *p = ((*p - max)/pst).exp();
-            total += *p;
-        }
-
-        *children_idx = start_index;
-        self[node_idx].set_children_count(moves.len() as u8);
-
-        for (idx, mv) in moves.into_iter().enumerate() {
-            let p = if policy.len() == 1 {
-                1.0
-            } else {
-                policy[idx] / total
-            };
-
-            self[start_index + (idx as u8)].clear(mv);
-            self[start_index + (idx as u8)].set_policy(p as f64);
-        }
-
-        Some(())
     }
 
     pub fn select_child_by_key<F: FnMut(&Node) -> f64>(
@@ -224,12 +116,4 @@ impl Tree {
 
         return None;
     }
-}
-
-fn calculate_pst(options: &EngineOptions, parent_score: f64, depth: f64) -> f64 {
-    let scalar = parent_score - parent_score.min(options.winning_pst_threshold());
-    let t = scalar / (1.0 - options.winning_pst_threshold());
-    let base_pst = 1.0 - options.base_pst()
-        + (depth - options.root_pst()).powf(-options.depth_pst_adjustment());
-    base_pst + (options.winning_pst_max() - base_pst) * t
 }

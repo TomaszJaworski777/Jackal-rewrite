@@ -3,8 +3,11 @@ use std::{ops::{Index, IndexMut}, sync::atomic::{AtomicU32, Ordering}};
 use chess::Move;
 
 mod node;
+mod tree_expand;
 mod tree_draw;
 mod tree_utils;
+mod tree_lru;
+mod tree_reuse;
 mod pv_line;
 mod half;
 
