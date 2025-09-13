@@ -115,7 +115,7 @@ impl UciProcessor {
             });
         }
 
-        search_engine.tree().try_reuse(search_engine.root_position(), &chess_position);
+        search_engine.tree().try_reuse(search_engine.root_position(), &chess_position, search_engine.options());
 
         search_engine.set_position(&chess_position);
         println!("Position has been set.");

@@ -1,9 +1,9 @@
 use chess::ChessPosition;
 
-use crate::{NodeIndex, Tree};
+use crate::{search_engine::engine_options::EngineOptions, NodeIndex, Tree};
 
 impl Tree {
-    pub fn try_reuse(&self, position: &ChessPosition, target: &ChessPosition) -> Option<()> {
+    pub fn try_reuse(&self, position: &ChessPosition, target: &ChessPosition, options: &EngineOptions) -> Option<()> {
         if position.board().hash() == target.board().hash() {
             return Some(())
         }
@@ -31,6 +31,8 @@ impl Tree {
         self[self.root_index()].set_children_count(count);
 
         self.copy_across(children_idx, count, old_root_children_idx);
+
+        self.relabel_root(target.board(), options);
 
         Some(())
     }

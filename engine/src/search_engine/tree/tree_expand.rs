@@ -56,6 +56,66 @@ impl Tree {
 
         Some(())
     }
+
+    const RELABEL_DEPTH: u8 = 2;
+    pub fn relabel_root(&self, board: &ChessBoard, engine_options: &EngineOptions) {
+        self.recurse_relabel(self.root_index(), Self::RELABEL_DEPTH, board, engine_options);
+    }
+
+    fn recurse_relabel(&self, node_idx: NodeIndex, depth: u8, board: &ChessBoard, engine_options: &EngineOptions) {
+        if depth == 0 {
+            return;
+        }
+
+        self.relabel_node(node_idx, Self::RELABEL_DEPTH + 1 - depth, board, engine_options);
+
+        let mask = board.castle_rights().get_castle_mask();
+        self[node_idx].map_children(|child_idx| {
+            let mut board_copy = board.clone();
+            board_copy.make_move(self[child_idx].mv(), &mask);
+
+            self.recurse_relabel(child_idx, depth - 1, &board_copy, engine_options);
+        });
+    }
+
+    fn relabel_node(&self, node_idx: NodeIndex, depth: u8, board: &ChessBoard, engine_options: &EngineOptions) {
+        let children_idx = *self[node_idx].children_index();
+
+        if self[node_idx].children_count() == 0 {
+            return;
+        }
+
+        let policy_inputs = PolicyNetwork.get_inputs(board);
+        let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
+
+        let pst = calculate_pst(engine_options, self[node_idx].score().single(0.5), depth as f64);
+
+        let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
+        let mut max = f64::NEG_INFINITY;
+        let mut total = 0f64;
+
+        self[node_idx].map_children(|child_idx| {
+            let mv = self[child_idx].mv();
+            let p = PolicyNetwork.forward(board, &policy_inputs, mv, &mut policy_cache) as f64;
+            policy.push(p);
+            max = max.max(p);
+        });
+
+        for p in policy.iter_mut() {
+            *p = ((*p - max)/pst).exp();
+            total += *p;
+        }
+
+        for (idx, p) in policy.iter().enumerate() {
+            let p = if policy.len() == 1 {
+                1.0
+            } else {
+                p / total
+            };
+
+            self[children_idx + idx].set_policy(p as f64);
+        }
+    }
 }
 
 fn calculate_pst(options: &EngineOptions, parent_score: f64, depth: f64) -> f64 {
