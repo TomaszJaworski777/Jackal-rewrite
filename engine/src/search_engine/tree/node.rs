@@ -115,8 +115,8 @@ impl Node {
     }
 
     #[inline]
-    pub fn children_count(&self) -> u8 {
-        self.children_count.load(Ordering::Relaxed)
+    pub fn children_count(&self) -> usize {
+        self.children_count.load(Ordering::Relaxed) as usize
     }
 
     #[inline]
@@ -169,8 +169,8 @@ impl Node {
     }
 
     #[inline]
-    pub fn set_children_count(&self, chilren_count: u8) {
-        self.children_count.store(chilren_count, Ordering::Relaxed);
+    pub fn set_children_count(&self, chilren_count: usize) {
+        self.children_count.store(chilren_count as u8, Ordering::Relaxed);
     }
 
     pub fn map_children<F: FnMut(NodeIndex)>(&self, mut func: F) {

@@ -15,7 +15,7 @@ impl MiscProcessor {
         match command {
             "exit" | "quit" | "q" => *shutdown_token = true,
             "clear" | "clean" | "cls" => clear_terminal_screen(),
-            "draw" | "d" => search_engine.current_position().board().draw_board(),
+            "draw" | "d" => search_engine.root_position().board().draw_board(),
             "tree" => {
                 let depth = if args.len() >= 1 {
                     args[0].parse::<u8>().ok()
@@ -106,7 +106,7 @@ impl MiscProcessor {
 fn perft<const BULK: bool, const CHESS_960: bool>(search_engine: &SearchEngine, depth: Option<u8>) {
     println!("");
 
-    search_engine.current_position().board().draw_board();
+    search_engine.root_position().board().draw_board();
 
     println!("-----------------------------------------------------------");
     println!("  Running PERFT");
@@ -115,7 +115,7 @@ fn perft<const BULK: bool, const CHESS_960: bool>(search_engine: &SearchEngine, 
     println!("-----------------------------------------------------------\n");
 
     let (result, duration) =
-        chess::perft::<BULK, true, CHESS_960>(search_engine.current_position().board(), depth);
+        chess::perft::<BULK, true, CHESS_960>(search_engine.root_position().board(), depth);
     let miliseconds = duration.as_millis().max(1);
 
     println!("\n-----------------------------------------------------------");
@@ -152,7 +152,7 @@ fn eval_bench() {
 }
 
 fn draw_policy(search_engine: &SearchEngine) {
-    let board = search_engine.current_position().board();
+    let board = search_engine.root_position().board();
 
     board.draw_board();
 
@@ -198,7 +198,7 @@ fn draw_policy(search_engine: &SearchEngine) {
 }
 
 fn eval(search_engine: &SearchEngine) {
-    let board = search_engine.current_position().board();
+    let board = search_engine.root_position().board();
 
     let wdl_score = ValueNetwork.forward(board);
     let current_eval = wdl_score.cp(0.5);
@@ -239,7 +239,7 @@ fn eval(search_engine: &SearchEngine) {
 }
 
 fn analyse(search_engine: &mut SearchEngine, iters: Option<u64>) {
-    let position = *search_engine.current_position();
+    let position = *search_engine.root_position();
     let board = *position.board();
     let iters = iters.unwrap_or(50000);
 

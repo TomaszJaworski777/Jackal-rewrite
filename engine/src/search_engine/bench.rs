@@ -71,6 +71,7 @@ impl SearchEngine {
         for fen in BENCH_FENS {
             let fen = FEN::from(fen);
             let board = ChessBoard::from(&fen);
+            self.tree().clear();
             self.set_position(&ChessPosition::from(board));
 
             let result = self.search::<NoReport>(&search_limits);

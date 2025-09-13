@@ -27,7 +27,7 @@ impl UciProcessor {
             "uci" => self.uci(search_engine),
             "tunables" => self.tunables(search_engine),
             "isready" => println!("readyok"),
-            "ucinewgame" => search_engine.reset_position(),
+            "ucinewgame" => { search_engine.reset_position(); search_engine.tree().clear(); },
             "setoption" => self.set_option(args, search_engine),
             "position" => self.position(args, search_engine),
             "go" => self.go(args, search_engine, input_wrapper, shutdown_token),
@@ -115,6 +115,8 @@ impl UciProcessor {
             });
         }
 
+        search_engine.tree().try_reuse(search_engine.root_position(), &chess_position);
+
         search_engine.set_position(&chess_position);
         println!("Position has been set.");
     }
@@ -126,7 +128,7 @@ impl UciProcessor {
         input_wrapper: &mut InputWrapper,
         shutdown_token: &mut bool,
     ) {
-        let search_limits = create_search_limits(args, search_engine.current_position().board(), search_engine);
+        let search_limits = create_search_limits(args, search_engine.root_position().board(), search_engine);
 
         std::thread::scope(|s| {
             s.spawn(|| {

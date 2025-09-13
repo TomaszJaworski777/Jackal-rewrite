@@ -3,8 +3,11 @@ use std::{ops::{Index, IndexMut}, sync::atomic::{AtomicU32, Ordering}};
 use chess::Move;
 
 mod node;
+mod tree_expand;
 mod tree_draw;
 mod tree_utils;
+mod tree_lru;
+mod tree_reuse;
 mod pv_line;
 mod half;
 
@@ -90,6 +93,11 @@ impl Tree {
     }
 
     #[inline]
+    pub fn root_node(&self) -> &Node {
+        &self[self.root_index()]
+    }
+    
+    #[inline]
     pub fn max_size(&self) -> usize {
         self.halves[0].max_size() + self.halves[1].max_size()
     }
@@ -102,11 +110,6 @@ impl Tree {
     #[inline]
     pub fn hash_table(&self) -> &HashTable {
         &self.hash_table
-    }
-    
-    #[inline]
-    pub fn get_root_node(&self) -> &Node {
-        &self[self.root_index()]
     }
 
     #[inline]

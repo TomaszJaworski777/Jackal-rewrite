@@ -75,7 +75,7 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
 
         let _ = term_cursor::set_pos(0, 0);
 
-        search_engine.current_position().board().draw_board();
+        search_engine.root_position().board().draw_board();
         height_used += 13;
     }
 
