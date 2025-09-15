@@ -65,7 +65,7 @@ impl SearchEngine {
                 continue;
             }
 
-            if search_limits.is_timeout(search_stats) {
+            if search_limits.is_timeout(search_stats, self.tree(), self.options()) {
                 self.interrupt_search();
             }
         }
