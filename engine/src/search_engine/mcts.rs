@@ -61,7 +61,7 @@ impl SearchEngine {
                 *max_avg_depth = search_stats.avg_depth().max(*max_avg_depth);
             }
 
-            if search_stats.iterations() % 128 != 0 {
+            if search_stats.iterations() % 256 != 0 {
                 continue;
             }
 

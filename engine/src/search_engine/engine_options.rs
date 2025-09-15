@@ -19,11 +19,11 @@ create_options! {
         }
         Tunables {
             //PST
-            base_pst:               f64  =>  0.1,   0.01,  1.0,   0.01,   0.002;
-            root_pst:               f64  =>  0.34,  0.01,  1.0,   0.034,  0.002;
-            depth_pst_adjustment:   f64  =>  1.8,   0.01,  10.0,  0.18,   0.002;
-            winning_pst_threshold:  f64  =>  0.6,   0.01,  1.0,   0.06,   0.002;
-            winning_pst_max:        f64  =>  1.6,   0.01,  10.0,  0.016,  0.002;
+            base_pst:              f64  =>  0.1,   0.01,  1.0,   0.01,   0.002;
+            root_pst:              f64  =>  0.34,  0.01,  1.0,   0.034,  0.002;
+            depth_pst_adjustment:  f64  =>  1.8,   0.01,  10.0,  0.18,   0.002;
+            winning_pst_threshold: f64  =>  0.6,   0.01,  1.0,   0.06,   0.002;
+            winning_pst_max:       f64  =>  1.6,   0.01,  10.0,  0.016,  0.002;
 
             //Node Selection
             start_cpuct:           f64  =>  1.2813,   0.1,    5.0,      0.128,  0.002;
@@ -33,6 +33,11 @@ create_options! {
             cpuct_variance_scale:  f64  =>  0.2,      0.1,    50.0,     0.02,   0.002;
             cpuct_variance_weight: f64  =>  0.85,     0.0,    2.0,      0.085,  0.002;
             exploration_tau:       f64  =>  0.51,     0.0,    1.0,      0.055,  0.002;
+
+            //Time manager
+            default_moves_to_go: i64  =>  40,   15,   50,   3,      0.002;
+            hard_limit_multi:    f64  =>  3.5,  3.0,  5.0,  0.35,   0.002;
+            max_time_fraction:   f64  =>  0.6,  0.0,  1.0,  0.085,  0.002;
 
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;

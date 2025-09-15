@@ -1,10 +1,11 @@
-use crate::search_engine::SearchStats;
+use crate::search_engine::{engine_options::EngineOptions, SearchStats};
 
 #[derive(Debug, Default)]
 pub struct SearchLimits {
     depth: Option<u64>,
     iters: Option<u64>,
-    time: Option<u128>,
+    soft_limit: Option<u128>,
+    hard_limit: Option<u128>,
     infinite: bool,
 }
 
@@ -18,7 +19,8 @@ impl SearchLimits {
     }
 
     pub fn set_time(&mut self, time: u128) {
-        self.time = Some(time)
+        self.hard_limit = Some(time);
+        self.soft_limit = Some(time)
     }
 
     pub fn set_infinite(&mut self, infinite: bool) {
@@ -34,24 +36,27 @@ impl SearchLimits {
         time_remaining: Option<u128>,
         increment: Option<u128>,
         moves_to_go: Option<u128>,
-        move_overhead: u128,
-        threads: i64
+        options: &EngineOptions
     ) {
+        let move_overhead = (options.move_overhead() + options.threads() * 10) as u128;
+        let increment = increment.unwrap_or(0);
+
         let time_remaining = if let Some(time_remaining) = time_remaining {
-            time_remaining.saturating_sub(threads as u128 * 10)
+            time_remaining
         } else {
             return;
         };
 
-        if let Some(moves_to_go) = moves_to_go {
-            self.time = Some(time_remaining / moves_to_go);
-            return;
-        }
+        let moves_to_go = if let Some(mtg) = moves_to_go.filter(|&m| m > 0) { 
+            mtg
+        } else {
+            options.default_moves_to_go() as u128
+        };
 
-        let max_time = (time_remaining * 3 / 5).saturating_sub(move_overhead).max(1);
-        let time = time_remaining / 40 + increment.unwrap_or(0) / 2;
-        self.time = Some(time.min(max_time))
-    }
+        let (soft_limit, hard_limit) = calculate_time_base(time_remaining, increment, moves_to_go, move_overhead, options);
+        self.soft_limit = Some(soft_limit);
+        self.hard_limit = Some(hard_limit);
+    } 
 
     pub fn is_limit_reached(&self, search_stats: &SearchStats) -> bool {
         if self.infinite {
@@ -74,11 +79,35 @@ impl SearchLimits {
     }
 
     pub fn is_timeout(&self, search_stats: &SearchStats) -> bool {
-        if self.time.is_none() {
+        if self.soft_limit.is_none() || self.hard_limit.is_none() {
             return false;
         }
 
         let time_passed_ms = search_stats.time_passesd_ms();
-        time_passed_ms >= self.time.unwrap()
+        
+        if time_passed_ms >= self.hard_limit.unwrap() {
+            return true;
+        }
+
+        let soft_limit = self.soft_limit.unwrap();
+
+        time_passed_ms >= soft_limit
     }
+}
+
+fn calculate_time_base(time_remaining: u128, increment: u128, moves_to_go: u128, move_overhead: u128, options: &EngineOptions) -> (u128, u128) {
+    let soft_limit = calculate_base_soft_limit(time_remaining, increment, moves_to_go, options);
+    let hard_limit = calculate_hard_limit(soft_limit, time_remaining, increment, move_overhead, options);
+
+    (soft_limit.min(hard_limit), hard_limit)
+}
+
+fn calculate_base_soft_limit(time_remaining: u128, increment: u128, moves_to_go: u128, _options: &EngineOptions) -> u128 {
+    let base_limit = time_remaining / moves_to_go + increment / 2;
+
+    base_limit
+}
+
+fn calculate_hard_limit(soft_limit: u128, time_remaining: u128, increment: u128, move_overhead: u128, options: &EngineOptions) -> u128 {
+    ((soft_limit as f64 * options.hard_limit_multi()).min((time_remaining + increment) as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1)
 }
