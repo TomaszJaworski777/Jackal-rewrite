@@ -47,7 +47,7 @@ fn is_draw(position: &ChessPosition, root_position: &ChessPosition) -> bool {
     let history_repetitions = root_position.history().get_repetitions(key);
     let search_repetitions = position.history().get_repetitions(key) - history_repetitions;
 
-    if history_repetitions >=3 || search_repetitions >=2 || history_repetitions + search_repetitions >= 3 {
+    if history_repetitions >= 3 || search_repetitions >= 2 || history_repetitions + search_repetitions >= 3 {
         return true;
     }
 

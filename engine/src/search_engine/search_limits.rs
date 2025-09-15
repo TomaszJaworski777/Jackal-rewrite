@@ -125,11 +125,54 @@ fn visits_distribution(search_stats: &SearchStats, tree: &Tree, options: &Engine
         return 1.0;
     }
 
-    let best_move_node = &tree[tree.select_best_child(tree.root_index()).unwrap()];
+    let mut best_idx = None;
+    let mut best_score = f64::NEG_INFINITY;
 
-    let best_move_visit_ratio = best_move_node.visits() as f64 / tree.root_node().visits() as f64;
-    let visit_ratio_difference = best_move_visit_ratio - options.visit_distr_threshold();
-    let time_multiplier = 2.0 * options.visit_penalty_scale() / (1.0 + (options.visit_difference_multi() * visit_ratio_difference).exp()) - options.visit_penalty_scale();
+    let mut second_best_idx = None;
+    let mut second_best_score = f64::NEG_INFINITY;
+
+    tree[tree.root_index()].map_children(|child_idx| {
+        let new_score = tree[child_idx].score().single(0.5);
+        if new_score > second_best_score {
+            second_best_idx = Some(child_idx);
+            second_best_score = new_score;
+
+            if second_best_score > best_score {
+                (best_idx, second_best_idx) = (second_best_idx, best_idx);
+                (best_score, second_best_score) = (second_best_score, best_score);
+            }
+        }
+    });
+
+    let best_move_visits = if let Some(best_idx) = best_idx {
+        tree[best_idx].visits()
+    } else {
+        tree.root_node().visits()
+    };
+
+    let second_move_visits = if let Some(second_best_idx) = second_best_idx {
+        tree[second_best_idx].visits()
+    } else {
+        0
+    };
+
+    let visit_gap_ratio = ((best_move_visits - second_move_visits) as f64).abs() / tree.root_node().visits() as f64 - options.gap_threshold();
+    let visit_gap = if visit_gap_ratio > 0.0 {
+        2.0 * options.gap_reward_scale() / (1.0 + (options.gap_reward_multi() * visit_gap_ratio).exp()) - options.gap_reward_scale()
+    } else {
+        2.0 * options.gap_penalty_scale() / (1.0 + (options.gap_penalty_multi() * visit_gap_ratio).exp()) - options.gap_penalty_scale()
+    };
+
+    let best_move_visit_ratio = best_move_visits as f64 / tree.root_node().visits() as f64;
+    let visit_difference_ratio = best_move_visit_ratio - options.visit_distr_threshold();
+    
+    let time_multiplier = if visit_difference_ratio > 0.0 {
+        let reward_scale = options.visit_reward_scale() + visit_gap;
+        2.0 * reward_scale / (1.0 + (options.visit_reward_multi() * visit_difference_ratio).exp()) - reward_scale
+    } else {
+        let penalty_scale = options.visit_penalty_scale() + visit_gap;
+        2.0 * penalty_scale / (1.0 + (options.visit_penalty_multi() * visit_difference_ratio).exp()) - penalty_scale
+    };
 
     1.0 + time_multiplier
 }
