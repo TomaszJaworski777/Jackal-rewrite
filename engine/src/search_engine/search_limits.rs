@@ -1,4 +1,4 @@
-use crate::search_engine::{engine_options::EngineOptions, SearchStats};
+use crate::{search_engine::{engine_options::EngineOptions, SearchStats}, Tree};
 
 #[derive(Debug, Default)]
 pub struct SearchLimits {
@@ -38,7 +38,7 @@ impl SearchLimits {
         moves_to_go: Option<u128>,
         options: &EngineOptions
     ) {
-        let move_overhead = (options.move_overhead() + options.threads() * 10) as u128;
+        let move_overhead = (options.move_overhead() + (options.threads() - 1) * 10) as u128;
         let increment = increment.unwrap_or(0);
 
         let time_remaining = if let Some(time_remaining) = time_remaining {
@@ -78,7 +78,7 @@ impl SearchLimits {
         false
     }
 
-    pub fn is_timeout(&self, search_stats: &SearchStats) -> bool {
+    pub fn is_timeout(&self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions) -> bool {
         if self.soft_limit.is_none() || self.hard_limit.is_none() {
             return false;
         }
@@ -91,7 +91,7 @@ impl SearchLimits {
 
         let soft_limit = self.soft_limit.unwrap();
 
-        time_passed_ms >= soft_limit
+        time_passed_ms >= (soft_limit as f64 * soft_limit_modifier(search_stats, tree, options)) as u128
     }
 }
 
@@ -110,4 +110,26 @@ fn calculate_base_soft_limit(time_remaining: u128, increment: u128, moves_to_go:
 
 fn calculate_hard_limit(soft_limit: u128, time_remaining: u128, increment: u128, move_overhead: u128, options: &EngineOptions) -> u128 {
     ((soft_limit as f64 * options.hard_limit_multi()).min((time_remaining + increment) as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1)
+}
+
+fn soft_limit_modifier(search_stats: &SearchStats, tree: &Tree, options: &EngineOptions) -> f64 {
+    let mut base_modifier = 1.0;
+
+    base_modifier *= visits_distribution(search_stats, tree, options);
+
+    base_modifier
+}
+
+fn visits_distribution(search_stats: &SearchStats, tree: &Tree, options: &EngineOptions) -> f64 {
+    if search_stats.iterations() < 2048 {
+        return 1.0;
+    }
+
+    let best_move_node = &tree[tree.select_best_child(tree.root_index()).unwrap()];
+
+    let best_move_visit_ratio = best_move_node.visits() as f64 / tree.root_node().visits() as f64;
+    let visit_ratio_difference = best_move_visit_ratio - options.visit_distr_threshold();
+    let time_multiplier = 2.0 * options.visit_penalty_scale() / (1.0 + (options.visit_difference_multi() * visit_ratio_difference).exp()) - options.visit_penalty_scale();
+
+    1.0 + time_multiplier
 }
