@@ -1,7 +1,7 @@
 use std::{thread, time::Instant};
 
 use crate::{
-    search_engine::{SearchLimits, SearchStats},
+    search_engine::{search_limits::TimeManager, SearchLimits, SearchStats},
     SearchEngine, SearchReport,
 };
 
@@ -22,9 +22,11 @@ impl SearchEngine {
 
         loop 
         {
+            let mut time_manager = search_limits.time_manager();
+
             thread::scope(|s| {
                 s.spawn(|| {
-                    self.main_loop::<Display>(&search_stats, &search_limits, &castle_mask, &mut search_report_timer, &mut max_avg_depth);
+                    self.main_loop::<Display>(&search_stats, &search_limits, &mut time_manager, &castle_mask, &mut search_report_timer, &mut max_avg_depth);
                 });
 
                 for _ in 0..(self.options().threads() - 1) {
@@ -48,6 +50,7 @@ impl SearchEngine {
         &self,
         search_stats: &SearchStats,
         search_limits: &SearchLimits,
+        time_manager: &mut TimeManager,
         castle_mask: &[u8; 64],
         search_report_timer: &mut Instant,
         max_avg_depth: &mut u64
@@ -65,7 +68,7 @@ impl SearchEngine {
                 continue;
             }
 
-            if search_limits.is_timeout(search_stats, self.tree(), self.options()) {
+            if time_manager.is_timeout(search_stats, self.tree(), self.options()) {
                 self.interrupt_search();
             }
         }
