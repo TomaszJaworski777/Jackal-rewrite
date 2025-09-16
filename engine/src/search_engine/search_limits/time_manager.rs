@@ -4,8 +4,6 @@ use crate::{search_engine::engine_options::EngineOptions, SearchStats, Tree};
 pub struct TimeManager {
     soft_limit: Option<u128>,
     hard_limit: Option<u128>,
-    current_visit_ratio: Option<f64>,
-    current_gap_ratio: Option<f64>
 }
 
 impl TimeManager {
@@ -98,15 +96,6 @@ impl TimeManager {
         };
 
         let visit_gap_ratio = ((best_move_visits - second_move_visits) as f64).abs() / tree.root_node().visits() as f64 - options.gap_threshold();
-        let visit_gap_ratio = if let Some(mut current_value) = self.current_gap_ratio {
-            current_value += options.gap_ema_alpha() * (visit_gap_ratio - current_value);
-            self.current_gap_ratio = Some(current_value);
-            current_value
-        } else {
-            self.current_gap_ratio = Some(visit_gap_ratio);
-            visit_gap_ratio
-        };
-
 
         let visit_gap = if visit_gap_ratio > 0.0 {
             2.0 * options.gap_reward_scale() / (1.0 + (options.gap_reward_multi() * visit_gap_ratio).exp()) - options.gap_reward_scale()
@@ -115,14 +104,6 @@ impl TimeManager {
         };
 
         let visit_difference_ratio = best_move_visits as f64 / tree.root_node().visits() as f64 - options.visit_distr_threshold();
-        let visit_difference_ratio = if let Some(mut current_value) = self.current_visit_ratio {
-            current_value += options.visit_ema_alpha() * (visit_difference_ratio - current_value);
-            self.current_visit_ratio = Some(current_value);
-            current_value
-        } else {
-            self.current_visit_ratio = Some(visit_difference_ratio);
-            visit_difference_ratio
-        };
         
         let time_multiplier = if visit_difference_ratio > 0.0 {
             let reward_scale = options.visit_reward_scale() + visit_gap;
