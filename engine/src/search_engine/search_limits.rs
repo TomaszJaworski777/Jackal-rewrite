@@ -173,6 +173,6 @@ fn visits_distribution(search_stats: &SearchStats, tree: &Tree, options: &Engine
         let penalty_scale = options.visit_penalty_scale() + visit_gap;
         2.0 * penalty_scale / (1.0 + (options.visit_penalty_multi() * visit_difference_ratio).exp()) - penalty_scale
     };
-
+  
     1.0 + time_multiplier
 }

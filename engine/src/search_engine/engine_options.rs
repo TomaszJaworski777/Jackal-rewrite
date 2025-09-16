@@ -44,11 +44,11 @@ create_options! {
             visit_reward_scale:    f64  =>  0.15,  0.0,  0.5,   0.02,   0.002;
             visit_reward_multi:    f64  =>  10.0,  1.0,  50.0,  1.0,    0.002;
             gap_threshold:         f64  =>  0.4,   0.0,  1.0,   0.04,   0.002;
-            gap_penalty_multi:     f64  =>  20.0,  1.0,  50.0,  2.0,    0.002;
-            gap_penalty_scale:     f64  =>  0.10,  0.0,  0.5,   0.02,   0.002;
-            gap_reward_multi:      f64  =>  20.0,  1.0,  50.0,  2.0,    0.002;
-            gap_reward_scale:      f64  =>  0.10,  0.0,  0.5,   0.02,   0.002;
-
+            gap_penalty_multi:     f64  =>  15.0,  1.0,  50.0,  2.0,    0.002;
+            gap_penalty_scale:     f64  =>  0.05,  0.0,  0.5,   0.05,   0.002;
+            gap_reward_multi:      f64  =>  15.0,  1.0,  50.0,  2.0,    0.002;
+            gap_reward_scale:      f64  =>  0.05,  0.0,  0.5,   0.05,   0.002;
+          
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;
         }
