@@ -134,15 +134,10 @@ impl TimeManager {
             0.0
         };
 
-        let multiplier = if score_trend > 0.0 {
-            -curve(score_trend * options.falling_eval_reward_multi(), options.falling_eval_reward_power(), options.falling_eval_reward_scale())
-        } else {
-            curve(-score_trend * options.falling_eval_penalty_multi(), options.falling_eval_penalty_power(), options.falling_eval_penalty_scale())
-        };
+        let ln = (1.0 / current_score.clamp(0.0, 1.0) - 1.0).ln();
+        let multiplier = (options.falling_eval_multi() * ln.abs().powf(options.falling_eval_power()).copysign(ln)).clamp(-options.falling_reward_clamp(), options.falling_penalty_clamp());
 
-        let multiplier = -score_trend * 5.0;
-
-        (1.0 + multiplier).clamp(0.6, 1.8)
+        1.0 + multiplier
     }
 }
 
