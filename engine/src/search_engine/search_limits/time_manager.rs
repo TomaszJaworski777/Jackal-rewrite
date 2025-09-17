@@ -1,3 +1,5 @@
+use core::f64;
+
 use crate::{search_engine::engine_options::EngineOptions, SearchStats, Tree};
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -5,6 +7,7 @@ pub struct TimeManager {
     soft_limit: Option<u128>,
     hard_limit: Option<u128>,
     previous_score: Option<f64>,
+    previous_best_move_changes: Option<f64>
 }
 
 #[allow(unused)]
@@ -43,7 +46,7 @@ impl TimeManager {
         self.hard_limit = Some(hard_limit);
     } 
 
-    pub fn is_timeout(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions) -> bool {
+    pub fn is_timeout(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions, best_move_changes: usize) -> bool {
         if self.soft_limit.is_none() || self.hard_limit.is_none() {
             return false;
         }
@@ -58,6 +61,7 @@ impl TimeManager {
 
         soft_limit_multiplier *= self.visits_distribution(search_stats, tree, options);
         soft_limit_multiplier *= self.falling_eval(search_stats, tree, options);
+        soft_limit_multiplier *= self.best_move_instability(search_stats, tree, options, best_move_changes);
 
         time_passed_ms >= (self.soft_limit.unwrap() as f64 * soft_limit_multiplier) as u128
     }
@@ -98,7 +102,7 @@ impl TimeManager {
             0
         };
 
-        let visit_gap_ratio = ((best_move_visits - second_move_visits) as f64).abs() / tree.root_node().visits() as f64 - options.gap_threshold();
+        let visit_gap_ratio = ((best_move_visits.saturating_sub(second_move_visits)) as f64).abs() / tree.root_node().visits() as f64 - options.gap_threshold();
 
         let visit_gap = if visit_gap_ratio > 0.0 {
             2.0 * options.gap_reward_scale() / (1.0 + (options.gap_reward_multi() * visit_gap_ratio).exp()) - options.gap_reward_scale()
@@ -135,6 +139,25 @@ impl TimeManager {
         };
 
         let multiplier = curve(score_trend + 0.5, options.falling_eval_power(), options.falling_eval_multi()).clamp(-options.falling_reward_clamp(), options.falling_penalty_clamp());
+
+        1.0 + multiplier
+    }
+
+    fn best_move_instability(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions, best_move_changes: usize) -> f64 {
+        if search_stats.iterations() < 2048 {
+            return 1.0;
+        }
+
+        let move_changes = if let Some(mut previous_changes) = self.previous_best_move_changes {
+            previous_changes += options.instability_ema_alpha() * (best_move_changes as f64 - previous_changes);
+            self.previous_best_move_changes = Some(previous_changes);
+            previous_changes
+        } else {
+            self.previous_best_move_changes = Some(best_move_changes as f64);
+            best_move_changes as f64
+        };
+
+        let multiplier = (options.instability_multi() * move_changes / 1000.0).powi(2).min(1.0) * options.instability_scale();
 
         1.0 + multiplier
     }

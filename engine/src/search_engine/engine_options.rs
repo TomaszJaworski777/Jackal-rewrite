@@ -35,24 +35,27 @@ create_options! {
             exploration_tau:       f64  =>  0.51,     0.0,    1.0,      0.055,  0.002;
 
             //Time manager
-            default_moves_to_go:        i64  =>  20,    15,   50,    4,      0.002;
-            hard_limit_multi:           f64  =>  3.5,   3.0,  5.0,   0.35,   0.002;
-            max_time_fraction:          f64  =>  0.6,   0.0,  1.0,   0.085,  0.002;
-            visit_distr_threshold:      f64  =>  0.6,   0.0,  1.0,   0.06,   0.002;
-            visit_penalty_scale:        f64  =>  0.8,   0.0,  0.5,   0.1,    0.002;
-            visit_penalty_multi:        f64  =>  10.0,  1.0,  50.0,  1.0,    0.002;
-            visit_reward_scale:         f64  =>  0.8,   0.0,  0.5,   0.1,    0.002;
-            visit_reward_multi:         f64  =>  10.0,  1.0,  50.0,  1.0,    0.002;
-            gap_threshold:              f64  =>  0.4,   0.0,  1.0,   0.04,   0.002;
-            gap_penalty_scale:          f64  =>  0.2,   0.0,  0.5,   0.05,   0.002;
-            gap_penalty_multi:          f64  =>  15.0,  1.0,  50.0,  2.0,    0.002;
-            gap_reward_scale:           f64  =>  0.2,   0.0,  0.5,   0.05,   0.002;
-            gap_reward_multi:           f64  =>  15.0,  1.0,  50.0,  2.0,    0.002;
-            falling_eval_ema_alpha:     f64  =>  0.65,  0.0,  1.0,   0.05,   0.002;
-            falling_eval_multi:         f64  =>  4.25,  0.0,  10.0,  0.5,    0.002;
-            falling_eval_power:         f64  =>  1.72,  1.0,  3.0,   0.2,    0.002;
-            falling_reward_clamp:       f64  =>  0.35,  0.0,  1.0,   0.035,  0.002;
-            falling_penalty_clamp:      f64  =>  0.6,   0.0,  1.0,   0.06,   0.002;
+            default_moves_to_go:        i64  =>  20,     15,   50,      4,        0.002;
+            hard_limit_multi:           f64  =>  3.5,    3.0,  5.0,     0.35,     0.002;
+            max_time_fraction:          f64  =>  0.6,    0.0,  1.0,     0.085,    0.002;
+            visit_distr_threshold:      f64  =>  0.6,    0.0,  1.0,     0.06,     0.002;
+            visit_penalty_scale:        f64  =>  0.8,    0.0,  0.5,     0.1,    0.002;
+            visit_penalty_multi:        f64  =>  10.0,   1.0,  50.0,    1.0,    0.002;
+            visit_reward_scale:         f64  =>  0.8,    0.0,  0.5,     0.1,    0.002;
+            visit_reward_multi:         f64  =>  10.0,   1.0,  50.0,    1.0,    0.002;
+            gap_threshold:              f64  =>  0.4,    0.0,  1.0,     0.04,   0.002;
+            gap_penalty_scale:          f64  =>  0.2,    0.0,  0.5,     0.05,   0.002;
+            gap_penalty_multi:          f64  =>  15.0,   1.0,  50.0,    2.0,    0.002;
+            gap_reward_scale:           f64  =>  0.2,    0.0,  0.5,     0.05,   0.002;
+            gap_reward_multi:           f64  =>  15.0,   1.0,  50.0,    2.0,    0.002;
+            falling_eval_ema_alpha:     f64  =>  0.65,   0.0,  1.0,     0.05,   0.002;
+            falling_eval_multi:         f64  =>  4.25,   0.0,  10.0,    0.5,    0.002;
+            falling_eval_power:         f64  =>  1.72,   1.0,  3.0,     0.2,    0.002;
+            falling_reward_clamp:       f64  =>  0.35,   0.0,  1.0,     0.035,  0.002;
+            falling_penalty_clamp:      f64  =>  0.6,    0.0,  1.0,     0.06,   0.002;
+            instability_ema_alpha:      f64  =>  0.2,    0.0,  1.0,     0.03,   0.002;
+            instability_multi:          f64  =>  334.0,  0.0,  1000.0,  33.4,   0.002;
+            instability_scale:          f64  =>  0.8,    0.0,  2.0,     0.1,    0.002;
           
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;
