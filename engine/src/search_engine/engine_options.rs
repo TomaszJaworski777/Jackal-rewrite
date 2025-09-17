@@ -48,13 +48,13 @@ create_options! {
             gap_penalty_multi:          f64  =>  15.0,  1.0,  50.0,  2.0,    0.002;
             gap_reward_scale:           f64  =>  0.2,   0.0,  0.5,   0.05,   0.002;
             gap_reward_multi:           f64  =>  15.0,  1.0,  50.0,  2.0,    0.002;
-            falling_eval_ema_alpha:     f64  =>  0.4849,   0.0,  1.0,   0.05,   0.002;
-            falling_eval_reward_scale:  f64  =>  0.8510,  0.0,  1.0,   0.085,  0.002;
-            falling_eval_reward_multi:  f64  =>  39.8950,  0.0,  60.0,  4.0,    0.002;
-            falling_eval_reward_power:  f64  =>  4.0448,   1.0,  10.0,  0.4,    0.002;
-            falling_eval_penalty_scale: f64  =>  0.8869,  0.0,  1.0,   0.085,  0.002;
-            falling_eval_penalty_multi: f64  =>  39.9418,  0.0,  60.0,  4.0,    0.002;
-            falling_eval_penalty_power: f64  =>  4.0209,   1.0,  10.0,  0.4,    0.002;
+            falling_eval_ema_alpha:     f64  =>  0.65,  0.0,  1.0,   0.05,   0.002;
+            falling_eval_reward_scale:  f64  =>  0.4,   0.0,  1.0,   0.085,  0.002;
+            falling_eval_reward_multi:  f64  =>  10.0,  0.0,  60.0,  4.0,    0.002;
+            falling_eval_reward_power:  f64  =>  2.0,   1.0,  10.0,  0.4,    0.002;
+            falling_eval_penalty_scale: f64  =>  0.7,   0.0,  1.0,   0.085,  0.002;
+            falling_eval_penalty_multi: f64  =>  10.0,  0.0,  60.0,  4.0,    0.002;
+            falling_eval_penalty_power: f64  =>  2.0,   1.0,  10.0,  0.4,    0.002;
           
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;

@@ -124,10 +124,10 @@ impl TimeManager {
             return 1.0;
         }
 
-        let current_score = tree[tree.select_best_child(tree.root_index()).unwrap()].score().single(0.5);
+        let current_score = tree[tree.select_best_child(tree.root_index()).unwrap()].score().cp(0.5) as f64 / 100.0;
         let score_trend = if let Some(previous_score) = self.previous_score {
             let trend = current_score - previous_score;
-            self.previous_score = Some(previous_score + 0.5 * trend);
+            self.previous_score = Some(previous_score + options.falling_eval_ema_alpha() * trend);
             trend
         } else {
             self.previous_score = Some(current_score);
@@ -140,11 +140,13 @@ impl TimeManager {
             curve(-score_trend * options.falling_eval_penalty_multi(), options.falling_eval_penalty_power(), options.falling_eval_penalty_scale())
         };
 
+        let multiplier = (-score_trend * 5.0).clamp(0.6, 1.8);
+
         1.0 + multiplier
     }
 }
 
 fn curve(value: f64, power: f64, scale: f64) -> f64 { //TODO: Replace sigmoids in visit ratio
     assert!(value >= 0.0);
-    (2.0 / (1.0 + (-value).exp()) - 1.0).powf(power) * scale
+    (value / 2.0).tanh().powf(power) * scale
 }
