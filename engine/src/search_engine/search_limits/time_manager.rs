@@ -4,8 +4,10 @@ use crate::{search_engine::engine_options::EngineOptions, SearchStats, Tree};
 pub struct TimeManager {
     soft_limit: Option<u128>,
     hard_limit: Option<u128>,
+    previous_score: Option<f64>,
 }
 
+#[allow(unused)]
 impl TimeManager {
     pub fn set_time(&mut self, time: u128) {
         self.hard_limit = Some(time);
@@ -55,6 +57,7 @@ impl TimeManager {
         let mut soft_limit_multiplier = 1.0;
 
         soft_limit_multiplier *= self.visits_distribution(search_stats, tree, options);
+        soft_limit_multiplier *= self.falling_eval(search_stats, tree, options);
 
         time_passed_ms >= (self.soft_limit.unwrap() as f64 * soft_limit_multiplier) as u128
     }
@@ -115,4 +118,33 @@ impl TimeManager {
     
         1.0 + time_multiplier
     }
+
+    fn falling_eval(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions) -> f64 {
+        if search_stats.iterations() < 2048 {
+            return 1.0;
+        }
+
+        let current_score = tree[tree.select_best_child(tree.root_index()).unwrap()].score().single(0.5);
+        let score_trend = if let Some(previous_score) = self.previous_score {
+            let trend = current_score - previous_score;
+            self.previous_score = Some(previous_score + 0.5 * trend);
+            trend
+        } else {
+            self.previous_score = Some(current_score);
+            0.0
+        };
+
+        let multiplier = if score_trend > 0.0 {
+            -curve(score_trend * options.falling_eval_reward_multi(), options.falling_eval_reward_power(), options.falling_eval_reward_scale())
+        } else {
+            curve(-score_trend * options.falling_eval_penalty_multi(), options.falling_eval_penalty_power(), options.falling_eval_penalty_scale())
+        };
+
+        1.0 + multiplier
+    }
+}
+
+fn curve(value: f64, power: f64, scale: f64) -> f64 { //TODO: Replace sigmoids in visit ratio
+    assert!(value >= 0.0);
+    (2.0 / (1.0 + (-value).exp()) - 1.0).powf(power) * scale
 }
