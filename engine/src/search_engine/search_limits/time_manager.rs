@@ -140,9 +140,9 @@ impl TimeManager {
             curve(-score_trend * options.falling_eval_penalty_multi(), options.falling_eval_penalty_power(), options.falling_eval_penalty_scale())
         };
 
-        let multiplier = (-score_trend * 5.0).clamp(0.6, 1.8);
+        let multiplier = -score_trend * 5.0;
 
-        1.0 + multiplier
+        (1.0 + multiplier).clamp(0.6, 1.8)
     }
 }
 
