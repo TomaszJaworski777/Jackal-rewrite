@@ -140,7 +140,7 @@ impl TimeManager {
     }
 }
 
-fn curve(value: f64, power: f64, scale: f64) -> f64 { //TODO: Replace sigmoids in visit ratio
+fn curve(value: f64, power: f64, scale: f64) -> f64 {
     let ln = (1.0 / value.clamp(0.0, 1.0) - 1.0).ln();
     ln.abs().powf(power).copysign(ln) * scale
 }

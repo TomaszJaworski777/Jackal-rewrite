@@ -49,8 +49,8 @@ create_options! {
             gap_reward_scale:           f64  =>  0.2,   0.0,  0.5,   0.05,   0.002;
             gap_reward_multi:           f64  =>  15.0,  1.0,  50.0,  2.0,    0.002;
             falling_eval_ema_alpha:     f64  =>  0.65,  0.0,  1.0,   0.05,   0.002;
-            falling_eval_multi:         f64  =>  4.25,   0.0,  10.0,  0.25,   0.002;
-            falling_eval_power:         f64  =>  1.72,  1.0,  3.0,   0.132,  0.002;
+            falling_eval_multi:         f64  =>  4.25,  0.0,  10.0,  0.5,    0.002;
+            falling_eval_power:         f64  =>  1.72,  1.0,  3.0,   0.2,    0.002;
             falling_reward_clamp:       f64  =>  0.35,  0.0,  1.0,   0.035,  0.002;
             falling_penalty_clamp:      f64  =>  0.6,   0.0,  1.0,   0.06,   0.002;
           
