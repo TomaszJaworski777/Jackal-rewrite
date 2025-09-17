@@ -134,14 +134,13 @@ impl TimeManager {
             0.0
         };
 
-        let ln = (1.0 / current_score.clamp(0.0, 1.0) - 1.0).ln();
-        let multiplier = (options.falling_eval_multi() * ln.abs().powf(options.falling_eval_power()).copysign(ln)).clamp(-options.falling_reward_clamp(), options.falling_penalty_clamp());
+        let multiplier = curve(score_trend + 0.5, options.falling_eval_power(), options.falling_eval_multi()).clamp(-options.falling_reward_clamp(), options.falling_penalty_clamp());
 
         1.0 + multiplier
     }
 }
 
 fn curve(value: f64, power: f64, scale: f64) -> f64 { //TODO: Replace sigmoids in visit ratio
-    assert!(value >= 0.0);
-    (value / 2.0).tanh().powf(power) * scale
+    let ln = (1.0 / value.clamp(0.0, 1.0) - 1.0).ln();
+    ln.abs().powf(power).copysign(ln) * scale
 }
