@@ -98,13 +98,25 @@ impl TimeManager {
             0
         };
 
-        let visit_gap_ratio = ((best_move_visits - second_move_visits) as f64).abs() / tree.root_node().visits() as f64 - options.visit_gap_threshold();
-        let visit_gap_multiplier = curve(visit_gap_ratio, options.visit_gap_power(), options.visit_gap_scale()).clamp(-options.visit_gap_reward_clamp(), options.visit_gap_penalty_clamp());
+        let visit_gap_ratio = ((best_move_visits - second_move_visits) as f64).abs() / tree.root_node().visits() as f64 - options.gap_threshold();
+
+        let visit_gap = if visit_gap_ratio > 0.0 {
+            2.0 * options.gap_reward_scale() / (1.0 + (options.gap_reward_multi() * visit_gap_ratio).exp()) - options.gap_reward_scale()
+        } else {
+            2.0 * options.gap_penalty_scale() / (1.0 + (options.gap_penalty_multi() * visit_gap_ratio).exp()) - options.gap_penalty_scale()
+        };
 
         let visit_difference_ratio = best_move_visits as f64 / tree.root_node().visits() as f64 - options.visit_distr_threshold();
-        let visit_difference_multiplier = curve(visit_difference_ratio, options.visit_distr_power(), options.visit_distr_scale()).clamp(-options.visit_reward_clamp(), options.visit_penalty_clamp());
+        
+        let time_multiplier = if visit_difference_ratio > 0.0 {
+            let reward_scale = options.visit_reward_scale() + visit_gap;
+            2.0 * reward_scale / (1.0 + (options.visit_reward_multi() * visit_difference_ratio).exp()) - reward_scale
+        } else {
+            let penalty_scale = options.visit_penalty_scale() + visit_gap;
+            2.0 * penalty_scale / (1.0 + (options.visit_penalty_multi() * visit_difference_ratio).exp()) - penalty_scale
+        };
     
-        1.0 + (visit_gap_multiplier + visit_difference_multiplier)
+        1.0 + time_multiplier
     }
 
     fn falling_eval(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions) -> f64 {
@@ -122,13 +134,13 @@ impl TimeManager {
             0.0
         };
 
-        let multiplier = curve(score_trend, options.falling_eval_power(), options.falling_eval_multi()).clamp(-options.falling_reward_clamp(), options.falling_penalty_clamp());
+        let multiplier = curve(score_trend + 0.5, options.falling_eval_power(), options.falling_eval_multi()).clamp(-options.falling_reward_clamp(), options.falling_penalty_clamp());
 
         1.0 + multiplier
     }
 }
 
 fn curve(value: f64, power: f64, scale: f64) -> f64 { //TODO: Replace sigmoids in visit ratio
-    let ln = (1.0 / (value + 0.5).clamp(0.0, 1.0) - 1.0).ln();
+    let ln = (1.0 / value.clamp(0.0, 1.0) - 1.0).ln();
     ln.abs().powf(power).copysign(ln) * scale
 }
