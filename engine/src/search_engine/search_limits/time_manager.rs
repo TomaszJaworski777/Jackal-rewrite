@@ -46,17 +46,21 @@ impl TimeManager {
         self.hard_limit = Some(hard_limit);
     } 
 
-    pub fn is_timeout(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions, best_move_changes: usize) -> bool {
+    pub fn hard_limit_reached(&mut self, search_stats: &SearchStats) -> bool {
+        if self.soft_limit.is_none() || self.hard_limit.is_none() {
+            return false;
+        }
+
+        search_stats.time_passesd_ms() >= self.hard_limit.unwrap()
+    }
+
+    pub fn soft_limit_reached(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions, best_move_changes: usize) -> bool {
         if self.soft_limit.is_none() || self.hard_limit.is_none() {
             return false;
         }
 
         let time_passed_ms = search_stats.time_passesd_ms();
         
-        if time_passed_ms >= self.hard_limit.unwrap() {
-            return true;
-        }
-
         let mut soft_limit_multiplier = 1.0;
 
         soft_limit_multiplier *= self.visits_distribution(search_stats, tree, options);

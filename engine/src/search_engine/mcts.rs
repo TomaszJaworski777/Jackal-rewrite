@@ -84,8 +84,18 @@ impl SearchEngine {
                 continue;
             }
 
-            if time_manager.is_timeout(search_stats, self.tree(), self.options(), *best_move_changes) {
+            if time_manager.hard_limit_reached(search_stats) {
                 self.interrupt_search();
+                break;
+            }
+
+            if search_stats.iterations() % 16384 != 0 {
+                continue;
+            }
+
+            if time_manager.soft_limit_reached(search_stats, self.tree(), self.options(), *best_move_changes) {
+                self.interrupt_search();
+                break;
             }
 
             *best_move_changes = 0;
