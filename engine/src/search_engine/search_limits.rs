@@ -1,11 +1,15 @@
-use crate::search_engine::SearchStats;
+use crate::{search_engine::{engine_options::EngineOptions, SearchStats}};
+
+mod time_manager;
+
+pub use time_manager::TimeManager;
 
 #[derive(Debug, Default)]
 pub struct SearchLimits {
     depth: Option<u64>,
     iters: Option<u64>,
-    time: Option<u128>,
     infinite: bool,
+    time_manager: TimeManager
 }
 
 impl SearchLimits {
@@ -16,11 +20,7 @@ impl SearchLimits {
     pub fn set_iters(&mut self, iters: Option<u64>) {
         self.iters = iters
     }
-
-    pub fn set_time(&mut self, time: u128) {
-        self.time = Some(time)
-    }
-
+    
     pub fn set_infinite(&mut self, infinite: bool) {
         self.infinite = infinite
     }
@@ -29,30 +29,10 @@ impl SearchLimits {
         self.infinite
     }
 
-    pub fn calculate_time_limit(
-        &mut self,
-        time_remaining: Option<u128>,
-        increment: Option<u128>,
-        moves_to_go: Option<u128>,
-        move_overhead: u128,
-        threads: i64
-    ) {
-        let time_remaining = if let Some(time_remaining) = time_remaining {
-            time_remaining.saturating_sub(threads as u128 * 10)
-        } else {
-            return;
-        };
-
-        if let Some(moves_to_go) = moves_to_go {
-            self.time = Some(time_remaining / moves_to_go);
-            return;
-        }
-
-        let max_time = (time_remaining * 3 / 5).saturating_sub(move_overhead).max(1);
-        let time = time_remaining / 40 + increment.unwrap_or(0) / 2;
-        self.time = Some(time.min(max_time))
+    pub fn time_manager(&self) -> TimeManager {
+        self.time_manager
     }
-
+ 
     pub fn is_limit_reached(&self, search_stats: &SearchStats) -> bool {
         if self.infinite {
             return false;
@@ -73,12 +53,11 @@ impl SearchLimits {
         false
     }
 
-    pub fn is_timeout(&self, search_stats: &SearchStats) -> bool {
-        if self.time.is_none() {
-            return false;
-        }
+    pub fn set_time(&mut self, time: u128) {
+        self.time_manager.set_time(time);
+    }
 
-        let time_passed_ms = search_stats.time_passesd_ms();
-        time_passed_ms >= self.time.unwrap()
+    pub fn calculate_time_limit(&mut self, time_remaining: Option<u128>, increment: Option<u128>, moves_to_go: Option<u128>, options: &EngineOptions) {
+        self.time_manager.calculate_time_limit(time_remaining, increment, moves_to_go, options);
     }
 }

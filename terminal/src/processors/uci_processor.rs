@@ -252,7 +252,7 @@ fn create_search_limits(args: &[String], board: &ChessBoard, search_engine: &Sea
         (btime, binc)
     };
 
-    search_limits.calculate_time_limit(time_remaining, increment, moves_to_go, search_engine.options().move_overhead() as u128, search_engine.options().threads());
+    search_limits.calculate_time_limit(time_remaining, increment, moves_to_go, search_engine.options());
 
     search_limits
 }

@@ -107,7 +107,7 @@ impl WDLScore {
     #[inline]
     pub fn cp(&self, draw_reference: f64) -> i32 {
         let score = self.single(draw_reference);
-        let score = (-400.0 * (1.0 / score.clamp(0.0, 1.0) - 1.0).ln()) as i32;
+        let score = (-246.631 * (1.0 / score.clamp(0.0, 1.0) - 1.0).ln()) as i32;
         score.clamp(-30000, 30000)
     }
 }
