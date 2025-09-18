@@ -161,7 +161,23 @@ impl TimeManager {
             best_move_changes as f64
         };
 
-        let multiplier = (options.instability_multi() * move_changes / 1000.0).powi(2).min(1.0) * options.instability_scale();
+        let multiplier = (options.instability_multi() * move_changes).powi(2).min(1.0) * options.instability_scale();
+
+        1.0 + multiplier
+    }
+
+    fn when_behind(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions) -> f64 {
+        if search_stats.iterations() < 1024 {
+            return 1.0;
+        }
+
+        let current_score = tree[tree.select_best_child(tree.root_index()).unwrap()].score().cp(0.5) as f64 / 100.0;
+
+        if current_score >= 0.0 {
+            return 1.0;
+        }
+
+        let multiplier = (options.behind_multi() * -current_score).powi(2).min(1.0) * options.behind_scale();
 
         1.0 + multiplier
     }
