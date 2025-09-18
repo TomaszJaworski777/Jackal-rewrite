@@ -40,7 +40,7 @@ impl TimeManager {
         };
 
         let soft_limit = time_remaining / moves_to_go + increment / 2;
-        let hard_limit = ((soft_limit as f64 * options.hard_limit_multi()).min((time_remaining + increment) as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
+        let hard_limit = ((soft_limit as f64 * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
 
         self.soft_limit = Some(soft_limit);
         self.hard_limit = Some(hard_limit);
@@ -59,6 +59,7 @@ impl TimeManager {
             return false;
         }
 
+        let move_overhead = (options.move_overhead() + (options.threads() - 1) * 10) as u128;
         let time_passed_ms = search_stats.time_passesd_ms();
         
         let mut soft_limit_multiplier = 1.0;
@@ -67,7 +68,7 @@ impl TimeManager {
         soft_limit_multiplier *= self.falling_eval(search_stats, tree, options);
         soft_limit_multiplier *= self.best_move_instability(search_stats, tree, options, best_move_changes);
 
-        time_passed_ms >= (self.soft_limit.unwrap() as f64 * soft_limit_multiplier) as u128
+        time_passed_ms >= ((self.soft_limit.unwrap() as f64 * soft_limit_multiplier) as u128).saturating_sub(move_overhead).max(1)
     }
 
     fn visits_distribution(&mut self, search_stats: &SearchStats, tree: &Tree, options: &EngineOptions) -> f64 {
