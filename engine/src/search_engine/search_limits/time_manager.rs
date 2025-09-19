@@ -34,15 +34,30 @@ impl TimeManager {
             return;
         };
 
-        let moves_to_go = if let Some(mtg) = moves_to_go.filter(|&m| m > 0) { 
-            mtg
-        } else {
-            options.default_moves_to_go() as u128
-        };
+        if let Some(mtg) = moves_to_go.filter(|&m| m > 0) { 
+            let limit = ((time_remaining + increment) as f64 / mtg as f64) as u128;
+            self.soft_limit = Some(limit);
+            self.hard_limit = Some(limit);
+            return;
+        }
 
         let ply_bonus = (1.0 + options.bonus_ply_scale() * ((game_ply as f64 + options.bonus_ply_offset()).sqrt() - options.bonus_ply_offset().sqrt())).min(options.max_bonus_ply_multi());
 
-        let soft_limit = (time_remaining / moves_to_go + increment / 2) as f64 * ply_bonus;
+        let mtg1 = options.mtg1().clamp(options.end_moves_to_go(), options.start_moves_to_go());
+        let mtg2 = options.mtg2().clamp(options.end_moves_to_go(), options.start_moves_to_go());
+
+        let r1 = (options.start_moves_to_go() - options.end_moves_to_go()) / (mtg1 - options.end_moves_to_go()) - 1.0;
+        let r2 = (options.start_moves_to_go() - options.end_moves_to_go()) / (mtg2 - options.end_moves_to_go()) - 1.0;
+
+        let s = (r1 / r2).ln() / 0.69314718055994530941723212145818;
+
+        let mid_ply = 40.0 / r1.powf(1.0 / s);
+
+        let moves_to_go = (options.end_moves_to_go() + (options.start_moves_to_go() - options.end_moves_to_go()) * (1.0 / (1.0 + (game_ply as f64 / mid_ply).powf(s)))).clamp(options.end_moves_to_go(), options.start_moves_to_go());
+        let soft_base = time_remaining as f64 / moves_to_go + increment as f64 / 2.0;
+        let curve_scale = (soft_base/options.move_reference()).powf(options.curve_scale_power()).clamp(0.8, 1.3);
+
+        let soft_limit = soft_base * curve_scale * ply_bonus;
         let hard_limit = ((soft_limit * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
 
         self.soft_limit = Some(soft_limit as u128);
