@@ -40,22 +40,10 @@ impl TimeManager {
             self.hard_limit = Some(limit);
             return;
         }
+        
+        let mtg = 30;
 
-        let ply_bonus = (1.0 + options.bonus_ply_scale() * ((game_ply as f64 + options.bonus_ply_offset()).sqrt() - options.bonus_ply_offset().sqrt())).min(options.max_bonus_ply_multi());
-
-        let mtg1 = options.mtg1().clamp(options.end_moves_to_go(), options.start_moves_to_go());
-        let mtg2 = options.mtg2().clamp(options.end_moves_to_go(), options.start_moves_to_go());
-
-        let r1 = (options.start_moves_to_go() - options.end_moves_to_go()) / (mtg1 - options.end_moves_to_go()) - 1.0;
-        let r2 = (options.start_moves_to_go() - options.end_moves_to_go()) / (mtg2 - options.end_moves_to_go()) - 1.0;
-
-        let s = (r1 / r2).ln() / 0.69314718055994530941723212145818;
-
-        let mid_ply = 40.0 / r1.powf(1.0 / s);
-
-        let moves_to_go = (options.end_moves_to_go() + (options.start_moves_to_go() - options.end_moves_to_go()) * (1.0 / (1.0 + (game_ply as f64 / mid_ply).powf(s)))).clamp(options.end_moves_to_go(), options.start_moves_to_go());
-
-        let time_left = (time_remaining + increment * (moves_to_go as u128 - 1) - 10 * (2 + moves_to_go as u128)).max(1) as f64;
+        let time_left = (time_remaining + increment * (mtg - 1) - 10 * (2 + mtg)).max(1) as f64;
         let log_time = (time_left / 1000.0).log10();
 
         let soft_constant = (0.0048 + 0.00032 * log_time).min(0.0060);
