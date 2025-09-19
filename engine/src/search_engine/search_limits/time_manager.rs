@@ -58,7 +58,15 @@ impl TimeManager {
         let curve_scale = (soft_base/options.move_reference()).powf(options.curve_scale_power()).clamp(0.8, 1.3);
 
         let soft_limit = soft_base * curve_scale * ply_bonus;
-        let hard_limit = ((soft_limit * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
+
+        let time_left = (time_remaining + increment * (moves_to_go as u128 - 1) - 10 * (2 + moves_to_go as u128)).max(1) as f64;
+        let log_time = (time_left / 1000.0).log10();
+
+        let hard_constant = (3.39 + 3.01 * log_time).max(2.93);
+        let hard_scale = (hard_constant + game_ply as f64 / 12.0).min(4.00);
+
+        //let hard_limit = ((soft_limit * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
+        let hard_limit = (hard_scale * soft_limit as f64).min(time_remaining as f64 * 0.850) as u128;
 
         self.soft_limit = Some(soft_limit as u128);
         self.hard_limit = Some(hard_limit);
