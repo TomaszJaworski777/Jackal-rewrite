@@ -54,22 +54,28 @@ impl TimeManager {
         let mid_ply = 40.0 / r1.powf(1.0 / s);
 
         let moves_to_go = (options.end_moves_to_go() + (options.start_moves_to_go() - options.end_moves_to_go()) * (1.0 / (1.0 + (game_ply as f64 / mid_ply).powf(s)))).clamp(options.end_moves_to_go(), options.start_moves_to_go());
-        let soft_base = time_remaining as f64 / moves_to_go + increment as f64 / 2.0;
-        let curve_scale = (soft_base/options.move_reference()).powf(options.curve_scale_power()).clamp(0.8, 1.3);
-
-        let soft_limit = soft_base * curve_scale * ply_bonus;
 
         let time_left = (time_remaining + increment * (moves_to_go as u128 - 1) - 10 * (2 + moves_to_go as u128)).max(1) as f64;
         let log_time = (time_left / 1000.0).log10();
 
+        let soft_constant = (0.0048 + 0.00032 * log_time).min(0.0060);
+        let soft_scale = (0.0125 + (game_ply as f64 + 2.5).sqrt() * soft_constant)
+            .min(0.25 * time_remaining as f64 / time_left);
+
         let hard_constant = (3.39 + 3.01 * log_time).max(2.93);
         let hard_scale = (hard_constant + game_ply as f64 / 12.0).min(4.00);
 
-        //let hard_limit = ((soft_limit * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
-        let hard_limit = (hard_scale * soft_limit as f64).min(time_remaining as f64 * 0.850) as u128;
+        let bonus = if game_ply <= 10 {
+            1.0 + (11.0 - game_ply as f64).log10() * 0.5
+        } else {
+            1.0
+        };
 
-        self.soft_limit = Some(soft_limit as u128);
-        self.hard_limit = Some(hard_limit);
+        let soft_time = (soft_scale * bonus * time_left) as u128;
+        let hard_time = (hard_scale * soft_time as f64).min(time_remaining as f64 * 0.850) as u128;
+
+        self.soft_limit = Some(soft_time);
+        self.hard_limit = Some(hard_time);
     } 
 
     pub fn hard_limit_reached(&mut self, search_stats: &SearchStats) -> bool {
