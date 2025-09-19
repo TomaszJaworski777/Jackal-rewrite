@@ -42,7 +42,13 @@ impl TimeManager {
 
         let ply_bonus = (1.0 + options.bonus_ply_scale() * ((game_ply as f64 + options.bonus_ply_offset()).sqrt() - options.bonus_ply_offset().sqrt())).min(options.max_bonus_ply_multi());
 
-        let soft_limit = (time_remaining / moves_to_go + increment / 2) as f64 * ply_bonus;
+        let opening_bonus = if game_ply <= options.opening_bonus_duration() as u16 {
+            1.0 + options.opening_bonus_scale() * (11.0 - options.opening_bonus_duration() as f64).log10()
+        } else {
+            1.0
+        }.min(options.max_opening_bonus());
+
+        let soft_limit = (time_remaining / moves_to_go + increment / 2) as f64 * ply_bonus * opening_bonus;
         let hard_limit = ((soft_limit * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
 
         self.soft_limit = Some(soft_limit as u128);
