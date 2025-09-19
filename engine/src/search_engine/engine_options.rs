@@ -35,7 +35,7 @@ create_options! {
             exploration_tau:       f64  =>  0.51,     0.0,    1.0,      0.055,  0.002;
 
             //Time manager
-            default_moves_to_go:    i64  =>  25,           10,   50,    2,      0.002;
+            default_moves_to_go:    i64  =>  15,           10,   50,    2,      0.002;
             hard_limit_multi:       f64  =>  4.109446,     3.0,  5.0,   0.41,   0.002;
             max_time_fraction:      f64  =>  0.454604,     0.0,  1.0,   0.045,  0.002;
             visit_distr_threshold:  f64  =>  0.677245,     0.0,  1.0,   0.07,   0.002;
@@ -61,9 +61,6 @@ create_options! {
             bonus_ply_scale:        f64  =>  0.04,         0.0,  1.0,   0.004,  0.002;
             bonus_ply_offset:       f64  =>  2.0,          0.0,  5.0,   0.2,    0.002;
             max_bonus_ply_multi:    f64  =>  1.5,          1.0,  2.0,   0.15,   0.002;
-            max_opening_bonus:      f64  =>  1.5,          1.0,  2.0,   0.15,   0.002;
-            opening_bonus_scale:    f64  =>  0.5,          0.0,  5.0,   0.05,   0.002;
-            opening_bonus_duration: i64  =>  10,           0,    20,    1.0,    0.002;
           
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;
