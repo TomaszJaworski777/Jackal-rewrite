@@ -37,32 +37,16 @@ impl TimeManager {
         let moves_to_go = if let Some(mtg) = moves_to_go.filter(|&m| m > 0) { 
             mtg
         } else {
-            30
+            options.default_moves_to_go() as u128
         };
 
-        let mtg = 30;
+        let ply_bonus = (1.0 + options.bonus_ply_scale() * ((game_ply as f64 + options.bonus_ply_offset()).sqrt() - options.bonus_ply_offset().sqrt())).min(options.max_bonus_ply_multi());
 
-        let time_left = (time_remaining + increment * (mtg - 1) - 10 * (2 + mtg)).max(1) as f64;
-        let log_time = (time_left / 1000.0).log10();
+        let soft_limit = (time_remaining / moves_to_go + increment / 2) as f64 * ply_bonus;
+        let hard_limit = ((soft_limit * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
 
-        let soft_constant = (0.0048 + 0.00032 * log_time).min(0.0060);
-        let soft_scale = (0.0125 + (game_ply as f64 + 2.5).sqrt() * soft_constant)
-            .min(0.25 * time_remaining as f64 / time_left);
-
-        let hard_constant = (3.39 + 3.01 * log_time).max(2.93);
-        let hard_scale = (hard_constant + game_ply as f64 / 12.0).min(4.00);
-
-        let bonus = if game_ply <= 10 {
-            1.0 + (11.0 - game_ply as f64).log10() * 0.5
-        } else {
-            1.0
-        };
-
-        let soft_time = (soft_scale * bonus * time_left) as u128;
-        let hard_time = (hard_scale * soft_time as f64).min(time_remaining as f64 * 0.850) as u128;
-
-        self.soft_limit = Some(soft_time);
-        self.hard_limit = Some(hard_time);
+        self.soft_limit = Some(soft_limit as u128);
+        self.hard_limit = Some(hard_limit);
     } 
 
     pub fn hard_limit_reached(&mut self, search_stats: &SearchStats) -> bool {
