@@ -40,7 +40,7 @@ impl TimeManager {
             self.hard_limit = Some(limit);
             return;
         }
-        
+
         let mtg = 30;
 
         let time_left = (time_remaining + increment * (mtg - 1) - 10 * (2 + mtg)).max(1) as f64;
@@ -53,11 +53,7 @@ impl TimeManager {
         let hard_constant = (3.39 + 3.01 * log_time).max(2.93);
         let hard_scale = (hard_constant + game_ply as f64 / 12.0).min(4.00);
 
-        let bonus = if game_ply <= 10 {
-            1.0 + (11.0 - game_ply as f64).log10() * 0.5
-        } else {
-            1.0
-        };
+        let bonus = 1.0 + 0.5 * (1.0 + 10.0 * (-(game_ply as f64 / 6.0).powf(1.2)).exp()).log10();
 
         let soft_time = (soft_scale * bonus * time_left) as u128;
         let hard_time = (hard_scale * soft_time as f64).min(time_remaining as f64 * 0.850) as u128;
