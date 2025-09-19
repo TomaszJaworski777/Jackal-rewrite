@@ -22,7 +22,8 @@ impl TimeManager {
         time_remaining: Option<u128>,
         increment: Option<u128>,
         moves_to_go: Option<u128>,
-        options: &EngineOptions
+        options: &EngineOptions,
+        game_ply: u16,
     ) {
         let move_overhead = (options.move_overhead() + (options.threads() - 1) * 10) as u128;
         let increment = increment.unwrap_or(0);
@@ -39,10 +40,12 @@ impl TimeManager {
             options.default_moves_to_go() as u128
         };
 
-        let soft_limit = time_remaining / moves_to_go + increment / 2;
-        let hard_limit = ((soft_limit as f64 * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
+        let ply_bonus = (1.0 + options.bonus_ply_scale() * ((game_ply as f64 + options.bonus_ply_offset()).sqrt() - options.bonus_ply_offset().sqrt())).min(options.max_bonus_ply_multi());
 
-        self.soft_limit = Some(soft_limit);
+        let soft_limit = (time_remaining / moves_to_go + increment / 2) as f64 * ply_bonus;
+        let hard_limit = ((soft_limit * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
+
+        self.soft_limit = Some(soft_limit as u128);
         self.hard_limit = Some(hard_limit);
     } 
 

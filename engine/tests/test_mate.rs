@@ -7,7 +7,7 @@ fn mate_in_1() {
 
     let position = ChessPosition::from(ChessBoard::from(&FEN::from("1r5k/8/8/8/8/8/1P6/KR6 b - - 0 1")));
 
-    search_engine.set_position(&position);
+    search_engine.set_position(&position, 0);
     
     let mut limits = SearchLimits::default();
     limits.set_iters(Some(2000));
@@ -24,7 +24,7 @@ fn mate_in_2() {
 
     let position = ChessPosition::from(ChessBoard::from(&FEN::from("r1b2k1r/ppp1bppp/8/1B1Q4/5q2/2P5/PPP2PPP/R3R1K1 w - - 1 1")));
 
-    search_engine.set_position(&position);
+    search_engine.set_position(&position, 0);
     
     let mut limits = SearchLimits::default();
     limits.set_iters(Some(125000));

@@ -58,6 +58,9 @@ create_options! {
             instability_scale:      f64  =>  0.683337,     0.0,  2.0,   0.07,   0.002;
             behind_multi:           f64  =>  0.3882863,    0.0,  1.0,   0.038,  0.002;
             behind_scale:           f64  =>  0.470591,     0.0,  2.0,   0.047,  0.002;
+            bonus_ply_scale:        f64  =>  0.04,         0.0,  1.0,   0.004,  0.002;
+            bonus_ply_offset:       f64  =>  2.0,          0.0,  5.0,   0.2,    0.002;
+            max_bonus_ply_multi:    f64  =>  1.5,          1.0,  2.0,   0.15,   0.002;
           
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;

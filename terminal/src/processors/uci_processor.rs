@@ -107,7 +107,7 @@ impl UciProcessor {
         }
 
         let mut chess_position = ChessPosition::from(ChessBoard::from(&FEN::from(fen)));
-        for mv in moves {
+        for &mv in &moves {
             chess_position.board().clone().map_legal_moves(|legal_mv| {
                 if *mv == legal_mv.to_string(search_engine.options().chess960()) {
                     chess_position.make_move_no_mask(legal_mv);
@@ -117,7 +117,7 @@ impl UciProcessor {
 
         search_engine.tree().try_reuse(search_engine.root_position(), &chess_position, search_engine.options());
 
-        search_engine.set_position(&chess_position);
+        search_engine.set_position(&chess_position, moves.len() as u16);
         println!("Position has been set.");
     }
 
@@ -252,7 +252,7 @@ fn create_search_limits(args: &[String], board: &ChessBoard, search_engine: &Sea
         (btime, binc)
     };
 
-    search_limits.calculate_time_limit(time_remaining, increment, moves_to_go, search_engine.options());
+    search_limits.calculate_time_limit(time_remaining, increment, moves_to_go, search_engine.options(), search_engine.game_ply());
 
     search_limits
 }

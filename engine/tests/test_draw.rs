@@ -12,7 +12,7 @@ fn three_fold() {
     position.make_move(Move::from_squares(Square::H3, Square::C8, MoveFlag::QUIET_MOVE), &mask);
     position.make_move(Move::from_squares(Square::G8, Square::H7, MoveFlag::QUIET_MOVE), &mask);
 
-    search_engine.set_position(&position);
+    search_engine.set_position(&position, 0);
     
     let mut limits = SearchLimits::default();
     limits.set_iters(Some(20000));
@@ -29,7 +29,7 @@ fn fifty_mr() {
 
     let position = ChessPosition::from(ChessBoard::from(&FEN::from("1r5k/2q1q3/3q1q2/4q1q1/5q2/8/1P6/KR6 w - - 98 100")));
 
-    search_engine.set_position(&position);
+    search_engine.set_position(&position, 0);
     
     let mut limits = SearchLimits::default();
     limits.set_iters(Some(2000));
@@ -46,7 +46,7 @@ fn fifty_mr_mate() {
 
     let position = ChessPosition::from(ChessBoard::from(&FEN::from("1r5k/2q1q3/3q1q2/4q1q1/5q2/8/1P6/KR6 b - - 99 100")));
 
-    search_engine.set_position(&position);
+    search_engine.set_position(&position, 0);
     
     let mut limits = SearchLimits::default();
     limits.set_iters(Some(2000));

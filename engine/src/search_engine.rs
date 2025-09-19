@@ -22,6 +22,7 @@ pub struct SearchEngine {
     tree: Tree,
     options: EngineOptions,
     interruption_token: AtomicBool,
+    game_ply: u16
 }
 
 impl Clone for SearchEngine {
@@ -31,6 +32,7 @@ impl Clone for SearchEngine {
             tree: self.tree.clone(),
             options: self.options.clone(),
             interruption_token: AtomicBool::new(self.interruption_token.load(Ordering::Relaxed)),
+            game_ply: self.game_ply
         }
     }
 }
@@ -44,6 +46,7 @@ impl SearchEngine {
             tree: Tree::from_bytes(options.hash() as usize, options.hash_size()),
             options,
             interruption_token: AtomicBool::new(false),
+            game_ply: 0
         }
     }
 
@@ -73,13 +76,20 @@ impl SearchEngine {
     }
 
     #[inline]
-    pub fn set_position(&mut self, position: &ChessPosition) {
+    pub fn game_ply(&self) -> u16 {
+        self.game_ply
+    }
+
+    #[inline]
+    pub fn set_position(&mut self, position: &ChessPosition, game_ply: u16) {
         self.position = *position;
+        self.game_ply = game_ply;
     }
 
     #[inline]
     pub fn reset_position(&mut self) {
         self.position = ChessPosition::from(ChessBoard::from(&FEN::start_position()));
+        self.game_ply = 0;
     }
 
     #[inline]

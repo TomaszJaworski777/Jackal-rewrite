@@ -72,7 +72,7 @@ impl SearchEngine {
             let fen = FEN::from(fen);
             let board = ChessBoard::from(&fen);
             self.tree().clear();
-            self.set_position(&ChessPosition::from(board));
+            self.set_position(&ChessPosition::from(board), 0);
 
             let result = self.search::<NoReport>(&search_limits);
             nodes += if self.options().report_iters() {
