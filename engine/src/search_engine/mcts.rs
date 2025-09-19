@@ -80,7 +80,7 @@ impl SearchEngine {
 
             *last_best_move = Some(best_move);
 
-            if search_stats.iterations() % 256 != 0 {
+            if search_stats.iterations() % 128 != 0 {
                 continue;
             }
 
@@ -89,13 +89,17 @@ impl SearchEngine {
                 break;
             }
 
-            if search_stats.iterations() % 16384 != 0 {
+            if search_stats.iterations() % 4096 != 0 {
                 continue;
             }
 
             if time_manager.soft_limit_reached(search_stats, self.tree(), self.options(), *best_move_changes) {
                 self.interrupt_search();
                 break;
+            }
+
+            if search_stats.iterations() % 16384 != 0 {
+                continue;
             }
 
             *best_move_changes = 0;

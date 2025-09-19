@@ -286,7 +286,7 @@ fn analyse(search_engine: &mut SearchEngine, iters: Option<u64>) {
             return;
         }
 
-        search_engine.set_position(&ChessPosition::from(board_cpy));
+        search_engine.set_position(&ChessPosition::from(board_cpy), 0);
         search_engine.search::<NoReport>(&search_limits);
 
         evals[usize::from(square)] = search_engine.tree().get_best_pv(0).score().cp(0.5);
@@ -300,7 +300,7 @@ fn analyse(search_engine: &mut SearchEngine, iters: Option<u64>) {
 
     draw_eval_board(&board, &info, current_eval, evals);
 
-    search_engine.set_position(&position);
+    search_engine.set_position(&position, 0);
 }
 
 fn draw_eval_board(board: &ChessBoard, info: &[String; 33], current_eval: i32, board_evals: [i32; 64]) {
