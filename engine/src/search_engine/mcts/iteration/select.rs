@@ -42,7 +42,8 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
 
     if parent_node.visits() > 1 {
         let var = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).powi(2)).max(0.0);
-        let variance = var.sqrt() / options.cpuct_variance_scale();
+        let mut variance = var.sqrt() / options.cpuct_variance_scale();
+        variance += (1.0 - variance) / (1.0 + options.cpuct_var_warmup() * parent_node.visits() as f64);
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);
     }
 
