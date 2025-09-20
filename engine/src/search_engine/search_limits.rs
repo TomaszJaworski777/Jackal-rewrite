@@ -57,7 +57,7 @@ impl SearchLimits {
         self.time_manager.set_time(time);
     }
 
-    pub fn calculate_time_limit(&mut self, time_remaining: Option<u128>, increment: Option<u128>, moves_to_go: Option<u128>, options: &EngineOptions, game_ply: u16) {
-        self.time_manager.calculate_time_limit(time_remaining, increment, moves_to_go, options, game_ply);
+    pub fn calculate_time_limit(&mut self, time_remaining: Option<u128>, increment: Option<u128>, moves_to_go: Option<u128>, options: &EngineOptions, game_ply: u16, phase: f64) {
+        self.time_manager.calculate_time_limit(time_remaining, increment, moves_to_go, options, game_ply, phase);
     }
 }

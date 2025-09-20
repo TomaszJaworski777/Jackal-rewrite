@@ -24,6 +24,7 @@ impl TimeManager {
         moves_to_go: Option<u128>,
         options: &EngineOptions,
         game_ply: u16,
+        phase: f64
     ) {
         let move_overhead = (options.move_overhead() + (options.threads() - 1) * 10) as u128;
         let increment = increment.unwrap_or(0);
@@ -46,8 +47,10 @@ impl TimeManager {
         let time_left = (time_remaining + increment * (mtg - 1) - 10 * (2 + mtg)).max(1) as f64;
         let log_time = (time_left / 1000.0).log10();
 
+        let phase = (1.0 - (phase/24.0)).powf(2.0).clamp(0.0, 1.0) * 1.0;
+
         let soft_constant = (0.0048 + 0.00032 * log_time).min(0.0060);
-        let soft_scale = (0.0125 + (game_ply as f64 + 2.5).sqrt() * soft_constant)
+        let soft_scale = (0.0125 + (game_ply as f64 + 2.5 + phase).sqrt() * soft_constant)
             .min(0.25 * time_remaining as f64 / time_left);
 
         let hard_constant = (3.39 + 3.01 * log_time).max(2.93);
