@@ -24,6 +24,7 @@ impl TimeManager {
         moves_to_go: Option<u128>,
         options: &EngineOptions,
         game_ply: u16,
+        phase: f64
     ) {
         let move_overhead = (options.move_overhead() + (options.threads() - 1) * 10) as u128;
         let increment = increment.unwrap_or(0);
@@ -34,19 +35,34 @@ impl TimeManager {
             return;
         };
 
-        let moves_to_go = if let Some(mtg) = moves_to_go.filter(|&m| m > 0) { 
-            mtg
-        } else {
-            options.default_moves_to_go() as u128
-        };
+        if let Some(mtg) = moves_to_go.filter(|&m| m > 0) { 
+            let limit = ((time_remaining + increment) as f64 / mtg as f64) as u128;
+            self.soft_limit = Some(limit);
+            self.hard_limit = Some(limit);
+            return;
+        }
 
-        let ply_bonus = (1.0 + options.bonus_ply_scale() * ((game_ply as f64 + options.bonus_ply_offset()).sqrt() - options.bonus_ply_offset().sqrt())).min(options.max_bonus_ply_multi());
+        let mtg = options.default_moves_to_go();
 
-        let soft_limit = (time_remaining / moves_to_go + increment / 2) as f64 * ply_bonus;
-        let hard_limit = ((soft_limit * options.hard_limit_multi()).min(time_remaining as f64 * options.max_time_fraction()) as u128).saturating_sub(move_overhead).max(1);
+        let time_left = (time_remaining as f64 + increment as f64 * (mtg - 1.0) - 10.0 * (2.0 + mtg)).max(1.0);
+        let log_time = (time_left / 1000.0).log10();
 
-        self.soft_limit = Some(soft_limit as u128);
-        self.hard_limit = Some(hard_limit);
+        let phase = (1.0 - (phase/24.0)).powf(options.phase_power()).clamp(0.0, 1.0) * options.phase_scale();
+
+        let soft_constant = (options.soft_constant() + options.soft_constant_multi() * log_time).min(options.soft_constant_cap());
+        let soft_scale = (options.soft_scale() + (game_ply as f64 + options.soft_scale_offset() + phase).sqrt() * soft_constant)
+            .min(options.soft_scale_cap() * time_remaining as f64 / time_left);
+
+        let hard_constant = (options.hard_constant() + options.hard_constant_multi() * log_time).max(options.hard_constant_cap());
+        let hard_scale = (hard_constant + game_ply as f64 / options.hard_ply_div()).min(options.hard_scale_cap());
+
+        let bonus = 1.0 + options.bonus_scale() * (1.0 + options.bonus_move_factor() * (-(game_ply as f64 / options.bonus_ply_div()).powf(options.bonus_power())).exp()).log10();
+
+        let soft_time = (soft_scale * bonus * time_left) as u128;
+        let hard_time = (hard_scale * soft_time as f64).min(time_remaining as f64 * 0.850) as u128;
+
+        self.soft_limit = Some(soft_time);
+        self.hard_limit = Some(hard_time);
     } 
 
     pub fn hard_limit_reached(&mut self, search_stats: &SearchStats) -> bool {
