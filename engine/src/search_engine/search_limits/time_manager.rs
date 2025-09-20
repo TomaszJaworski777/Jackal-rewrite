@@ -42,21 +42,21 @@ impl TimeManager {
             return;
         }
 
-        let mtg = 30;
+        let mtg = options.default_moves_to_go();
 
-        let time_left = (time_remaining + increment * (mtg - 1) - 10 * (2 + mtg)).max(1) as f64;
+        let time_left = (time_remaining as f64 + increment as f64 * (mtg - 1.0) - 10.0 * (2.0 + mtg)).max(1.0);
         let log_time = (time_left / 1000.0).log10();
 
-        let phase = (1.0 - (phase/24.0)).powf(2.0).clamp(0.0, 1.0) * 1.0;
+        let phase = (1.0 - (phase/24.0)).powf(options.phase_power()).clamp(0.0, 1.0) * options.phase_scale();
 
-        let soft_constant = (0.0048 + 0.00032 * log_time).min(0.0060);
-        let soft_scale = (0.0125 + (game_ply as f64 + 2.5 + phase).sqrt() * soft_constant)
-            .min(0.25 * time_remaining as f64 / time_left);
+        let soft_constant = (options.soft_constant() + options.soft_constant_multi() * log_time).min(options.soft_constant_cap());
+        let soft_scale = (options.soft_scale() + (game_ply as f64 + options.soft_scale_offset() + phase).sqrt() * soft_constant)
+            .min(options.soft_scale_cap() * time_remaining as f64 / time_left);
 
-        let hard_constant = (3.39 + 3.01 * log_time).max(2.93);
-        let hard_scale = (hard_constant + game_ply as f64 / 12.0).min(4.00);
+        let hard_constant = (options.hard_constant() + options.hard_constant_multi() * log_time).max(options.hard_constant_cap());
+        let hard_scale = (hard_constant + game_ply as f64 / options.hard_ply_div()).min(options.hard_scale_cap());
 
-        let bonus = 1.0 + 0.5 * (1.0 + 10.0 * (-(game_ply as f64 / 6.0).powf(1.2)).exp()).log10();
+        let bonus = 1.0 + options.bonus_scale() * (1.0 + options.bonus_move_factor() * (-(game_ply as f64 / options.bonus_ply_div()).powf(options.bonus_power())).exp()).log10();
 
         let soft_time = (soft_scale * bonus * time_left) as u128;
         let hard_time = (hard_scale * soft_time as f64).min(time_remaining as f64 * 0.850) as u128;
