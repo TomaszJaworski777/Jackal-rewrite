@@ -16,6 +16,9 @@ impl SearchEngine {
     ) -> Option<WDLScore> { 
         let hash = position.board().hash();
         let node = &self.tree()[node_idx];
+
+        let mut selected_child_idx = None;
+
         let score = if !ROOT && (node.is_terminal() || node.visits() == 0) {
             self.simulate(node_idx, position)
         } else {
@@ -28,6 +31,8 @@ impl SearchEngine {
             self.tree().update_node(node_idx)?;
 
             let new_idx = self.select(node_idx, *depth);
+
+            selected_child_idx = Some(new_idx);
 
             position.make_move(self.tree()[new_idx].mv(), castle_mask);
 
@@ -48,7 +53,7 @@ impl SearchEngine {
             score?
         }.reversed();
 
-        self.backpropagate(node_idx, score, hash);
+        self.backpropagate(node_idx, selected_child_idx, score, hash);
 
         Some(score)
     }
