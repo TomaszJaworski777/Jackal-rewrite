@@ -51,5 +51,7 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
 }
 
 fn get_exploration_scale(options: &EngineOptions, parent_node: &Node) -> f64 {
-    (options.exploration_tau() * (parent_node.visits().max(1) as f64).ln()).exp()
+    let mut exp = (options.exploration_tau() * (parent_node.visits().max(1) as f64).ln()).exp();
+    exp *= (0.679 - 1.634 * (parent_node.gini_impurity() + 0.001).ln()).min(2.1);
+    exp
 }

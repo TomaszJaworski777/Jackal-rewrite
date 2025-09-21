@@ -43,6 +43,7 @@ impl Tree {
         *children_idx = start_index;
         self[node_idx].set_children_count(moves.len());
 
+        let mut squares = 0.0;
         for (idx, mv) in moves.into_iter().enumerate() {
             let p = if policy.len() == 1 {
                 1.0
@@ -51,8 +52,13 @@ impl Tree {
             };
 
             self[start_index + idx].clear(mv);
-            self[start_index + idx].set_policy(p as f64);
+            self[start_index + idx].set_policy(p);
+
+            squares += p * p;
         }
+
+        let gini_impurity = (1.0 - squares).clamp(0.0, 1.0);
+        self[node_idx].set_gini_impurity(gini_impurity);
 
         Some(())
     }
@@ -106,6 +112,7 @@ impl Tree {
             total += *p;
         }
 
+        let mut squares = 0.0;
         for (idx, p) in policy.iter().enumerate() {
             let p = if policy.len() == 1 {
                 1.0
@@ -114,7 +121,11 @@ impl Tree {
             };
 
             self[children_idx + idx].set_policy(p as f64);
+            squares += p * p;
         }
+
+        let gini_impurity = (1.0 - squares).clamp(0.0, 1.0);
+        self[node_idx].set_gini_impurity(gini_impurity);
     }
 }
 

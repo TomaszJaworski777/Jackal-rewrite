@@ -23,6 +23,7 @@ pub struct Node {
     policy: AtomicU16,
     state: AtomicGameState,
     threads: AtomicU8,
+    gini_impurity: AtomicU16
 }
 
 impl Clone for Node {
@@ -37,6 +38,7 @@ impl Clone for Node {
             state: self.state.clone(),
             policy: AtomicU16::new(self.policy.load(Ordering::Relaxed)),
             threads: AtomicU8::new(self.threads.load(Ordering::Relaxed)),
+            gini_impurity: AtomicU16::new(self.gini_impurity.load(Ordering::Relaxed))
         }
     }
 }
@@ -53,6 +55,7 @@ impl Node {
             state: AtomicGameState::new(GameState::Ongoing),
             policy: AtomicU16::new(0),
             threads: AtomicU8::new(0),
+            gini_impurity: AtomicU16::new(0)
         }
     }
 
@@ -65,6 +68,7 @@ impl Node {
         self.state.set(node.state());
         self.policy.store(node.policy.load(Ordering::Relaxed), Ordering::Relaxed);
         self.threads.store(node.threads(), Ordering::Relaxed);
+        self.gini_impurity.store(node.gini_impurity.load(Ordering::Relaxed), Ordering::Relaxed);
     }
 
     #[inline]
@@ -76,6 +80,7 @@ impl Node {
         self.state.set(GameState::Ongoing);
         self.policy.store(0, Ordering::Relaxed);
         self.threads.store(0, Ordering::Relaxed);
+        self.gini_impurity.store(0, Ordering::Relaxed);
         self.clear_children();
     }
 
@@ -135,6 +140,11 @@ impl Node {
     }
     
     #[inline]
+    pub fn gini_impurity(&self) -> f64 {
+        f64::from(self.gini_impurity.load(Ordering::Relaxed)) / f64::from(u16::MAX)
+    }
+
+    #[inline]
     pub fn is_terminal(&self) -> bool {
         self.state() != GameState::Ongoing
     }
@@ -157,6 +167,11 @@ impl Node {
     #[inline]
     pub fn dec_threads(&self, value: u8) -> u8 {
         self.threads.fetch_sub(value, Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn set_gini_impurity(&self, gini_impurity: f64) {
+        self.gini_impurity.store((gini_impurity * f64::from(u16::MAX)) as u16, Ordering::Relaxed)
     }
 
     #[inline]
