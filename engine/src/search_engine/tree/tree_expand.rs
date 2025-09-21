@@ -19,7 +19,11 @@ impl Tree {
         let policy_inputs = PolicyNetwork.get_inputs(board);
         let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
 
-        let pst = calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
+        let pst = if node_idx == self.root_index() {
+            3.25
+        } else {
+            1.23
+        }; //calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
 
         let mut moves = Vec::new();
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
@@ -94,7 +98,11 @@ impl Tree {
         let policy_inputs = PolicyNetwork.get_inputs(board);
         let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
 
-        let pst = calculate_pst(engine_options, self[node_idx].score().single(0.5), depth as f64);
+        let pst = if node_idx == self.root_index() {
+            3.25
+        } else {
+            1.23
+        }; //calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
 
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
         let mut max = f64::NEG_INFINITY;
