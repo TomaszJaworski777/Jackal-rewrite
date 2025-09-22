@@ -19,7 +19,11 @@ impl Tree {
         let policy_inputs = PolicyNetwork.get_inputs(board);
         let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
 
-        let pst = calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
+        let pst = if node_idx == self.root_index() {
+            3.25
+        } else {
+            1.23
+        }; //calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
 
         let mut moves = Vec::new();
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
@@ -43,6 +47,7 @@ impl Tree {
         *children_idx = start_index;
         self[node_idx].set_children_count(moves.len());
 
+        let mut squares = 0.0;
         for (idx, mv) in moves.into_iter().enumerate() {
             let p = if policy.len() == 1 {
                 1.0
@@ -51,8 +56,13 @@ impl Tree {
             };
 
             self[start_index + idx].clear(mv);
-            self[start_index + idx].set_policy(p as f64);
+            self[start_index + idx].set_policy(p);
+
+            squares += p * p;
         }
+
+        let gini_impurity = (1.0 - squares).clamp(0.0, 1.0);
+        self[node_idx].set_gini_impurity(gini_impurity);
 
         Some(())
     }
@@ -88,7 +98,11 @@ impl Tree {
         let policy_inputs = PolicyNetwork.get_inputs(board);
         let mut policy_cache: [Option<Vec<f32>>; 192] = [const { None }; 192];
 
-        let pst = calculate_pst(engine_options, self[node_idx].score().single(0.5), depth as f64);
+        let pst = if node_idx == self.root_index() {
+            3.25
+        } else {
+            1.23
+        }; //calculate_pst(engine_options, self[node_idx].score().single(0.5), depth);
 
         let mut policy = Vec::with_capacity(board.occupancy().pop_count() as usize);
         let mut max = f64::NEG_INFINITY;
@@ -106,6 +120,7 @@ impl Tree {
             total += *p;
         }
 
+        let mut squares = 0.0;
         for (idx, p) in policy.iter().enumerate() {
             let p = if policy.len() == 1 {
                 1.0
@@ -114,7 +129,11 @@ impl Tree {
             };
 
             self[children_idx + idx].set_policy(p as f64);
+            squares += p * p;
         }
+
+        let gini_impurity = (1.0 - squares).clamp(0.0, 1.0);
+        self[node_idx].set_gini_impurity(gini_impurity);
     }
 }
 

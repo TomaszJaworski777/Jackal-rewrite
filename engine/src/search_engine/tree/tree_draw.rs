@@ -229,9 +229,10 @@ impl Tree {
         println!(
             "{}",
             format!(
-                "{prefix}  {score} score  {} visits  {} policy  {}",
+                "{prefix}  {score} score  {} visits  {} policy  {:.4} gini {}",
                 visits.to_string().white(),
                 policy,
+                node.gini_impurity(),
                 state.white()
             )
             .secondary(color_gradient)
