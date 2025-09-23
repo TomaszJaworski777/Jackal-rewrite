@@ -15,7 +15,7 @@ create_options! {
             ["Report_iters"] report_iters:  bool  =>  false;
 
             //======== EAS ========
-            ["Contempt"]  contempt:   i64  =>  1000,  -10000,  10000;
+            ["Contempt"]  contempt:   i64  =>  500,  -10000,  10000;
             ["DrawScore"] draw_score: i64  =>  40,    -100,    100;
         }
         Tunables {
