@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use chess::{ChessBoard, ChessPosition, Piece, Side, Square, DEFAULT_PERFT_DEPTH, FEN};
-use engine::{NoReport, NodeIndex, PolicyNetwork, SearchEngine, SearchLimits, ValueNetwork};
+use engine::{NoReport, NodeIndex, PolicyNetwork, SearchEngine, SearchLimits, ValueNetwork, WDLScore};
 use utils::{clear_terminal_screen, create_loading_bar, heat_color, time_to_string, number_to_string, AlignString, Colors, CustomColor, PieceColors, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 pub struct MiscProcessor;
@@ -35,7 +35,7 @@ impl MiscProcessor {
                     None
                 };
                 
-                search_engine.tree().draw_tree::<true>(depth, node_idx, search_engine.options().chess960());
+                search_engine.tree().draw_tree::<true>(depth, node_idx,&search_engine);
             },
             "rawtree" => {
                 let depth = if args.len() >= 1 {
@@ -56,7 +56,7 @@ impl MiscProcessor {
                     None
                 };
 
-                search_engine.tree().draw_tree::<false>(depth, node_idx, search_engine.options().chess960());
+                search_engine.tree().draw_tree::<false>(depth, node_idx, &search_engine);
             },
             "perft" => {
                 let depth = if args.len() >= 1 {
@@ -203,6 +203,13 @@ fn eval(search_engine: &SearchEngine) {
     let wdl_score = ValueNetwork.forward(board);
     let current_eval = wdl_score.cp(0.5);
 
+    let mut v = wdl_score.win_chance() - wdl_score.lose_chance();
+    let mut d = wdl_score.draw_chance();
+
+    search_engine.contempt().rescale(&mut v, &mut d, 1.0, false, search_engine.options());
+    let contempt_score = WDLScore::new((1.0 + v - d) / 2.0, d);
+    let contempt_eval = contempt_score.cp(0.5);
+
     let mut info: [String; 33] = [const { String::new() }; 33];
     info[1] = format!("Raw: {}", 
         format!("[{}, {}, {}] ({}{})",
@@ -213,6 +220,15 @@ fn eval(search_engine: &SearchEngine) {
             heat_color(format!("{:.2}", current_eval.abs() as f32 / 100.0).as_str(), current_eval as f32 / 100.0, -20.0, 20.0),
         ).secondary(1.0/32.0)
     ).primary(1.0/32.0);
+    info[2] = format!("Contempt: {}", 
+        format!("[{}, {}, {}] ({}{})",
+            format!("{:.2}%", contempt_score.win_chance() * 100.0).custom_color(WIN_COLOR),
+            format!("{:.2}%", contempt_score.draw_chance() * 100.0).custom_color(DRAW_COLOR),
+            format!("{:.2}%", contempt_score.lose_chance() * 100.0).custom_color(LOSE_COLOR),
+            heat_color(if contempt_eval > 0 { "+" } else { "-" }, contempt_eval as f32 / 100.0, -20.0, 20.0),
+            heat_color(format!("{:.2}", contempt_eval.abs() as f32 / 100.0).as_str(), contempt_eval as f32 / 100.0, -20.0, 20.0),
+        ).secondary(2.0/32.0)
+    ).primary(2.0/32.0);
 
     let mut evals = [0; 64];
     board.occupancy().map(|square| {

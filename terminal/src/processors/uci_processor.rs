@@ -66,6 +66,8 @@ impl UciProcessor {
                     search_engine.resize_tree();
                 }
 
+                search_engine.reinit_contempt();
+
                 println!("Option {name} has been set to {value}");
             },
             _ => {}

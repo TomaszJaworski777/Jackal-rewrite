@@ -15,7 +15,8 @@ create_options! {
             ["Report_iters"] report_iters:  bool  =>  false;
 
             //======== EAS ========
-
+            ["Contempt"]  contempt:   i64  =>  1000,  -10000,  10000;
+            ["DrawScore"] draw_score: i64  =>  40,    -100,    100;
         }
         Tunables {
             //PST
@@ -78,6 +79,13 @@ create_options! {
           
             //Transposition Table
             hash_size: f64  =>  0.04,  0.01,  0.5,  0.004,  0.002;
+
+            //Contempt
+            max_reasonable_s: f64  =>  2.0,     0.0,    100.0,    0.2,    0.002;
+            book_exit_bias:   f64  =>  0.65,    0.0,    1.0,      0.065,  0.002;
+            draw_rate_target: f64  =>  0.0,     0.0,    1.0,      0.01,   0.002;
+            draw_rate_ref:    f64  =>  0.65,    0.0,    1.0,      0.065,  0.002;
+            contempt_att:     f64  =>  1.0,     -10.0,  10.0,     0.1,    0.002;
         }
     }
 }

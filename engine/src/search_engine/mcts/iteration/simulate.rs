@@ -1,6 +1,6 @@
 use chess::ChessPosition;
 
-use crate::{search_engine::tree::NodeIndex, GameState, SearchEngine, ValueNetwork, WDLScore};
+use crate::{search_engine::{contempt::Contempt, engine_options::EngineOptions, tree::NodeIndex}, GameState, SearchEngine, ValueNetwork, WDLScore};
 
 impl SearchEngine {
     pub(super) fn simulate(&self, node_idx: NodeIndex, position: &ChessPosition) -> WDLScore {
@@ -9,14 +9,16 @@ impl SearchEngine {
             self.tree().set_state(node_idx, state);
         }
 
+        let is_stm = self.root_position().board().side() == position.board().side();
+
         if self.tree[node_idx].state() == GameState::Ongoing {
             if let Some(entry) = self.tree().hash_table().get(position.board().hash()) {
                 entry
             } else {
-                get_position_score(position, self.tree()[node_idx].state())
+                get_position_score(position, self.tree()[node_idx].state(), self.contempt(), self.options(), is_stm)
             }
         } else {
-            get_position_score(position, self.tree()[node_idx].state())
+            get_position_score(position, self.tree()[node_idx].state(), self.contempt(), self.options(), is_stm)
         }
     }
 }
@@ -54,11 +56,22 @@ fn is_draw(position: &ChessPosition, root_position: &ChessPosition) -> bool {
     false
 }
 
-fn get_position_score(position: &ChessPosition, node_state: GameState) -> WDLScore {
-    match node_state {
+fn get_position_score(position: &ChessPosition, node_state: GameState, contempt: &Contempt, options: &EngineOptions, is_stm: bool) -> WDLScore {
+    let score = match node_state {
         GameState::Draw => WDLScore::DRAW,
         GameState::Loss(_) => WDLScore::LOSE,
         GameState::Win(_) => WDLScore::WIN,
         _ => ValueNetwork.forward(position.board())
-    }
+    };
+
+    let mut draw_chance= score.draw_chance();
+    let mut win_lose_delta = score.win_chance() - score.lose_chance();
+
+    let sign = if is_stm { 1.0 } else { -1.0 };
+
+    contempt.rescale(&mut win_lose_delta, &mut draw_chance, sign, false, options);
+
+    let new_win_chance = (1.0 + win_lose_delta - draw_chance) / 2.0;
+
+    WDLScore::new(new_win_chance, draw_chance)
 }

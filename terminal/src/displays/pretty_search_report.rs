@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use engine::{PvLine, SearchEngine, SearchLimits, SearchReport, SearchStats, Tree};
+use engine::{PvLine, SearchEngine, SearchLimits, SearchReport, SearchStats, Tree, WDLScore};
 use utils::{bytes_to_string, clear_terminal_screen, create_loading_bar, heat_color, number_to_string, time_to_string, AlignString, Theme, DRAW_COLOR, LOSE_COLOR, WIN_COLOR};
 
 static mut SEARCH_HISTORY: Vec<(u128, PvLine)> = Vec::new();
@@ -134,11 +134,20 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
     }
 
     let pv = search_engine.tree().get_best_pv(0);
-    let single = pv.score().single(0.5);
+
+    let score = pv.score();
+    let mut v = score.win_chance() - score.lose_chance();
+    let mut d = score.draw_chance();
+
+    search_engine.contempt().rescale(&mut v, &mut d, 1.0, true, search_engine.options());
+
+    let pv_score = WDLScore::new((1.0 + v - d) / 2.0, d);
+
+    let single = pv_score.single(0.5);
     let score = match pv.first_node().state() {
         engine::GameState::Loss(len) => format!("+M{}", (len + 1).div_ceil(2)),
         engine::GameState::Win(len) => format!("-M{}", (len + 1).div_ceil(2)),
-        _ => format!("{}{:.2}", if single < 0.5 { "-" } else { "+" }, pv.score().cp(0.5).abs() as f32 / 100.0)
+        _ => format!("{}{:.2}", if single < 0.5 { "-" } else { "+" }, pv_score.cp(0.5).abs() as f32 / 100.0)
     };
 
     print!("{}\r", " ".repeat(t_width));
