@@ -10,7 +10,11 @@ impl SearchEngine {
         let expl = cpuct * exploration_scale;
 
         self.tree().select_child_by_key(node_idx, |child_node| {
-            let score = get_score(&parent_node.score(), child_node, child_node.visits()).single(0.5) as f64;
+            let score = get_score(&parent_node.score(), child_node, child_node.visits()).single_with_score(if depth as i64 % 2 == 0 {
+                0.5
+            } else {
+                self.options().draw_score() as f64 / 100.0
+            }) as f64;
             score + child_node.policy() * expl / f64::from(child_node.visits() + 1)
         }).expect("Failed to select a valid node.")
     }
@@ -41,7 +45,7 @@ fn get_cpuct(options: &EngineOptions, parent_node: &Node, depth: f64) -> f64 {
     cpuct *= 1.0 + ((f64::from(parent_node.visits()) + visit_scale) / visit_scale).ln();
 
     if parent_node.visits() > 1 {
-        let var = (parent_node.squared_score() - (parent_node.score().single(0.5) as f64).powi(2)).max(0.0);
+        let var = (parent_node.squared_score() - (parent_node.score().single() as f64).powi(2)).max(0.0);
         let mut variance = var.sqrt() / options.cpuct_variance_scale();
         variance += (1.0 - variance) / (1.0 + options.cpuct_var_warmup() * parent_node.visits() as f64);
         cpuct *= 1.0 + options.cpuct_variance_weight() * (variance - 1.0);

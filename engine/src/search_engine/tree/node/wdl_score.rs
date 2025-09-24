@@ -100,14 +100,18 @@ impl WDLScore {
     }
 
     #[inline]
-    pub const fn single(&self, draw_reference: f64) -> f64 {
-        self.win_chance() + self.draw_chance() * draw_reference
+    pub const fn single(&self) -> f64 {
+        self.win_chance() + self.draw_chance() * 0.5
     }
 
     #[inline]
-    pub fn cp(&self, draw_reference: f64) -> i32 {
-        let score = self.single(draw_reference);
-        let score = (-246.631 * (1.0 / score.clamp(0.0, 1.0) - 1.0).ln()) as i32;
+    pub const fn single_with_score(&self, draw_score: f64) -> f64 {
+        self.win_chance() + self.draw_chance() * draw_score
+    }
+
+    #[inline]
+    pub fn cp(&self) -> i32 {
+        let score = (-246.631 * (1.0 / self.single().clamp(0.0, 1.0) - 1.0).ln()) as i32;
         score.clamp(-30000, 30000)
     }
 }

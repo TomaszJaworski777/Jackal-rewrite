@@ -179,7 +179,7 @@ impl Node {
         self.visit_count.fetch_add(1, Ordering::Relaxed) as f64;
         self.cumulative_score.add(score);
         
-        let score = score.single(0.5) as f64;
+        let score = score.single() as f64;
         self.squared_score.fetch_add((score.powi(2) * f64::from(SCORE_SCALE)) as u64, Ordering::Relaxed);
     }
 

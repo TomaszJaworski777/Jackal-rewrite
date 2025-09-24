@@ -201,14 +201,14 @@ fn eval(search_engine: &SearchEngine) {
     let board = search_engine.root_position().board();
 
     let wdl_score = ValueNetwork.forward(board);
-    let current_eval = wdl_score.cp(0.5);
+    let current_eval = wdl_score.cp();
 
     let mut v = wdl_score.win_chance() - wdl_score.lose_chance();
     let mut d = wdl_score.draw_chance();
 
     search_engine.contempt().rescale(&mut v, &mut d, 1.0, false, search_engine.options());
     let contempt_score = WDLScore::new((1.0 + v - d) / 2.0, d);
-    let contempt_eval = contempt_score.cp(0.5);
+    let contempt_eval = contempt_score.cp();
 
     let mut info: [String; 33] = [const { String::new() }; 33];
     info[1] = format!("Raw: {}", 
@@ -246,7 +246,7 @@ fn eval(search_engine: &SearchEngine) {
             return;
         }
 
-        evals[usize::from(square)] = ValueNetwork.forward(&board_cpy).cp(0.5);
+        evals[usize::from(square)] = ValueNetwork.forward(&board_cpy).cp();
     });
 
     println!("\n{} {}\n", " FEN:".primary(0.0), FEN::from(board).to_string().secondary(0.1));
@@ -277,8 +277,9 @@ fn analyse(search_engine: &mut SearchEngine, iters: Option<u64>) {
     print!("{} {}\r", " Progress:".primary(5.0/32.0), create_loading_bar(50, progress / piece_count as f32, (225,225,225), (225,225,225)).secondary(5.0/32.0));
     let _ = std::io::stdout().flush();
 
-    let wdl_score = search_engine.tree().get_best_pv(0).score();
-    let current_eval = wdl_score.cp(0.5);
+    let draw_score = search_engine.options().draw_score() as f64 / 100.0;
+    let wdl_score = search_engine.tree().get_best_pv(0, draw_score).score();
+    let current_eval = wdl_score.cp();
 
     let info = [const { String::new() }; 33];
 
@@ -305,7 +306,7 @@ fn analyse(search_engine: &mut SearchEngine, iters: Option<u64>) {
         search_engine.set_position(&ChessPosition::from(board_cpy), 0);
         search_engine.search::<NoReport>(&search_limits);
 
-        evals[usize::from(square)] = search_engine.tree().get_best_pv(0).score().cp(0.5);
+        evals[usize::from(square)] = search_engine.tree().get_best_pv(0, draw_score).score().cp();
 
         print!("{} {}\r", " Progress:".primary(5.0/32.0), create_loading_bar(50, progress / piece_count as f32, (225,225,225), (225,225,225)).secondary(5.0/32.0));
         let _ = std::io::stdout().flush();

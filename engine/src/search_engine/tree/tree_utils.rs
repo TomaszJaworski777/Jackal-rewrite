@@ -28,18 +28,18 @@ impl Tree {
         best_idx
     }
 
-    pub fn select_best_child(&self, parent_idx: NodeIndex) -> Option<NodeIndex> {
-        self.select_child_by_key(parent_idx, |node| node.score().single(0.5) as f64)
+    pub fn select_best_child(&self, parent_idx: NodeIndex, draw_score: f64) -> Option<NodeIndex> {
+        self.select_child_by_key(parent_idx, |node| node.score().single_with_score(draw_score) as f64)
     }
 
-    pub fn get_pv(&self, node_idx: NodeIndex) -> PvLine {
+    pub fn get_pv(&self, node_idx: NodeIndex, draw_score: f64, flip: bool) -> PvLine {
         let node = &self[node_idx];
 
         if node.children_count() == 0 {
             return PvLine::new(node);
         }
 
-        let best_child_idx = self.select_best_child(node_idx);
+        let best_child_idx = self.select_best_child(node_idx, draw_score);
 
         if best_child_idx.is_none() {
             return PvLine::new(node);
@@ -47,13 +47,17 @@ impl Tree {
 
         let best_child_idx = best_child_idx.unwrap();
 
-        let mut result = self.get_pv(best_child_idx);
+        let mut result = self.get_pv(best_child_idx, if flip {
+            0.5
+        } else {
+            draw_score
+        }, !flip);
         result.add_node(node);
 
         result
     }
 
-    pub fn get_best_pv(&self, index: usize) -> PvLine {
+    pub fn get_best_pv(&self, index: usize, draw_score: f64) -> PvLine {
         let mut chilren_nodes = Vec::new();
         let node = self.root_node();
 
@@ -64,7 +68,7 @@ impl Tree {
                 return;
             }
 
-            chilren_nodes.push((child_idx, node.score().single(0.5)))
+            chilren_nodes.push((child_idx, node.score().single()))
         });
 
         if chilren_nodes.is_empty() {
@@ -74,7 +78,7 @@ impl Tree {
         chilren_nodes.sort_by(|(_, a), (_, b)| b.total_cmp(a));
 
         let (pv_node_idx, _) = chilren_nodes[index.min(chilren_nodes.len() - 1)];
-        self.get_pv(pv_node_idx)
+        self.get_pv(pv_node_idx, draw_score, false)
     }
 
     pub fn find_node_depth(&self, start_node_idx: NodeIndex, target_node_idx: NodeIndex) -> Option<u64> {
