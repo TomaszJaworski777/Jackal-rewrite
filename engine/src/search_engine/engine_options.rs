@@ -16,7 +16,7 @@ create_options! {
 
             //======== EAS ========
             ["Contempt"]  contempt:   i64  =>  1000,  -10000,  10000;
-            ["DrawScore"] draw_score: i64  =>  40,    -100,    100;
+            ["DrawScore"] draw_score: i64  =>  20,    -100,    100;
         }
         Tunables {
             //PST
