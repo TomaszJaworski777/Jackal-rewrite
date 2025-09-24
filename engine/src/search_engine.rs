@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::{search_engine::engine_options::EngineOptions, search_report_trait::SearchReport};
+use crate::{search_engine::{contempt::Contempt, engine_options::EngineOptions}, search_report_trait::SearchReport};
 
 mod bench;
 mod mcts;
@@ -11,6 +11,7 @@ mod search_stats;
 mod tree;
 mod engine_options;
 mod hash_table;
+mod contempt;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
@@ -22,7 +23,8 @@ pub struct SearchEngine {
     tree: Tree,
     options: EngineOptions,
     interruption_token: AtomicBool,
-    game_ply: u16
+    game_ply: u16,
+    contempt: Contempt
 }
 
 impl Clone for SearchEngine {
@@ -32,7 +34,8 @@ impl Clone for SearchEngine {
             tree: self.tree.clone(),
             options: self.options.clone(),
             interruption_token: AtomicBool::new(self.interruption_token.load(Ordering::Relaxed)),
-            game_ply: self.game_ply
+            game_ply: self.game_ply,
+            contempt: self.contempt
         }
     }
 }
@@ -40,13 +43,15 @@ impl Clone for SearchEngine {
 impl SearchEngine {
     pub fn new() -> Self {
         let options = EngineOptions::new();
+        let contempt = Contempt::init(&options);
 
         Self {
             position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
             tree: Tree::from_bytes(options.hash() as usize, options.hash_size()),
             options,
             interruption_token: AtomicBool::new(false),
-            game_ply: 0
+            game_ply: 0,
+            contempt
         }
     }
 
@@ -81,6 +86,11 @@ impl SearchEngine {
     }
 
     #[inline]
+    pub fn contempt(&self) -> &Contempt {
+        &self.contempt
+    }
+
+    #[inline]
     pub fn set_position(&mut self, position: &ChessPosition, game_ply: u16) {
         self.position = *position;
         self.game_ply = game_ply;
@@ -90,6 +100,11 @@ impl SearchEngine {
     pub fn reset_position(&mut self) {
         self.position = ChessPosition::from(ChessBoard::from(&FEN::start_position()));
         self.game_ply = 0;
+    }
+
+    #[inline]
+    pub fn reinit_contempt(&mut self) {
+        self.contempt = Contempt::init(self.options())
     }
 
     #[inline]

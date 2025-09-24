@@ -1,4 +1,4 @@
-use engine::{SearchEngine, SearchLimits, SearchReport, SearchStats};
+use engine::{SearchEngine, SearchLimits, SearchReport, SearchStats, WDLScore};
 
 pub struct UciSearchReport;
 impl SearchReport for UciSearchReport {
@@ -15,18 +15,26 @@ impl SearchReport for UciSearchReport {
         for pv_idx in 0..pv_count {
             let pv = search_engine.tree().get_best_pv(pv_idx as usize);
 
+            let score = pv.score();
+            let mut v = score.win_chance() - score.lose_chance();
+            let mut d = score.draw_chance();
+
+            search_engine.contempt().rescale(&mut v, &mut d, 1.0, true, search_engine.options());
+
+            let pv_score = WDLScore::new((1.0 + v - d) / 2.0, d);
+
             let state = pv.first_node().state();
             let score = match state {
                 engine::GameState::Loss(len) => format!("mate {}", (len + 1).div_ceil(2)),
                 engine::GameState::Win(len) => format!("mate -{}", (len + 1).div_ceil(2)),
-                _ => format!("cp {}", pv.score().cp(0.5))
+                _ => format!("cp {}", pv_score.cp(0.5))
             };
 
             let wdl = if search_engine.options().show_wdl() {
                 format!(" wdl {:.0} {:.0} {:.0}", 
-                    pv.score().win_chance() * 1000.0, 
-                    pv.score().draw_chance() * 1000.0,
-                    pv.score().lose_chance() * 1000.0
+                    pv_score.win_chance() * 1000.0, 
+                    pv_score.draw_chance() * 1000.0,
+                    pv_score.lose_chance() * 1000.0
                 )
             } else {
                String::new() 

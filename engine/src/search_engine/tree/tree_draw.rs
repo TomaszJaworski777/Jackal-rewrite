@@ -1,9 +1,9 @@
 use utils::{bytes_to_string, heat_color, number_to_string, AlignString, Colors, Theme};
 
-use crate::search_engine::tree::{node::Node, GameState, NodeIndex, Tree};
+use crate::{search_engine::{tree::{node::Node, GameState, NodeIndex, Tree}}, SearchEngine, WDLScore};
 
 impl Tree {
-    pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<NodeIndex>, chess_960: bool) {
+    pub fn draw_tree<const FLIP_SCORE: bool>(&self, depth: Option<u8>, node_idx: Option<NodeIndex>, search_engine: &SearchEngine) {
         let depth = depth.unwrap_or(1);
         let node_idx = node_idx.unwrap_or(self.root_index());
 
@@ -74,7 +74,7 @@ impl Tree {
             20,
             policy,
             policy,
-            chess_960
+            search_engine
         );
     }
 
@@ -91,7 +91,7 @@ impl Tree {
         iter_size: usize,
         mut min_policy: f32,
         mut max_policy: f32,
-        chess_960: bool,
+        search_engine: &SearchEngine
     ) {
         self.print_node(
             node_idx,
@@ -103,7 +103,7 @@ impl Tree {
             iter_size,
             min_policy,
             max_policy,
-            chess_960
+            search_engine
         );
 
         if FLIP_SCORE {
@@ -153,7 +153,7 @@ impl Tree {
                 children.len(),
                 min_policy,
                 max_policy,
-                chess_960
+                search_engine
             );
         }
     }
@@ -169,7 +169,7 @@ impl Tree {
         iter_size: usize,
         min_policy: f32,
         max_policy: f32,
-        chess_960: bool
+        search_engine: &SearchEngine
     ) {
         let node = &self[node_idx];
         let color_gradient = (iter_idx + 5) as f32 / (iter_size + 10) as f32;
@@ -188,7 +188,7 @@ impl Tree {
             if node_idx == self.root_index() {
                 String::from("root")
             } else {
-                node.mv().to_string(chess_960).align_to_left(5)
+                node.mv().to_string(search_engine.options().chess960()).align_to_left(5)
             }
             .primary(color_gradient)
         } else {
@@ -199,7 +199,7 @@ impl Tree {
                     .primary(color_gradient),
                 ">".secondary(color_gradient),
                 node.mv()
-                    .to_string(chess_960)
+                    .to_string(search_engine.options().chess960())
                     .align_to_left(5)
                     .primary(color_gradient)
             )
@@ -212,8 +212,30 @@ impl Tree {
             node.score()
         };
 
-        let cp = score.cp(0.5);
-        let score = heat_color(&format!("{:.2}", cp as f32 / 100.0).align_to_right(6), score.single(0.5) as f32, 0.0, 1.0);
+        let mut v = score.win_chance() - score.lose_chance();
+        let mut d = score.draw_chance();
+
+        search_engine.contempt().rescale(&mut v, &mut d, 1.0, true, search_engine.options());
+
+        let pv_score = WDLScore::new((1.0 + v - d) / 2.0, d);
+
+        let state = if flip {
+            match node.state() {
+                GameState::Loss(x) => GameState::Win(x),
+                GameState::Win(x) => GameState::Loss(x),
+                _ => node.state()
+            }
+        } else {
+            node.state()
+        };
+
+        let score = match state {
+            GameState::Loss(len) => format!("+M{}", (len + 1).div_ceil(2)),
+            GameState::Win(len) => format!("-M{}", (len + 1).div_ceil(2)),
+            _ => format!("{}{:.2}", if pv_score.single(0.5) < 0.5 { "-" } else { "+" }, pv_score.cp(0.5).abs() as f32 / 100.0)
+        };
+
+        let score = heat_color(&score.align_to_right(6), pv_score.single(0.5) as f32, 0.0, 1.0);
 
         let visits = format!("{}", node.visits()).align_to_right(9);
 
