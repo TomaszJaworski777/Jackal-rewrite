@@ -3,7 +3,7 @@ use chess::ChessPosition;
 use crate::{search_engine::{contempt::Contempt, engine_options::EngineOptions, tree::NodeIndex}, GameState, SearchEngine, ValueNetwork, WDLScore};
 
 impl SearchEngine {
-    pub(super) fn simulate(&self, node_idx: NodeIndex, position: &ChessPosition) -> WDLScore {
+    pub(super) fn simulate(&self, node_idx: NodeIndex, position: &ChessPosition, depth: f64) -> WDLScore {
         if self.tree()[node_idx].visits() == 0 {
             let state = get_node_state(position, self.root_position());
             self.tree().set_state(node_idx, state);
@@ -15,10 +15,10 @@ impl SearchEngine {
             if let Some(entry) = self.tree().hash_table().get(position.board().hash()) {
                 entry
             } else {
-                get_position_score(position, self.tree()[node_idx].state(), self.contempt(), self.options(), is_stm)
+                get_position_score(position, self.tree()[node_idx].state(), self.contempt(), self.options(), is_stm, depth)
             }
         } else {
-            get_position_score(position, self.tree()[node_idx].state(), self.contempt(), self.options(), is_stm)
+            get_position_score(position, self.tree()[node_idx].state(), self.contempt(), self.options(), is_stm, depth)
         }
     }
 }
@@ -56,7 +56,7 @@ fn is_draw(position: &ChessPosition, root_position: &ChessPosition) -> bool {
     false
 }
 
-fn get_position_score(position: &ChessPosition, node_state: GameState, contempt: &Contempt, options: &EngineOptions, is_stm: bool) -> WDLScore {
+fn get_position_score(position: &ChessPosition, node_state: GameState, contempt: &Contempt, options: &EngineOptions, is_stm: bool, depth: f64) -> WDLScore {
     let mut score = match node_state {
         GameState::Draw => WDLScore::DRAW,
         GameState::Loss(_) => WDLScore::LOSE,
@@ -64,7 +64,7 @@ fn get_position_score(position: &ChessPosition, node_state: GameState, contempt:
         _ => ValueNetwork.forward(position.board())
     };
 
-    score.apply_50mr(position.board().half_moves(), options);
+    score.apply_50mr(position.board().half_moves(), depth, options);
 
     let mut draw_chance= score.draw_chance();
     let mut win_lose_delta = score.win_chance() - score.lose_chance();

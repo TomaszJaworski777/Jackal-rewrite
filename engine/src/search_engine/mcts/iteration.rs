@@ -20,7 +20,7 @@ impl SearchEngine {
         let mut selected_child_idx = None;
 
         let score = if !ROOT && (node.is_terminal() || node.visits() == 0) {
-            self.simulate(node_idx, position)
+            self.simulate(node_idx, position, *depth)
         } else {
             *depth += 1.0;
 
