@@ -57,12 +57,14 @@ fn is_draw(position: &ChessPosition, root_position: &ChessPosition) -> bool {
 }
 
 fn get_position_score(position: &ChessPosition, node_state: GameState, contempt: &Contempt, options: &EngineOptions, is_stm: bool) -> WDLScore {
-    let score = match node_state {
+    let mut score = match node_state {
         GameState::Draw => WDLScore::DRAW,
         GameState::Loss(_) => WDLScore::LOSE,
         GameState::Win(_) => WDLScore::WIN,
         _ => ValueNetwork.forward(position.board())
     };
+
+    score.apply_50mr(position.board().half_moves(), options);
 
     let mut draw_chance= score.draw_chance();
     let mut win_lose_delta = score.win_chance() - score.lose_chance();

@@ -36,7 +36,11 @@ create_options! {
             cpuct_var_warmup:      f64  =>  0.5,       0.0,    1.0,      0.05,     0.002;
             exploration_tau:       f64  =>  0.51,      0.0,    1.0,      0.055,    0.002;
 
-            //Time manager
+            //Draw Scaling
+            draw_scaling_power: f64  =>  3.0,  1.0,  10.0,  0.3,   0.002;
+            draw_scaling_cap:   f64  =>  0.9,  0.0,  1.0,   0.08,  0.002;
+
+            //Time Manager
             default_moves_to_go:    f64  =>  30.0,         10.0,  50.0,  3.0,      0.002;
             phase_power:            f64  =>  2.0,          0.0,   10.0,  0.2,      0.002;
             phase_scale:            f64  =>  1.0,          0.0,   1.0,   0.1,      0.002;

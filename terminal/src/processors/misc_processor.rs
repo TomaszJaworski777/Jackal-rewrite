@@ -210,8 +210,12 @@ fn eval(search_engine: &SearchEngine) {
     let contempt_score = WDLScore::new((1.0 + v - d) / 2.0, d);
     let contempt_eval = contempt_score.cp();
 
+    let mut half_moves = wdl_score;
+    half_moves.apply_50mr(board.half_moves(), search_engine.options());
+    let half_moves_cp = half_moves.cp();
+
     let mut info: [String; 33] = [const { String::new() }; 33];
-    info[1] = format!("Raw: {}", 
+    info[1] = format!("Raw:      {}", 
         format!("[{}, {}, {}] ({}{})",
             format!("{:.2}%", wdl_score.win_chance() * 100.0).custom_color(WIN_COLOR),
             format!("{:.2}%", wdl_score.draw_chance() * 100.0).custom_color(DRAW_COLOR),
@@ -229,6 +233,15 @@ fn eval(search_engine: &SearchEngine) {
             heat_color(format!("{:.2}", contempt_eval.abs() as f32 / 100.0).as_str(), contempt_eval as f32 / 100.0, -20.0, 20.0),
         ).secondary(2.0/32.0)
     ).primary(2.0/32.0);
+    info[3] = format!("50mr:     {}", 
+        format!("[{}, {}, {}] ({}{})",
+            format!("{:.2}%", half_moves.win_chance() * 100.0).custom_color(WIN_COLOR),
+            format!("{:.2}%", half_moves.draw_chance() * 100.0).custom_color(DRAW_COLOR),
+            format!("{:.2}%", half_moves.lose_chance() * 100.0).custom_color(LOSE_COLOR),
+            heat_color(if half_moves_cp > 0 { "+" } else { "-" }, half_moves_cp as f32 / 100.0, -20.0, 20.0),
+            heat_color(format!("{:.2}", half_moves_cp.abs() as f32 / 100.0).as_str(), half_moves_cp as f32 / 100.0, -20.0, 20.0),
+        ).secondary(3.0/32.0)
+    ).primary(3.0/32.0);
 
     let mut evals = [0; 64];
     board.occupancy().map(|square| {
