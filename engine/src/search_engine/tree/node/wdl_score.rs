@@ -1,5 +1,7 @@
 use std::{ops::Mul, sync::atomic::{AtomicU64, Ordering}};
 
+use crate::search_engine::engine_options::EngineOptions;
+
 pub const SCORE_SCALE: u32 = 1024 * 64;
 
 #[derive(Debug, Default)]
@@ -106,13 +108,23 @@ impl WDLScore {
 
     #[inline]
     pub const fn single_with_score(&self, draw_score: f64) -> f64 {
-        self.win_chance() + self.draw_chance() * draw_score
+        (self.win_chance() + self.draw_chance() * draw_score).clamp(0.0, 1.0)
     }
 
     #[inline]
     pub fn cp(&self) -> i32 {
-        let score = (-246.631 * (1.0 / self.single().clamp(0.0, 1.0) - 1.0).ln()) as i32;
+        let score = (-246.631 * (1.0 / self.single() - 1.0).ln()) as i32;
         score.clamp(-30000, 30000)
+    }
+
+    #[inline]
+    pub fn apply_50mr(&mut self, half_move: u8, options: &EngineOptions) {
+        let s = (0.01 * half_move as f64).powf(options.draw_scaling_power()).min(options.draw_scaling_cap());
+        let win_delta = self.win_chance() * s; 
+        let lose_delta = self.lose_chance() * s; 
+
+        self.0 -= win_delta;
+        self.1 += win_delta + lose_delta;
     }
 }
 
