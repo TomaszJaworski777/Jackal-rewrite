@@ -12,8 +12,10 @@ impl SearchReport for UciSearchReport {
 
         let pv_count = search_engine.tree().root_node().children_count().min(search_engine.options().multi_pv() as usize);
 
+        let draw_score = search_engine.options().draw_score() as f64 / 100.0;
+
         for pv_idx in 0..pv_count {
-            let pv = search_engine.tree().get_best_pv(pv_idx as usize);
+            let pv = search_engine.tree().get_best_pv(pv_idx as usize, draw_score);
 
             let score = pv.score();
             let mut v = score.win_chance() - score.lose_chance();
@@ -27,7 +29,7 @@ impl SearchReport for UciSearchReport {
             let score = match state {
                 engine::GameState::Loss(len) => format!("mate {}", (len + 1).div_ceil(2)),
                 engine::GameState::Win(len) => format!("mate -{}", (len + 1).div_ceil(2)),
-                _ => format!("cp {}", pv_score.cp(0.5))
+                _ => format!("cp {}", pv_score.cp())
             };
 
             let wdl = if search_engine.options().show_wdl() {
@@ -58,7 +60,8 @@ impl SearchReport for UciSearchReport {
     }
 
     fn search_ended(_: &SearchLimits, _: &SearchStats, search_engine: &SearchEngine) {
-        let best_node_idx = search_engine.tree().select_best_child(search_engine.tree().root_index());
+        let draw_score = search_engine.options().draw_score() as f64 / 100.0;
+        let best_node_idx = search_engine.tree().select_best_child(search_engine.tree().root_index(), draw_score);
 
         if best_node_idx.is_none() {
             return;

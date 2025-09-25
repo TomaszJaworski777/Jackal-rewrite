@@ -232,10 +232,10 @@ impl Tree {
         let score = match state {
             GameState::Loss(len) => format!("+M{}", (len + 1).div_ceil(2)),
             GameState::Win(len) => format!("-M{}", (len + 1).div_ceil(2)),
-            _ => format!("{}{:.2}", if pv_score.single(0.5) < 0.5 { "-" } else { "+" }, pv_score.cp(0.5).abs() as f32 / 100.0)
+            _ => format!("{}{:.2}", if pv_score.single() < 0.5 { "-" } else { "+" }, pv_score.cp().abs() as f32 / 100.0)
         };
 
-        let score = heat_color(&score.align_to_right(6), pv_score.single(0.5) as f32, 0.0, 1.0);
+        let score = heat_color(&score.align_to_right(6), pv_score.single() as f32, 0.0, 1.0);
 
         let visits = format!("{}", node.visits()).align_to_right(9);
 

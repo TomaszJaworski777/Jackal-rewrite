@@ -27,9 +27,8 @@ impl SearchReport for PrettySearchReport {
 
         print_search_report::<true>(search_limits, search_stats, search_engine);
 
-        let best_node = search_engine
-                .tree()
-                .select_child_by_key(search_engine.tree().root_index(), |node| node.score().single(0.5) as f64);
+        let draw_score = search_engine.options().draw_score() as f64 / 100.0;
+        let best_node_idx = search_engine.tree().select_best_child(search_engine.tree().root_index(), draw_score);
 
         if let Some((x,y)) = term_cursor::get_pos().ok() {
             let _ = term_cursor::set_pos(x, y - 2);
@@ -38,7 +37,7 @@ impl SearchReport for PrettySearchReport {
         print!("{}\r", " ".repeat(50));
         println!( "\n{}",
             format!(" Best Move: {}", search_engine
-                .tree()[best_node.unwrap()]
+                .tree()[best_node_idx.unwrap()]
                 .mv()
                 .to_string(search_engine.options().chess960()).secondary(1.0)).primary(1.0)
         );
@@ -133,7 +132,8 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
         height_used += 4;
     }
 
-    let pv = search_engine.tree().get_best_pv(0);
+    let draw_score = search_engine.options().draw_score() as f64 / 100.0;
+    let pv = search_engine.tree().get_best_pv(0, draw_score);
 
     let score = pv.score();
     let mut v = score.win_chance() - score.lose_chance();
@@ -143,15 +143,14 @@ fn print_search_report<const FINAL: bool>(_: &SearchLimits, search_stats: &Searc
 
     let pv_score = WDLScore::new((1.0 + v - d) / 2.0, d);
 
-    let single = pv_score.single(0.5);
     let score = match pv.first_node().state() {
         engine::GameState::Loss(len) => format!("+M{}", (len + 1).div_ceil(2)),
         engine::GameState::Win(len) => format!("-M{}", (len + 1).div_ceil(2)),
-        _ => format!("{}{:.2}", if single < 0.5 { "-" } else { "+" }, pv_score.cp(0.5).abs() as f32 / 100.0)
+        _ => format!("{}{:.2}", if pv_score.single() < 0.5 { "-" } else { "+" }, pv_score.cp().abs() as f32 / 100.0)
     };
 
     print!("{}\r", " ".repeat(t_width));
-    println!("{}", format!(" Score:      {}", heat_color(score.as_str(), single as f32, 0.0, 1.0)).primary(grad(22)));
+    println!("{}", format!(" Score:      {}", heat_color(score.as_str(), pv_score.single() as f32, 0.0, 1.0)).primary(grad(22)));
     print!("{}\r", " ".repeat(t_width));
     println!("{}", format!(" Win:        {}", create_loading_bar(50, pv.score().win_chance() as f32, WIN_COLOR, WIN_COLOR).secondary(grad(23))).primary(grad(23)));
     print!("{}\r", " ".repeat(t_width));

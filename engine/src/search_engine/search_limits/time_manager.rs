@@ -102,7 +102,7 @@ impl TimeManager {
         let mut second_best_score = f64::NEG_INFINITY;
 
         tree[tree.root_index()].map_children(|child_idx| {
-            let new_score = tree[child_idx].score().single(0.5);
+            let new_score = tree[child_idx].score().single();
             if new_score > second_best_score {
                 second_best_idx = Some(child_idx);
                 second_best_score = new_score;
@@ -151,8 +151,9 @@ impl TimeManager {
         if search_stats.iterations() < 2048 {
             return 1.0;
         }
-
-        let current_score = tree[tree.select_best_child(tree.root_index()).unwrap()].score().cp(0.5) as f64 / 100.0;
+        
+        let draw_score = options.draw_score() as f64 / 100.0;
+        let current_score = tree[tree.select_best_child(tree.root_index(), draw_score).unwrap()].score().cp() as f64 / 100.0;
         let score_trend = if let Some(previous_score) = self.previous_score {
             let trend = current_score - previous_score;
             self.previous_score = Some(previous_score + options.falling_eval_ema_alpha() * trend);
@@ -191,7 +192,8 @@ impl TimeManager {
             return 1.0;
         }
 
-        let current_score = tree[tree.select_best_child(tree.root_index()).unwrap()].score().cp(0.5) as f64 / 100.0;
+        let draw_score = options.draw_score() as f64 / 100.0;
+        let current_score = tree[tree.select_best_child(tree.root_index(), draw_score).unwrap()].score().cp() as f64 / 100.0;
 
         if current_score >= 0.0 {
             return 1.0;

@@ -19,7 +19,7 @@ fn three_fold() {
 
     search_engine.search::<NoReport>(&limits);
 
-    let best_move = search_engine.tree().get_best_pv(0).first_move();
+    let best_move = search_engine.tree().get_best_pv(0, 0.5).first_move();
     assert_eq!(best_move, Move::from_squares(Square::C8, Square::H3, MoveFlag::QUIET_MOVE))
 }
 
@@ -36,7 +36,7 @@ fn fifty_mr() {
 
     search_engine.search::<NoReport>(&limits);
 
-    let draw_distance = 0.5 - search_engine.tree().get_best_pv(0).score().single(0.5);
+    let draw_distance = 0.5 - search_engine.tree().get_best_pv(0, 0.5).score().single();
     assert!(draw_distance.abs() < 0.1)
 }
 
@@ -53,6 +53,6 @@ fn fifty_mr_mate() {
 
     search_engine.search::<NoReport>(&limits);
 
-    let draw_distance = 0.5 - search_engine.tree().get_best_pv(0).score().single(0.5);
+    let draw_distance = 0.5 - search_engine.tree().get_best_pv(0, 0.5).score().single();
     assert!(draw_distance.abs() > 0.4)
 }
