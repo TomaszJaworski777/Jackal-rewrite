@@ -37,8 +37,9 @@ create_options! {
             exploration_tau:       f64  =>  0.51,      0.0,    1.0,      0.055,    0.002;
 
             //Draw Scaling
-            draw_scaling_power: f64  =>  3.0,  1.0,  10.0,  0.3,   0.002;
-            draw_scaling_cap:   f64  =>  0.9,  0.0,  1.0,   0.08,  0.002;
+            draw_scaling_power: f64  =>  3.0,     1.0,  10.0,  0.3,     0.002;
+            draw_scaling_cap:   f64  =>  0.9,     0.0,  1.0,   0.08,    0.002;
+            depth_scaling:      f64  =>  0.0015,  0.0,  1.0,   0.0001,  0.002;
 
             //Time Manager
             default_moves_to_go:    f64  =>  30.0,         10.0,  50.0,  3.0,      0.002;

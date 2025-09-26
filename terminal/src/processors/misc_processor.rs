@@ -211,7 +211,7 @@ fn eval(search_engine: &SearchEngine) {
     let contempt_eval = contempt_score.cp();
 
     let mut half_moves = wdl_score;
-    half_moves.apply_50mr(board.half_moves(), search_engine.options());
+    half_moves.apply_50mr(board.half_moves(), 0.0, search_engine.options());
     let half_moves_cp = half_moves.cp();
 
     let mut info: [String; 33] = [const { String::new() }; 33];
